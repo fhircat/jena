@@ -464,7 +464,7 @@ void tripleConstraint(Node label) : { Node p; int idx; boolean reverse = false; 
     (cardinality = cardinality())?
     (annotation())*
     semActs = semanticActions()
-    { finishTripleConstraint(label, idx, p, reverse, cardinality, null); }
+    { finishTripleConstraint(label, idx, p, reverse, cardinality, semActs); }
 }
 
 Cardinality cardinality() : {}
@@ -657,7 +657,7 @@ List<SemAct> semanticActions() : {
     (semAct = codeDecl() { semActs.add(semAct); })* { return semActs; }
 }
 
-SemAct codeDecl() : {}
+SemAct codeDecl() : { Token t; }
 {
     // Spec: - 2.1:
     // codeDecl	   ::=   	'%' iri (CODE | '%'){
@@ -672,7 +672,7 @@ SemAct codeDecl() : {}
     
     // CODE_BLOCK this as a single token introduced with "%".
     
-    <CODE_BLOCK> { return null; }
+    (t = <CODE_BLOCK>) { return crackSemanticAction(t.image, t.beginLine, t.beginColumn); }
 }
 
 Node literal() : { Node n ; }

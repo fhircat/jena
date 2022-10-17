@@ -1286,7 +1286,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       annotation();
     }
     semActs = semanticActions();
-      finishTripleConstraint(label, idx, p, reverse, cardinality, null);
+      finishTripleConstraint(label, idx, p, reverse, cardinality, semActs);
   }
 
   final public Cardinality cardinality() throws ParseException {
@@ -1738,8 +1738,9 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
   }
 
   final public SemAct codeDecl() throws ParseException {
-    jj_consume_token(CODE_BLOCK);
-                   {if (true) return null;}
+                      Token t;
+    t = jj_consume_token(CODE_BLOCK);
+                         {if (true) return crackSemanticAction(t.image, t.beginLine, t.beginColumn);}
     throw new Error("Missing return statement in function");
   }
 

@@ -632,6 +632,26 @@ public class ParserShExC extends LangParserBase {
         addNodeConstraint(numLength);
     }
 
+    protected SemAct crackSemanticAction(String iriAndCode, int line, int column) {
+        // e.g. % <http://shex.io/extensions/Test/> { print(s) %}
+        // or   % ex:Test { print(s) %}
+        iriAndCode = iriAndCode.substring(1, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
+        String iri, code;
+
+        if (iriAndCode.startsWith("<")) {
+            int iriLen = iriAndCode.indexOf('>');
+            iri = resolveQuotedIRI(iriAndCode.substring(0, iriLen), line, column);
+            code = iriAndCode.substring(iriAndCode.indexOf('{', iriLen) + 1);
+        } else {
+            int pnameEnd = iriAndCode.indexOf('{');
+            int lastSpace = iriAndCode.lastIndexOf(' ', pnameEnd);
+            String pname = iriAndCode.substring(0, lastSpace == -1 ? pnameEnd : lastSpace);
+            iri = resolvePName(pname, line, column);
+            code = iriAndCode.substring(pnameEnd);
+        }
+        return new SemAct(iri, code);
+    }
+
     // Metacharacters ., ?, *, +, {, } (, ), [ or ].
         // and "|", "$" and "^". These preserve their \.
     //    "\\" [ "n", "r", "t", "\\", "|", "." , "?", "*", "+",
