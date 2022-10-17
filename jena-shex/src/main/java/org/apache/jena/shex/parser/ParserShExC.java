@@ -425,7 +425,7 @@ public class ParserShExC extends LangParserBase {
         return startShapeOp();
     }
 
-    protected void finishTripleConstraint(Node label, int idx, Node predicate, boolean reverse, Cardinality cardinality) {
+    protected void finishTripleConstraint(Node label, int idx, Node predicate, boolean reverse, Cardinality cardinality, List<SemAct> semActs) {
         if ( label != null ) { /*ref*/ } // XXX
         List<ShapeExpression> args = finishShapeOp(idx);
         if ( args == null )
@@ -435,7 +435,7 @@ public class ParserShExC extends LangParserBase {
 
         ShapeExpression arg = args.get(0);
         // Cardinality as argument.
-        TripleExpression tripleExpr = new TripleConstraint(label, predicate, reverse, arg, cardinality);
+        TripleExpression tripleExpr = new TripleConstraint(label, predicate, reverse, arg, cardinality, semActs);
         push(tripleExprStack, tripleExpr);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr);

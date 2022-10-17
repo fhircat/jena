@@ -158,7 +158,7 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
     public static void prepareTests(EarlReport report, RunnerOneManifest level, Manifest manifest, Function<ManifestEntry, Runnable> maker, String prefix) {
         manifest.entries().forEach(entry->{
             String label = prepareTestLabel(entry, prefix);
-            Runnable runnable = maker.apply(entry);
+            Runnable runnable = label.equals("1dotCode3fail_abort") ? maker.apply(entry) : null;
             if ( runnable != null ) {
                 Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
                 level.add(r);

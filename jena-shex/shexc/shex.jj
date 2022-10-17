@@ -455,7 +455,7 @@ void bracketedTripleExpr(Node label): { TripleExpression tripleExpr = null; Card
     { finishBracketedTripleExpr(label, tripleExpr, cardinality); }
 }
 
-void tripleConstraint(Node label) : { Node p; int idx; boolean reverse = false; Cardinality cardinality = null; }
+void tripleConstraint(Node label) : { Node p; int idx; boolean reverse = false; Cardinality cardinality = null; List<SemAct> semActs; }
 {
     { idx = startTripleConstraint(); }
   	( reverse = senseFlags() )?
@@ -463,8 +463,8 @@ void tripleConstraint(Node label) : { Node p; int idx; boolean reverse = false; 
     inlineShapeExpression()
     (cardinality = cardinality())?
     (annotation())*
-    semanticActions()
-    { finishTripleConstraint(label, idx, p, reverse, cardinality); }
+    semActs = semanticActions()
+    { finishTripleConstraint(label, idx, p, reverse, cardinality, null); }
 }
 
 Cardinality cardinality() : {}
@@ -648,13 +648,16 @@ void annotation() : {}
     "//" predicate() (iri() | literal())
 }
 
-void semanticActions() : {}
+List<SemAct> semanticActions() : {
+  List<SemAct> semActs = new ArrayList<SemAct>();
+  SemAct semAct;
+}
 {
     // semanticAction	: '%' iri (CODE | '%') ;
-    (codeDecl())*
+    (semAct = codeDecl() { semActs.add(semAct); })* { return semActs; }
 }
 
-void codeDecl() : {}
+SemAct codeDecl() : {}
 {
     // Spec: - 2.1:
     // codeDecl	   ::=   	'%' iri (CODE | '%'){
@@ -669,7 +672,7 @@ void codeDecl() : {}
     
     // CODE_BLOCK this as a single token introduced with "%".
     
-    <CODE_BLOCK>
+    <CODE_BLOCK> { return null; }
 }
 
 Node literal() : { Node n ; }

@@ -67,7 +67,7 @@ public class ShexTests {
         excludes.add("#1inversedotCode1_pass");
         excludes.add("#1dotCode3_pass");
         excludes.add("#1dotNoCode3_pass");
-        excludes.add("#1dotCode3fail_abort");
+//        excludes.add("#1dotCode3fail_abort");
         excludes.add("#1dotCodeWithEscapes1_pass");
         excludes.add("#1dotShapeCode1_pass");
         excludes.add("#1dotShapeNoCode1_pass");
