@@ -336,14 +336,15 @@ String numericLength() : { Token t; }
 void shapeDefinition() :
 { boolean closed = false; TripleExpression tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+  List<SemAct> semActs;
 }
 {
     { startShapeDefinition(); }
  	(extraPropertySet(extras) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
     (annotation())*
-    semanticActions()
-    { finishShapeDefinition(tripleExpr, extras, closed); }
+    semActs = semanticActions()
+    { finishShapeDefinition(tripleExpr, extras, closed, semActs); }
 }
 
 void inlineShapeDefinition() :
@@ -355,7 +356,7 @@ void inlineShapeDefinition() :
     { startShapeDefinition(); }
    	( extraPropertySet(extras) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
-    { finishShapeDefinition(tripleExpr, extras, closed); }
+    { finishShapeDefinition(tripleExpr, extras, closed, null); }
 }
 
 void extraPropertySet(List<Node> extras) : { Node p; }
@@ -407,14 +408,14 @@ TripleExpression tripleExpression() : { int idx; }
 {
   { idx = startTripleExpression(); }
   tripleExpressionClause() (<VBAR> tripleExpressionClause())*
-  { return finishTripleExpression(idx); }
+  { return finishTripleExpression(idx, null); }
 }
 
 void tripleExpressionClause() : { int idx; } {
    { idx = startTripleExpressionClause(); }
    // One of the rules below.
    tripleExpressionClause_1()
-   { finishTripleExpressionClause(idx); }
+   { finishTripleExpressionClause(idx, null); }
 }
 
 // Iterative, but needs LOOKAHEAD(2)
@@ -445,14 +446,14 @@ void unaryTripleExpr() : { Node n = null; }
     { finishUnaryTripleExpr(); }
 }
 
-void bracketedTripleExpr(Node label): { TripleExpression tripleExpr = null; Cardinality cardinality = null; }
+void bracketedTripleExpr(Node label): { TripleExpression tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs; }
 {
     { startBracketedTripleExpr(); }
    	<LPAREN> tripleExpr = tripleExpression() <RPAREN>
     (cardinality = cardinality())?
     (annotation())*
-    semanticActions()
-    { finishBracketedTripleExpr(label, tripleExpr, cardinality); }
+    semActs = semanticActions()
+    { finishBracketedTripleExpr(label, tripleExpr, cardinality, semActs); }
 }
 
 void tripleConstraint(Node label) : { Node p; int idx; boolean reverse = false; Cardinality cardinality = null; List<SemAct> semActs; }

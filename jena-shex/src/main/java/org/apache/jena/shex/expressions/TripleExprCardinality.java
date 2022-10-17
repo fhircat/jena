@@ -36,7 +36,7 @@ public class TripleExprCardinality extends TripleExpression {
     private final int max;
 
     public TripleExprCardinality(TripleExpression tripleExpr, Cardinality cardinality) {
-        super();
+        super(null);
         this.other = tripleExpr;
         this.cardinality = cardinality;
         this.min = (cardinality==null) ? 1 : cardinality.min;
@@ -59,6 +59,11 @@ public class TripleExprCardinality extends TripleExpression {
         return max;
     }
 
+
+    @Override
+    public boolean testSemanticAction(SemAct semAct) {
+        throw new RuntimeException("TripleExprCardinality should not have a semantics action: %<" + semAct.iri + ">%{" + semAct.code + "%}");
+    }
 
     @Override
     public void visit(TripleExprVisitor visitor) {

@@ -133,6 +133,7 @@ public class ShapeExprTripleExpr extends ShapeExpression {
     public static class Builder {
         private Node label;
         private Set<Node> extras = null;
+        private List<SemAct> semActs;
         private Optional<Boolean> closed = null;
         //extra:[IRIREF]?
         private TripleExpression tripleExpr = null;
@@ -147,6 +148,13 @@ public class ShapeExprTripleExpr extends ShapeExpression {
             if ( extras == null )
                 extras = new HashSet<>();
             this.extras.addAll(extrasList);
+            return this;
+        }
+
+        public Builder semActs(List<SemAct> semActsList) {
+            if ( semActs == null )
+                semActs = new ArrayList<>();
+            this.semActs.addAll(semActsList);
             return this;
         }
 

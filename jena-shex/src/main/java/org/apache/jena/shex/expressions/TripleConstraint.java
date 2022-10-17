@@ -53,10 +53,9 @@ public class TripleConstraint extends TripleExpression {
     private final Cardinality cardinality;
     private final int min;
     private final int max;
-    private List<SemAct> semActs;
 
     public TripleConstraint(Node label, Node predicate, boolean reverse, ShapeExpression valueExpr, Cardinality cardinality, List<SemAct> semActs) {
-        super();
+        super(semActs);
         this.label = label;
         this.predicate = predicate;
         this.reverse = reverse;
@@ -64,7 +63,6 @@ public class TripleConstraint extends TripleExpression {
         this.cardinality = cardinality;
         this.min = (cardinality==null) ? 1 : cardinality.min;
         this.max = (cardinality==null) ? 1 : cardinality.max;
-        this.semActs = semActs;
     }
 
     public String cardinalityString() {
@@ -99,6 +97,11 @@ public class TripleConstraint extends TripleExpression {
 
     private static Node value(Triple triple, boolean reverse) {
         return reverse ? triple.getSubject() : triple.getObject();
+    }
+
+    @Override
+    public boolean testSemanticAction(SemAct semAct) {
+        return false;
     }
 
     @Override

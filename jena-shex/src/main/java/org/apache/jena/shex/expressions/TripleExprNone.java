@@ -25,7 +25,12 @@ public class TripleExprNone extends TripleExpression {
     private static TripleExpression instance = new TripleExprNone();
     public static TripleExpression get() { return instance ; }
 
-    private TripleExprNone() { super(); }
+    private TripleExprNone() { super(null); }
+
+    @Override
+    public boolean testSemanticAction(SemAct semAct) {
+        throw new RuntimeException("TripleExprNone should not have a semantics action: %<" + semAct.iri + ">%{" + semAct.code + "%}");
+    }
 
     @Override
     public void visit(TripleExprVisitor visitor) {

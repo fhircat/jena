@@ -30,12 +30,17 @@ public class TripleExprRef extends TripleExpression {
     private Node ref;
 
     public TripleExprRef(Node node) {
-        super();
+        super(null);
         this.ref = node;
     }
 
     public Node ref() {
         return ref;
+    }
+
+    @Override
+    public boolean testSemanticAction(SemAct semAct) {
+        throw new RuntimeException("TripleExprRef should not have a semantics action: %<" + semAct.iri + ">%{" + semAct.code + "%}");
     }
 
     @Override

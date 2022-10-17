@@ -940,6 +940,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
   final public void shapeDefinition() throws ParseException {
   boolean closed = false; TripleExpression tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+  List<SemAct> semActs;
       startShapeDefinition();
     label_14:
     while (true) {
@@ -995,8 +996,8 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       }
       annotation();
     }
-    semanticActions();
-      finishShapeDefinition(tripleExpr, extras, closed);
+    semActs = semanticActions();
+      finishShapeDefinition(tripleExpr, extras, closed, semActs);
   }
 
   final public void inlineShapeDefinition() throws ParseException {
@@ -1046,7 +1047,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       ;
     }
     jj_consume_token(RBRACE);
-      finishShapeDefinition(tripleExpr, extras, closed);
+      finishShapeDefinition(tripleExpr, extras, closed, null);
   }
 
   final public void extraPropertySet(List<Node> extras) throws ParseException {
@@ -1127,7 +1128,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       jj_consume_token(VBAR);
       tripleExpressionClause();
     }
-    {if (true) return finishTripleExpression(idx);}
+    {if (true) return finishTripleExpression(idx, null);}
     throw new Error("Missing return statement in function");
   }
 
@@ -1135,7 +1136,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
                                   int idx;
      idx = startTripleExpressionClause();
     tripleExpressionClause_1();
-     finishTripleExpressionClause(idx);
+     finishTripleExpressionClause(idx, null);
   }
 
 // Iterative, but needs LOOKAHEAD(2)
@@ -1217,7 +1218,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
   }
 
   final public void bracketedTripleExpr(Node label) throws ParseException {
-                                        TripleExpression tripleExpr = null; Cardinality cardinality = null;
+                                        TripleExpression tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs;
       startBracketedTripleExpr();
     jj_consume_token(LPAREN);
     tripleExpr = tripleExpression();
@@ -1245,8 +1246,8 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       }
       annotation();
     }
-    semanticActions();
-      finishBracketedTripleExpr(label, tripleExpr, cardinality);
+    semActs = semanticActions();
+      finishBracketedTripleExpr(label, tripleExpr, cardinality, semActs);
   }
 
   final public void tripleConstraint(Node label) throws ParseException {

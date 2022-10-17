@@ -23,6 +23,7 @@ import static org.apache.jena.shex.parser.ParserShExC.Inline.NOT_INLINE;
 import static org.apache.jena.sparql.util.NodeUtils.nullToAny;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -265,18 +266,18 @@ public class ParserShExC extends LangParserBase {
         return pop(tripleExprStack, idx);
     }
 
-    private void finishTripleOp(int idx, Function<List<TripleExpression>, TripleExpression> action) {
+    private void finishTripleOp(int idx, List<SemAct> semActs, BiFunction<List<TripleExpression>, List<SemAct>, TripleExpression> action) {
         if ( action == null )
             return ;
         List<TripleExpression> args = finishTripleOp(idx);
         if ( args == null )
             return ;
-        processTripleExprArgs(args, action);
+        processTripleExprArgs(args, semActs, action);
     }
 
-    private void processTripleExprArgs(List<TripleExpression> args, Function<List<TripleExpression>, TripleExpression> action) {
+    private void processTripleExprArgs(List<TripleExpression> args, List<SemAct> semActs, BiFunction<List<TripleExpression>, List<SemAct>, TripleExpression> action) {
         if ( action != null ) {
-            TripleExpression tExpr = action.apply(args);
+            TripleExpression tExpr = action.apply(args, semActs);
             if ( tExpr != null )
                 push(tripleExprStack, tExpr);
         }
@@ -359,7 +360,7 @@ public class ParserShExC extends LangParserBase {
         start("ShapeDefinition");
     }
 
-    protected void finishShapeDefinition(TripleExpression tripleExpr, List<Node> extras, boolean closed) {
+    protected void finishShapeDefinition(TripleExpression tripleExpr, List<Node> extras, boolean closed, List<SemAct> semActs) {
         if ( tripleExpr == null )
             return;
             // XXX [Print] Below causes "{ ; }"
@@ -368,6 +369,7 @@ public class ParserShExC extends LangParserBase {
                 //.label(???)
                 .closed(closed)
                 .extras(extras)
+                .semActs(semActs)
                 .shapeExpr(tripleExpr).build();
         push(shapeExprStack, shape);
         finish("ShapeDefinition");
@@ -378,8 +380,8 @@ public class ParserShExC extends LangParserBase {
         return startTripleOp();
     }
 
-    protected TripleExpression finishTripleExpression(int idx) {
-        finishTripleOp(idx, TripleExprOneOf::create);
+    protected TripleExpression finishTripleExpression(int idx, List<SemAct> semActs) {
+        finishTripleOp(idx, semActs, TripleExprOneOf::create);
         TripleExpression tripleExpr = pop(tripleExprStack);
         finish("TripleExpression");
         return tripleExpr;
@@ -392,8 +394,8 @@ public class ParserShExC extends LangParserBase {
         return startTripleOp();
     }
 
-    protected void finishTripleExpressionClause(int idx) {
-        finishTripleOp(idx, TripleExprEachOf::create);
+    protected void finishTripleExpressionClause(int idx, List<SemAct> semActs) {
+        finishTripleOp(idx, semActs, TripleExprEachOf::create);
         finish("TripleExpressionClause");
     }
 
@@ -410,7 +412,7 @@ public class ParserShExC extends LangParserBase {
         start("BracketedTripleExpression");
     }
 
-    protected void finishBracketedTripleExpr(Node label, TripleExpression tripleExpr, Cardinality cardinality) {
+    protected void finishBracketedTripleExpr(Node label, TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
         TripleExpression tripleExpr2 = tripleExpr;
         if ( cardinality != null )
             tripleExpr2 = new TripleExprCardinality(tripleExpr, cardinality);

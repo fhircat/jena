@@ -27,23 +27,28 @@ import org.apache.jena.riot.out.NodeFormatter;
 
 public class TripleExprEachOf extends TripleExpression {
 
-    public static TripleExpression create(List<TripleExpression> acc) {
+    public static TripleExpression create(List<TripleExpression> acc, List<SemAct> semActs) {
         if ( acc.size() == 0 )
             throw new InternalErrorException("Empty list");
         if ( acc.size() == 1 )
             return acc.get(0);
-        return new TripleExprEachOf(acc);
+        return new TripleExprEachOf(acc, semActs);
     }
 
     private List<TripleExpression> tripleExpressions;
 
-    private TripleExprEachOf(List<TripleExpression> expressions) {
-        super();
+    private TripleExprEachOf(List<TripleExpression> expressions, List<SemAct> semActs) {
+        super(semActs);
         this.tripleExpressions = expressions;
     }
 
     public List<TripleExpression> expressions() {
         return tripleExpressions;
+    }
+
+    @Override
+    public boolean testSemanticAction(SemAct semAct) {
+        throw new RuntimeException("TripleExprEachOf testSemanticAction not implemented: %<" + semAct.iri + ">%{" + semAct.code + "%}");
     }
 
     @Override
