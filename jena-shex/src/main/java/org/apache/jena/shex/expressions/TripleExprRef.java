@@ -39,11 +39,6 @@ public class TripleExprRef extends TripleExpression {
     }
 
     @Override
-    public boolean testSemanticAction(SemAct semAct) {
-        throw new RuntimeException("TripleExprRef should not have a semantics action: %<" + semAct.getIri() + ">%{" + semAct.getCode() + "%}");
-    }
-
-    @Override
     public void visit(TripleExprVisitor visitor) {
         visitor.visit(this);
     }

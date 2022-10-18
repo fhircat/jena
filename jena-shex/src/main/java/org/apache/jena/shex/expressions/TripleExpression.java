@@ -51,7 +51,6 @@ public abstract class TripleExpression implements ShexPrintable {
             return true;
         return v.dispatchSemanticAction(this, matchables);
     }
-    public abstract boolean testSemanticAction(SemAct semAct);
 
     public abstract void visit(TripleExprVisitor visitor);
 

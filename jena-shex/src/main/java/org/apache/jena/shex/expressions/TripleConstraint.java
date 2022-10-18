@@ -100,11 +100,6 @@ public class TripleConstraint extends TripleExpression {
     }
 
     @Override
-    public boolean testSemanticAction(SemAct semAct) {
-        return false;
-    }
-
-    @Override
     public void visit(TripleExprVisitor visitor) {
         visitor.visit(this);
     }

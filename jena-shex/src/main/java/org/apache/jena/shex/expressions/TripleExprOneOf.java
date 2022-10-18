@@ -47,11 +47,6 @@ public class TripleExprOneOf extends TripleExpression {
     }
 
     @Override
-    public boolean testSemanticAction(SemAct semAct) {
-        throw new RuntimeException("TripleExprOneOf testSemanticAction not implemented: %<" + semAct.getIri() + ">%{" + semAct.getCode() + "%}");
-    }
-
-    @Override
     public void visit(TripleExprVisitor visitor) {
         visitor.visit(this);
     }

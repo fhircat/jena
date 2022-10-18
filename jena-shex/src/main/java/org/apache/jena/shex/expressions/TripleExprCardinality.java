@@ -62,11 +62,6 @@ public class TripleExprCardinality extends TripleExpression {
 
 
     @Override
-    public boolean testSemanticAction(SemAct semAct) {
-        throw new RuntimeException("TripleExprCardinality should not have a semantics action: %<" + semAct.getIri() + ">%{" + semAct.getCode() + "%}");
-    }
-
-    @Override
     public void visit(TripleExprVisitor visitor) {
         visitor.visit(this);
     }
