@@ -18,10 +18,7 @@
 
 package org.apache.jena.shex.sys;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.atlas.lib.ListUtils;
@@ -29,8 +26,17 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 class ShexValidatorImpl implements ShexValidator{
+
+    private Map<String,SemanticActionPlugin> semanticActionPluginIndex;
+
+    ShexValidatorImpl() {}
+
+    ShexValidatorImpl(Map<String,SemanticActionPlugin> semActPluginIndex) {
+        this.semanticActionPluginIndex = semActPluginIndex;
+    }
 
     /** Return the current system-wide {@code ShexValidator}. */
     public static ShexValidator get() { return SysShex.get();}

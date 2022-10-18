@@ -18,6 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
+import org.apache.jena.shex.sys.ValidationContext;
+
 import java.util.List;
 
 public abstract class TripleExpression implements ShexPrintable {
@@ -34,7 +36,7 @@ public abstract class TripleExpression implements ShexPrintable {
         this.semActs = semActs;
     }
 
-    public boolean testSemanticActions() {
+    public boolean testSemanticActions(ValidationContext v) {
         if (this.semActs == null)
             return true;
         return !this.semActs.stream().anyMatch(semAct -> {

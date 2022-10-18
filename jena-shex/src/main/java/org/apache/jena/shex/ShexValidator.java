@@ -20,7 +20,10 @@ package org.apache.jena.shex;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.sys.SysShex;
+
+import java.util.Map;
 
 public interface ShexValidator {
 

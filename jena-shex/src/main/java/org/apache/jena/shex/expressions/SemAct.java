@@ -18,13 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.lib.InternalErrorException;
-
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.jena.atlas.lib.InternalErrorException;
 
 public class SemAct {
     public final String iri;
