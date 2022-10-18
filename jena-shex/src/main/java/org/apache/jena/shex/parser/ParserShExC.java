@@ -642,7 +642,7 @@ public class ParserShExC extends LangParserBase {
 
         if (iriAndCode.startsWith("<")) {
             int iriLen = iriAndCode.indexOf('>');
-            iri = resolveQuotedIRI(iriAndCode.substring(0, iriLen), line, column);
+            iri = resolveQuotedIRI(iriAndCode.substring(0, iriLen + 1), line, column);
             code = iriAndCode.substring(iriAndCode.indexOf('{', iriLen) + 1);
         } else {
             int pnameEnd = iriAndCode.indexOf('{');

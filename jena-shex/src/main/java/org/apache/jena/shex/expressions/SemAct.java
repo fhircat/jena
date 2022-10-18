@@ -21,16 +21,24 @@ package org.apache.jena.shex.expressions;
 import java.util.Objects;
 
 public class SemAct {
-    public final String iri;
-    public final String code;
+    private final String iri;
+    private final String code;
 
     public SemAct(String iri, String code) {
         this.iri = iri;
         this.code = code;
     }
 
+    public String getIri() {
+        return iri;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
     static String semActStr(String iri, String code) {
-        return String.format("%<%s>{ %s %}", iri, code == null ? "" : code);
+        return String.format("%%<%s>{%s%%}", iri, code == null ? "" : code);
     }
 
     @Override

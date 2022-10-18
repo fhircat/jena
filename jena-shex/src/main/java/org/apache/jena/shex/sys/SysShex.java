@@ -22,6 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shex.ShexValidator;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,19 +42,25 @@ public class SysShex {
     // Node used for FOCUS in a shape map.
     public static Node focusNode = NodeFactory.createExt("|focus|");
 
-    private static Map<String, SemanticActionPlugin> semActPluginIndex = new ConcurrentHashMap<>();
+    private static Map<String, SemanticActionPlugin> semActPluginIndex;
 
     public static void registerSemActPlugin(String uri, SemanticActionPlugin plugin) {
         semActPluginIndex.put(uri, plugin);
     }
 
     // This is thread-safe.
-    private static ShexValidator systemValiditor = new ShexValidatorImpl(semActPluginIndex);
+    private static ShexValidator systemValiditor;
 
     /** Set the current system-wide {@link ShexValidator}. */
     public static void set(ShexValidator validator) { systemValiditor = validator; }
 
     public static ShexValidator get() {
         return systemValiditor;
+    }
+
+    static {
+        semActPluginIndex = new ConcurrentHashMap<>();
+        new TestSemanticActionPlugin().register();
+        systemValiditor = new ShexValidatorImpl(semActPluginIndex);
     }
 }

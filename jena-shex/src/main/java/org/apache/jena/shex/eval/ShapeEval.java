@@ -79,7 +79,7 @@ public class ShapeEval {
                 return false;
         }
 
-        b = tripleExpr.testSemanticActions(vCxt);
+        b = tripleExpr.testSemanticActions(vCxt, matchables);
         if ( ! b )
             return false;
 

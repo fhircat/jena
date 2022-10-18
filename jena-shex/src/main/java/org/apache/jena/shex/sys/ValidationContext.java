@@ -18,16 +18,16 @@
 
 package org.apache.jena.shex.sys;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 /** Context for a validation and collector of the results. */
 public class ValidationContext {
@@ -35,6 +35,7 @@ public class ValidationContext {
     private final Graph data;
     private boolean verbose = false;
     private boolean seenReportEntry = false;
+    private Map<String, SemanticActionPlugin> semActPluginIndex;
     // <data node, shape>
     private Deque<Pair<Node, ShexShape>> inProgress = new ArrayDeque<>();
 
@@ -43,16 +44,25 @@ public class ValidationContext {
 
     public static ValidationContext create(ValidationContext vCxt) {
         // Fresh ShexReport.Builder
-        return new ValidationContext(vCxt.data, vCxt.shapes, vCxt.inProgress);
+        return new ValidationContext(vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex);
     }
 
-    public ValidationContext(Graph data, ShexSchema shapes) {
-        this(data, shapes, null);
+//    public ValidationContext(Graph data, ShexSchema shapes) {
+//        this(data, shapes, null, null);
+//    }
+
+    public ValidationContext(Graph data, ShexSchema shapes, Map<String,SemanticActionPlugin> semActPluginIndex) {
+        this(data, shapes, null, semActPluginIndex);
     }
 
     private ValidationContext(Graph data, ShexSchema shapes ,Deque<Pair<Node, ShexShape>> progress) {
+        this(data, shapes, progress, null);
+    }
+
+    private ValidationContext(Graph data, ShexSchema shapes ,Deque<Pair<Node, ShexShape>> progress, Map<String,SemanticActionPlugin> semActPluginIndex) {
         this.data = data;
         this.shapes = shapes;
+        this.semActPluginIndex = semActPluginIndex;
         if ( progress != null )
             this.inProgress.addAll(progress);
     }
@@ -80,6 +90,18 @@ public class ValidationContext {
     // Return true if done or in-progress (i.e. don't walk further)
     public boolean cycle(ShexShape shape, Node data) {
         return inProgress.stream().anyMatch(p->p.equalElts(data, shape));
+    }
+
+    public boolean dispatchSemanticAction(TripleExpression te, Set<Triple> matchables) {
+        return !te.getSemActs().stream().anyMatch(semAct -> {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if(semActPlugin != null) {
+                if (!semActPlugin.evaluate(semAct, te, matchables))
+                     return true;
+            }
+            return false;
+        });
+
     }
 
     public void finishValidate(ShexShape shape, Node data) {

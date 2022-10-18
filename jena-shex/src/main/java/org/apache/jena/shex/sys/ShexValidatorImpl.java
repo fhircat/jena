@@ -38,6 +38,11 @@ class ShexValidatorImpl implements ShexValidator{
         this.semanticActionPluginIndex = semActPluginIndex;
     }
 
+    private static ShexValidator shexValidator = new ShexValidatorImpl();
+    public static ShexValidator lightlyUsedInstance() {
+        return shexValidator;
+    }
+
     /** Return the current system-wide {@code ShexValidator}. */
     public static ShexValidator get() { return SysShex.get();}
 
@@ -48,7 +53,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(shapeMap);
         shapes = shapes.importsClosure();
-        ValidationContext vCxt = new ValidationContext(dataGraph, shapes);
+        ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         List<ShexRecord> reports = new ArrayList<>();
         shapeMap.entries().forEach(mapEntry->{
             Collection<Node> focusNodes = focusNodes(dataGraph, mapEntry);
@@ -73,7 +78,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(dataGraph);
         ShexRecord entry = new ShexRecord(focus, shapeRef);
         shapes = shapes.importsClosure();
-        ValidationContext vCxt = new ValidationContext(dataGraph, shapes);
+        ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         boolean isValid = validationStep(vCxt, entry, shapeRef, focus);
         return vCxt.generateReport();
     }
@@ -87,7 +92,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(focus);
         ShexRecord entry = new ShexRecord(focus, shape.getLabel());
         shapes = shapes.importsClosure();
-        ValidationContext vCxt = new ValidationContext(dataGraph, shapes);
+        ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         boolean isValid = validationStep(vCxt, entry, entry.shapeExprLabel, focus);
         return vCxt.generateReport();
     }
@@ -99,7 +104,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(shapeMap);
         Objects.requireNonNull(focus);
         shapes = shapes.importsClosure();
-        ValidationContext vCxt = new ValidationContext(dataGraph, shapes);
+        ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         List<ShexRecord> reports = new ArrayList<>();
         shapeMap.entries().forEach(mapEntry->{
             validateOneShapeRecord(vCxt, mapEntry, focus);
