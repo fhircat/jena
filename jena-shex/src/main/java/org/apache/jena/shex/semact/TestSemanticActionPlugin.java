@@ -1,5 +1,6 @@
 package org.apache.jena.shex.semact;
 
+import org.apache.jena.base.Sys;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.TripleExpression;

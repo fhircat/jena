@@ -944,9 +944,9 @@ TOKEN [IGNORE_CASE] :
 //| <CODE             : "{" (~[ "%","\\"] | "\\" ["%","\\"] )* "%" "}" >
 
 | <CODE_BLOCK    : <PERCENT_CHAR>
-                         (" ")*
+                         (" " | "\t" | "\n" | "\r" | "\f")*
                          (<IRIref>|<PNAME_LN>|<PNAME_NS>)
-                         (" ")*
+                         (" " | "\t" | "\n" | "\r" | "\f")*
                          (  <LBRACE>
                             ( ~[ "%","\\"] | ("\\" ["%","\\"]) | <UCHAR> )*
                             <PERCENT_CHAR><RBRACE>

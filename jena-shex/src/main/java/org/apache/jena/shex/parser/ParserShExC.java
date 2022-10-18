@@ -415,7 +415,7 @@ public class ParserShExC extends LangParserBase {
     protected void finishBracketedTripleExpr(Node label, TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
         TripleExpression tripleExpr2 = tripleExpr;
         if ( cardinality != null )
-            tripleExpr2 = new TripleExprCardinality(tripleExpr, cardinality);
+            tripleExpr2 = new TripleExprCardinality(tripleExpr, cardinality, semActs);
         push(tripleExprStack, tripleExpr2);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr2);
@@ -637,20 +637,35 @@ public class ParserShExC extends LangParserBase {
     protected SemAct crackSemanticAction(String iriAndCode, int line, int column) {
         // e.g. % <http://shex.io/extensions/Test/> { print(s) %}
         // or   % ex:Test { print(s) %}
-        iriAndCode = iriAndCode.substring(1, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
-        String iri, code;
 
+        // Trim leading '%' and ws and trim trailing '%}'
+        String whitespaces = " \t\n\r\f";
+        int startOfIri = 1; // get past '%'
+        for (; whitespaces.indexOf(iriAndCode.charAt(startOfIri)) != -1; ++startOfIri)
+            ;
+        iriAndCode = iriAndCode.substring(startOfIri, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
+
+        // parse the IRI and extract the code
+        String iri, code;
         if (iriAndCode.startsWith("<")) {
+            // relative IRI
             int iriLen = iriAndCode.indexOf('>');
             iri = resolveQuotedIRI(iriAndCode.substring(0, iriLen + 1), line, column);
-            code = iriAndCode.substring(iriAndCode.indexOf('{', iriLen) + 1);
+
+            int codeDelimiter = iriAndCode.indexOf('{', iriLen);
+            code = iriAndCode.substring(codeDelimiter + 1);
         } else {
-            int pnameEnd = iriAndCode.indexOf('{');
-            int lastSpace = iriAndCode.lastIndexOf(' ', pnameEnd);
-            String pname = iriAndCode.substring(0, lastSpace == -1 ? pnameEnd : lastSpace);
+            // PNAME
+            int codeDelimiter = iriAndCode.indexOf('{');
+            int endOfLocalName = codeDelimiter - 1;
+            for (; whitespaces.indexOf(iriAndCode.charAt(endOfLocalName)) != -1; --endOfLocalName)
+                ;
+            String pname = iriAndCode.substring(0, endOfLocalName + 1);
             iri = resolvePName(pname, line, column);
-            code = iriAndCode.substring(pnameEnd);
+
+            code = iriAndCode.substring(codeDelimiter + 1);
         }
+
         return new SemAct(iri, code);
     }
 

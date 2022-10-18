@@ -1,6 +1,11 @@
+PREFIX p: <http://shex.io/extensions/>
+BASE <http://shex.io/extensions/dir/>
+
 <http://a.example/S1> {
    <http://a.example/p1> .
-     %<http://shex.io/extensions/Test/>{ print(s) %}
-     %<http://shex.io/extensions/Test/>{ fail(s) %}
+     %    p:Test\/
+     { print(s) %}  
+     %   <../Test/>
+     {fail(s)%}
      %<http://shex.io/extensions/Test/>{ print(o) %}
 }
