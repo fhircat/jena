@@ -39,6 +39,7 @@ public class ShapeExprNOT extends ShapeExpression {
     private final ShapeExpression other;
 
     public ShapeExprNOT(ShapeExpression shapeExpression) {
+        super(null);
         this.other = shapeExpression;
     }
 

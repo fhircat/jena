@@ -22,6 +22,7 @@ import java.util.*;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.eval.ShapeEval;
 import org.apache.jena.shex.sys.ValidationContext;
@@ -48,11 +49,10 @@ public class ShapeExprTripleExpr extends ShapeExpression {
     private TripleExpression tripleExpr;
     //semActs:[SemAct+]?
     //annotations:[Annotation+]?
-
     public static Builder newBuilder() { return new Builder(); }
 
-    private ShapeExprTripleExpr(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr) {
-        super();
+    private ShapeExprTripleExpr(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr, List<SemAct> semActs) {
+        super(semActs);
         this.label = label;
         if ( extras == null || extras.isEmpty() )
             this.extras = null;
@@ -164,7 +164,7 @@ public class ShapeExprTripleExpr extends ShapeExpression {
 
         public ShapeExprTripleExpr build() {
             boolean isClosed = (closed == null) ? false : closed.get();
-            return new ShapeExprTripleExpr(label, extras, isClosed, tripleExpr);
+            return new ShapeExprTripleExpr(label, extras, isClosed, tripleExpr, semActs);
         }
     }
 }

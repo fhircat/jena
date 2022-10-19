@@ -620,7 +620,7 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
   }
 
   final public void litNodeConstraint() throws ParseException {
-                             String str; Token t; int idx;
+                             String str; Token t; int idx; List<SemAct> semActs;
     idx = startLiteralNodeConstraint(token.beginLine, token.beginColumn);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LITERAL:
@@ -728,12 +728,13 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    finishLiteralNodeConstraint(idx, token.beginLine, token.beginColumn);
+    semActs = semanticActions();
+    finishLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn);
   }
 
 // Check precedence
   final public void nonLitNodeConstraint() throws ParseException {
-                                int idx;
+                                int idx; List<SemAct> semActs;
     idx = startNonLiteralNodeConstraint(token.beginLine, token.beginColumn);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case IRI:
@@ -781,7 +782,8 @@ public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    finishNonLiteralNodeConstraint(idx, token.beginLine, token.beginColumn);
+    semActs = semanticActions();
+    finishNonLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn);
   }
 
   final public void nonLiteralKind() throws ParseException {

@@ -1,8 +1,10 @@
 package org.apache.jena.shex.semact;
 
 import org.apache.jena.base.Sys;
+import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.SemAct;
+import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 
 import java.util.ArrayList;
@@ -19,7 +21,12 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     @Override
-    public boolean evaluate(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
+    public boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus) {
+        return semAct.getCode().indexOf("fail") == -1;
+    }
+
+    @Override
+    public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
         return semAct.getCode().indexOf("fail") == -1;
     }
 }

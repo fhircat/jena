@@ -26,6 +26,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
@@ -92,16 +93,26 @@ public class ValidationContext {
         return inProgress.stream().anyMatch(p->p.equalElts(data, shape));
     }
 
-    public boolean dispatchSemanticAction(TripleExpression te, Set<Triple> matchables) {
-        return !te.getSemActs().stream().anyMatch(semAct -> {
+    public boolean dispatchShapeExprSemanticAction(ShapeExpression se, Node focus) {
+        return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if(semActPlugin != null) {
-                if (!semActPlugin.evaluate(semAct, te, matchables))
+                if (!semActPlugin.evaluateShapeExpr(semAct, se, focus))
                      return true;
             }
             return false;
         });
+    }
 
+    public boolean dispatchTripleExprSemanticAction(TripleExpression te, Set<Triple> matchables) {
+        return !te.getSemActs().stream().anyMatch(semAct -> {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if(semActPlugin != null) {
+                if (!semActPlugin.evaluateTripleExpr(semAct, te, matchables))
+                    return true;
+            }
+            return false;
+        });
     }
 
     public void finishValidate(ShexShape shape, Node data) {

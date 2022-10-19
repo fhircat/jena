@@ -1,8 +1,10 @@
 package org.apache.jena.shex.semact;
 
+import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.Plugin;
 import org.apache.jena.shex.expressions.SemAct;
+import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.sys.SysShex;
 
@@ -20,5 +22,7 @@ public interface SemanticActionPlugin extends Plugin {
 
     List<String> getUris();
 
-    boolean evaluate(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples);
+    boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples);
+
+    boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus);
 }

@@ -254,7 +254,7 @@ void shapeRef() : { Token t ; Node ref; }
     { shapeReference(ref); }
 }
 
-void litNodeConstraint() : { String str; Token t; int idx; } {
+void litNodeConstraint() : { String str; Token t; int idx; List<SemAct> semActs; } {
   { idx = startLiteralNodeConstraint(token.beginLine, token.beginColumn); }
   (
     t = <LITERAL>
@@ -267,17 +267,19 @@ void litNodeConstraint() : { String str; Token t; int idx; } {
     (xsFacet())*
   | (numericFacet())+
   )
-  { finishLiteralNodeConstraint(idx, token.beginLine, token.beginColumn); }
+  semActs = semanticActions()
+  { finishLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn); }
 }
 
 // Check precedence
 
-void nonLitNodeConstraint() : { int idx; } {
+void nonLitNodeConstraint() : { int idx; List<SemAct> semActs; } {
   { idx = startNonLiteralNodeConstraint(token.beginLine, token.beginColumn); }
   (  nonLiteralKind() (stringFacet())*
   | (stringFacet())+
   )
-  { finishNonLiteralNodeConstraint(idx, token.beginLine, token.beginColumn); }
+  semActs = semanticActions()
+  { finishNonLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn); }
 }
 
 void nonLiteralKind() : { Token t; }

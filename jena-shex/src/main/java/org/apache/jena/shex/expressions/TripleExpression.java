@@ -42,14 +42,14 @@ public abstract class TripleExpression implements ShexPrintable {
         return semActs;
     }
 
-    public void setSemActs(List<SemAct> semActs) {
-        this.semActs = semActs;
-    }
+//    public void setSemActs(List<SemAct> semActs) {
+//        this.semActs = semActs;
+//    }
 
     public boolean testSemanticActions(ValidationContext v, Set<Triple> matchables) {
         if (this.semActs == null)
             return true;
-        return v.dispatchSemanticAction(this, matchables);
+        return v.dispatchTripleExprSemanticAction(this, matchables);
     }
 
     public abstract void visit(TripleExprVisitor visitor);

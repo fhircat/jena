@@ -31,6 +31,7 @@ public class ShapeExprAtom extends ShapeExpression {
     private final ShapeExpression other;
 
     public ShapeExprAtom(ShapeExpression other) {
+        super(null);
         this.other = other;
     }
 

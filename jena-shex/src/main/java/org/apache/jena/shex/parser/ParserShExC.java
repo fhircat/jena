@@ -453,9 +453,9 @@ public class ParserShExC extends LangParserBase {
         return startShapeOp();
     }
 
-    protected void finishLiteralNodeConstraint(int idx, int line, int column) {
+    protected void finishLiteralNodeConstraint(List<SemAct> semActs, int idx, int line, int column) {
         finishShapeOpNoAction("LiteralNodeConstraint", idx);
-        finishNodeConstraint();
+        finishNodeConstraint(semActs);
         finish("LiteralNodeConstraint");
     }
 
@@ -465,9 +465,9 @@ public class ParserShExC extends LangParserBase {
         return startShapeOp();
     }
 
-    protected void finishNonLiteralNodeConstraint(int idx, int line, int column) {
+    protected void finishNonLiteralNodeConstraint(List<SemAct> semActs, int idx, int line, int column) {
         finishShapeOpNoAction("NonLiteralNodeConstraint", idx);
-        finishNodeConstraint();
+        finishNodeConstraint(semActs);
         finish("NonLiteralNodeConstraint");
     }
 
@@ -475,10 +475,10 @@ public class ParserShExC extends LangParserBase {
 
     private void startNodeConstraint() { }
 
-    private void finishNodeConstraint() {
+    private void finishNodeConstraint(List<SemAct> semActs) {
         NodeConstraint nodeConstraint = new NodeConstraint(accumulator);
         accumulator.clear();
-        ShapeExpression shExpr = new ShapeNodeConstraint(nodeConstraint);
+        ShapeExpression shExpr = new ShapeNodeConstraint(nodeConstraint, semActs);
         push(shapeExprStack, shExpr);
     }
 
