@@ -38,7 +38,16 @@ public class TestManifest {
     
     /** <p>The namespace of the vocabulary as a resource</p> */
     public static final Resource NAMESPACE = m_model.createResource( NS );
-    
+
+    /** <p>The test statusThe expected output of semantic actions</p> */
+    public static final Property extensionResults = m_model.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#extensionResults" );
+
+    /** <p>The test statusThe expected output of semantic actions</p> */
+    public static final Property extension = m_model.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#extension" );
+
+    /** <p>The test statusThe expected output of semantic actions</p> */
+    public static final Property prints = m_model.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#prints" );
+
     /** <p>The test statusThe expected outcome</p> */
     public static final Property result = m_model.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#result" );
     

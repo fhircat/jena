@@ -24,13 +24,21 @@ import org.apache.jena.arq.junit.manifest.ManifestEntry;
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.lib.IRILib;
 import org.apache.jena.atlas.lib.InternalErrorException;
+import org.apache.jena.atlas.lib.tuple.Tuple;
+import org.apache.jena.base.Sys;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 import org.apache.jena.shex.sys.ShexLib;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /** A Shex validation test. Created by {@link RunnerShexValidation}.  */
 public class ShexValidationTest implements Runnable {
@@ -46,6 +54,7 @@ public class ShexValidationTest implements Runnable {
     private final ShapeMap shapeMap;
     private final boolean positiveTest;
     private final boolean verbose = false;
+    private List<Tuple> extensionResults;
 
     enum TestType{ ShapeFocus, StartFocus, ShapeMap }
 
@@ -118,16 +127,18 @@ public class ShexValidationTest implements Runnable {
             if ( ShexTests.dumpTest )
                 describeTest();
             ShexReport report;
+            TestSemanticActionPlugin p = new TestSemanticActionPlugin();
+            List<SemanticActionPlugin> semanticActionPlugins = Collections.singletonList(p);
             switch (this.testType) {
                 case ShapeFocus :
-                    report = ShexValidator.get().validate(graph, shapes, shape, focus);
+                    report = ShexValidator.getNew(semanticActionPlugins).validate(graph, shapes, shape, focus);
                     break;
                 case ShapeMap :
-                    report = ShexValidator.get().validate(graph, shapes, shapeMap);
+                    report = ShexValidator.getNew(semanticActionPlugins).validate(graph, shapes, shapeMap);
                     break;
                 case StartFocus : {
                     ShexShape startShape = shapes.getStart();
-                    report = ShexValidator.get().validate(graph, shapes, startShape, focus);
+                    report = ShexValidator.getNew(semanticActionPlugins).validate(graph, shapes, startShape, focus);
                     break;
                 }
                 default:
@@ -138,6 +149,12 @@ public class ShexValidationTest implements Runnable {
             if ( !b ) {
                 if ( ! ShexTests.dumpTest )
                     describeTest();
+            }
+            if (extensionResults != null) {
+                Collection<String> output = p.getOut();
+                output.forEach(s -> {
+                    System.out.println(s);
+                });
             }
             assertEquals(entry.getName(), positiveTest, report.conforms());
         } catch (java.lang.AssertionError ex) {

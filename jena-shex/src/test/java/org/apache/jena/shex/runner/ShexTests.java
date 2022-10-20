@@ -18,23 +18,25 @@
 
 package org.apache.jena.shex.runner;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.jena.arq.junit.manifest.ManifestEntry;
 import org.apache.jena.arq.junit.manifest.Prefix;
 import org.apache.jena.arq.junit.runners.Label;
 import org.apache.jena.atlas.lib.FileOps;
+import org.apache.jena.atlas.lib.Pair;
+import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.logging.Log;
 import org.apache.jena.atlas.web.TypedInputStream;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.system.stream.Locator;
 import org.apache.jena.riot.system.stream.LocatorFile;
 import org.apache.jena.riot.system.stream.StreamManager;
 import org.apache.jena.shex.expressions.Sx2;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.TestManifest;
 
 public class ShexTests {
     static boolean VERBOSE = false;
@@ -304,6 +306,28 @@ public class ShexTests {
                     System.err.println(entry.getEntry().getLocalName());
                     return null;
                 }
+            }
+
+            Resource extensionResults = entry.getExtensionResults();
+            if (extensionResults != null) {
+                List<Pair<Resource, String>> pairs = new ArrayList<>();
+                StmtIterator listIter = extensionResults.listProperties(TestManifest.extensionResults);
+                for (; listIter.hasNext();)
+                {
+                    //List head
+                    Resource listItem = listIter.nextStatement().getResource();
+                    for (; !listItem.equals(RDF.nil);)
+                    {
+                        Resource pair = listItem.getRequiredProperty(RDF.first).getResource();
+                        Resource extension = getResource(pair, TestManifest.extension);
+                        String prints = getLiteral(pair, TestManifest.prints) ;
+                        Pair<Resource, String> pair = new Pair<>(extension, prints);
+                        pairs.add(pair);
+                        // Move to next list item
+                        listItem = listItem.getRequiredProperty(RDF.rest).getResource();
+                    }
+                }
+                listIter.close();
             }
 
             // Unknown.

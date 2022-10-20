@@ -20,21 +20,29 @@ package org.apache.jena.arq.junit.manifest;
 
 import org.apache.jena.rdf.model.Resource;
 
+import java.util.Collections;
+
 public class ManifestEntry {
     private final Manifest manifest;
     private final Resource entry;
     private final String name;
     private final Resource testType;
     private final Resource action;
+    private final Resource extensionResults;
     private final Resource result;
 
-    public ManifestEntry(Manifest manifest, Resource entry, String name, Resource testType, Resource action, Resource result) {
+    private ManifestEntry(Manifest manifest, Resource entry, String name, Resource testType, Resource action, Resource result) {
+        this(manifest, entry, name, testType, action, null, result);
+    }
+
+    public ManifestEntry(Manifest manifest, Resource entry, String name, Resource testType, Resource action, Resource extensionResults, Resource result) {
         super();
         this.manifest = manifest;
         this.entry = entry;
         this.name = name;
         this.testType = testType;
         this.action = action;
+        this.extensionResults = extensionResults;
         this.result = result;
     }
 
@@ -60,6 +68,10 @@ public class ManifestEntry {
 
     public Resource getAction() {
         return action;
+    }
+
+    public Resource getExtensionResults() {
+        return extensionResults;
     }
 
     public Resource getResult() {
