@@ -28,9 +28,7 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.logging.Log;
 import org.apache.jena.atlas.web.TypedInputStream;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.system.stream.Locator;
 import org.apache.jena.riot.system.stream.LocatorFile;
 import org.apache.jena.riot.system.stream.StreamManager;
@@ -312,16 +310,15 @@ public class ShexTests {
             if (extensionResults != null) {
                 List<Pair<Resource, String>> pairs = new ArrayList<>();
                 StmtIterator listIter = extensionResults.listProperties(TestManifest.extensionResults);
-                for (; listIter.hasNext();)
-                {
+                while (listIter.hasNext()) {
                     //List head
                     Resource listItem = listIter.nextStatement().getResource();
-                    for (; !listItem.equals(RDF.nil);)
-                    {
-                        Resource pair = listItem.getRequiredProperty(RDF.first).getResource();
-                        Resource extension = getResource(pair, TestManifest.extension);
-                        String prints = getLiteral(pair, TestManifest.prints) ;
-                        Pair<Resource, String> pair = new Pair<>(extension, prints);
+                    while (!listItem.equals(RDF.nil)) {
+                        Resource extensionResult = listItem.getRequiredProperty(RDF.first).getResource(); //TODO Eric, please review. Hopefully this does the trick
+                        Resource extension = extensionResult.getProperty(TestManifest.extension).getResource();
+                        Literal prints = extensionResult.getProperty(TestManifest.prints).getLiteral();
+                        String printStr = prints.getString() ;
+                        Pair<Resource, String> pair = new Pair<>(extension, printStr);
                         pairs.add(pair);
                         // Move to next list item
                         listItem = listItem.getRequiredProperty(RDF.rest).getResource();
