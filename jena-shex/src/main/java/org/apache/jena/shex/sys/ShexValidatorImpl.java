@@ -166,7 +166,7 @@ class ShexValidatorImpl implements ShexValidator{
     // Worker.
     private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShexShape shape, Node shapeRef, Node focus) {
         // Isolate report entries.
-        ValidationContext vCxtInner = ValidationContext.create(vCxt);
+        ValidationContext vCxtInner = vCxt.create();
         vCxtInner.startValidate(shape, focus);
         boolean isValid = shape.satisfies(vCxtInner, focus);
         vCxtInner.finishValidate(shape, focus);

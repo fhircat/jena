@@ -30,12 +30,15 @@ import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
-/** Context for a validation and collector of the results. */
+/**
+ * Context for a validation and collector of the results.
+ */
 public class ValidationContext {
     private final ShexSchema shapes;
     private final Graph data;
     private boolean verbose = false;
     private boolean seenReportEntry = false;
+    private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
     // <data node, shape>
     private Deque<Pair<Node, ShexShape>> inProgress = new ArrayDeque<>();
@@ -43,29 +46,63 @@ public class ValidationContext {
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
 
+    @Deprecated
     public static ValidationContext create(ValidationContext vCxt) {
         // Fresh ShexReport.Builder
-        return new ValidationContext(vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex);
+        return new ValidationContext(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex);
+    }
+
+    /**
+     * Creates a new validation context with the current one as its parent context.
+     * Initializes the new context with the state of the parent context.
+     *
+     * @return
+     */
+    public ValidationContext create() {
+        // Fresh ShexReport.Builder
+        return new ValidationContext(this, this.data, this.shapes, this.inProgress, this.semActPluginIndex);
     }
 
 //    public ValidationContext(Graph data, ShexSchema shapes) {
 //        this(data, shapes, null, null);
 //    }
 
-    public ValidationContext(Graph data, ShexSchema shapes, Map<String,SemanticActionPlugin> semActPluginIndex) {
-        this(data, shapes, null, semActPluginIndex);
+    /**
+     * Precondition: vCxt cannot be null
+     *
+     * @param vCxt
+     */
+    private ValidationContext(ValidationContext vCxt) {
+        this(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex);
     }
 
-    private ValidationContext(Graph data, ShexSchema shapes ,Deque<Pair<Node, ShexShape>> progress) {
-        this(data, shapes, progress, null);
+    public ValidationContext(Graph data, ShexSchema shapes, Map<String, SemanticActionPlugin> semActPluginIndex) {
+        this(null, data, shapes, null, semActPluginIndex);
     }
 
-    private ValidationContext(Graph data, ShexSchema shapes ,Deque<Pair<Node, ShexShape>> progress, Map<String,SemanticActionPlugin> semActPluginIndex) {
+//    private ValidationContext(Graph data, ShexSchema shapes ,Deque<Pair<Node, ShexShape>> progress) {
+//        this(data, shapes, progress, null);
+//    }
+
+    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShexShape>> progress, Map<String, SemanticActionPlugin> semActPluginIndex) {
+        this.parentCtx = parentCtx;
         this.data = data;
         this.shapes = shapes;
         this.semActPluginIndex = semActPluginIndex;
-        if ( progress != null )
+        if (progress != null)
             this.inProgress.addAll(progress);
+    }
+
+    public ValidationContext getParent() {
+        return parentCtx;
+    }
+
+    public ValidationContext getRoot() {
+        ValidationContext parent = this.parentCtx;
+        while (parent != null) {
+            parent = this.getParent();
+        }
+        return (parent != null) ? parent : this;
     }
 
     public TripleExpression getTripleExpression(Node label) {
@@ -90,15 +127,15 @@ public class ValidationContext {
 
     // Return true if done or in-progress (i.e. don't walk further)
     public boolean cycle(ShexShape shape, Node data) {
-        return inProgress.stream().anyMatch(p->p.equalElts(data, shape));
+        return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
     }
 
     public boolean dispatchShapeExprSemanticAction(ShapeExpression se, Node focus) {
         return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
-            if(semActPlugin != null) {
+            if (semActPlugin != null) {
                 if (!semActPlugin.evaluateShapeExpr(semAct, se, focus))
-                     return true;
+                    return true;
             }
             return false;
         });
@@ -107,7 +144,7 @@ public class ValidationContext {
     public boolean dispatchTripleExprSemanticAction(TripleExpression te, Set<Triple> matchables) {
         return !te.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
-            if(semActPlugin != null) {
+            if (semActPlugin != null) {
                 if (!semActPlugin.evaluateTripleExpr(semAct, te, matchables))
                     return true;
             }
@@ -117,7 +154,7 @@ public class ValidationContext {
 
     public void finishValidate(ShexShape shape, Node data) {
         Pair<Node, ShexShape> x = inProgress.pop();
-        if ( x.equalElts(data, shape) )
+        if (x.equalElts(data, shape))
             return;
         throw new InternalErrorException("Eval stack error");
     }
@@ -125,24 +162,32 @@ public class ValidationContext {
     // In ShEx "satisfies" returns a boolean.
     //    public boolean conforms() { return validationReportBuilder.isEmpty(); }
 
-    public boolean hasEntries() { return reportBuilder.hasEntries(); }
+    public boolean hasEntries() {
+        return reportBuilder.hasEntries();
+    }
 
-    /** Update other with "this" state */
+    /**
+     * Update other with "this" state
+     */
     public void copyInto(ValidationContext other) {
-        reportBuilder.getItems().forEach(item->other.reportEntry(item));
-        reportBuilder.getReports().forEach(reportLine->other.shexReport(reportLine));
+        reportBuilder.getItems().forEach(item -> other.reportEntry(item));
+        reportBuilder.getReports().forEach(reportLine -> other.shexReport(reportLine));
     }
 
     private void shexReport(ShexRecord reportLine) {
         reportBuilder.shexReport(reportLine);
     }
 
-    /** Current state. */
+    /**
+     * Current state.
+     */
     public List<ReportItem> getReportItems() {
         return reportBuilder.getItems();
     }
 
-    /** Current state. */
+    /**
+     * Current state.
+     */
     public List<ShexRecord> getShexReportItems() {
         return reportBuilder.getReports();
     }

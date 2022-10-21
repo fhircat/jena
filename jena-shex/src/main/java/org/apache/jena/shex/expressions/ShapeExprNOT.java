@@ -45,7 +45,7 @@ public class ShapeExprNOT extends ShapeExpression {
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        ValidationContext vCxt2 = ValidationContext.create(vCxt);
+        ValidationContext vCxt2 = vCxt.create();
         boolean innerSatisfies = other.satisfies(vCxt2, data);
         if ( ! innerSatisfies )
             return true;
