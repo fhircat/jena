@@ -62,7 +62,7 @@ public class ShexTests {
         excludes.add("#shapeExternRef_fail");
 
         // ## semantic actions
-        excludes.add("#1dotCode1_pass");
+//        excludes.add("#1dotCode1_pass");
         excludes.add("#1dotNoCode1_pass");
         excludes.add("#1inversedotCode1_pass");
         excludes.add("#1dotCode3_pass");
@@ -257,6 +257,7 @@ public class ShexTests {
         }
         // -- Check
 
+        List<Pair<Resource, String>> pairs = extractExtensionResults(entry);
         if ( testType.equals(ShexT.cValidationTest) || testType.equals(ShexT.cValidationFailure) ) {
             boolean faiureTest = testType.equals(ShexT.cValidationFailure);
 
@@ -306,27 +307,6 @@ public class ShexTests {
                 }
             }
 
-            Resource extensionResults = entry.getExtensionResults();
-            if (extensionResults != null) {
-                List<Pair<Resource, String>> pairs = new ArrayList<>();
-                StmtIterator listIter = extensionResults.listProperties(TestManifest.extensionResults);
-                while (listIter.hasNext()) {
-                    //List head
-                    Resource listItem = listIter.nextStatement().getResource();
-                    while (!listItem.equals(RDF.nil)) {
-                        Resource extensionResult = listItem.getRequiredProperty(RDF.first).getResource(); //TODO Eric, please review. Hopefully this does the trick
-                        Resource extension = extensionResult.getProperty(TestManifest.extension).getResource();
-                        Literal prints = extensionResult.getProperty(TestManifest.prints).getLiteral();
-                        String printStr = prints.getString() ;
-                        Pair<Resource, String> pair = new Pair<>(extension, printStr);
-                        pairs.add(pair);
-                        // Move to next list item
-                        listItem = listItem.getRequiredProperty(RDF.rest).getResource();
-                    }
-                }
-                listIter.close();
-            }
-
             // Unknown.
             System.err.println("Unknown: "+entry.getName());
             return null;
@@ -335,6 +315,30 @@ public class ShexTests {
             Log.warn("ShexTests", "Skip unknown test type for: "+entry.getName());
             return null;
         }
+    }
+
+    private static List<Pair<Resource, String>> extractExtensionResults(ManifestEntry entry) {
+        Resource extensionResults = entry.getExtensionResults();
+        List<Pair<Resource, String>> pairs = new ArrayList<>();
+        if (extensionResults != null) {
+            StmtIterator listIter = entry.getEntry().listProperties(TestManifest.extensionResults);
+            while (listIter.hasNext()) {
+                //List head
+                Resource listItem = listIter.nextStatement().getResource();
+                while (!listItem.equals(RDF.nil)) {
+                    Resource extensionResult = listItem.getRequiredProperty(RDF.first).getResource(); //TODO Eric, please review. Hopefully this does the trick
+                    Resource extension = extensionResult.getProperty(TestManifest.extension).getResource();
+                    Literal prints = extensionResult.getProperty(TestManifest.prints).getLiteral();
+                    String printStr = prints.getString() ;
+                    Pair<Resource, String> pair = new Pair<>(extension, printStr);
+                    pairs.add(pair);
+                    // Move to next list item
+                    listItem = listItem.getRequiredProperty(RDF.rest).getResource();
+                }
+            }
+            listIter.close();
+        }
+        return pairs;
     }
 
     private static boolean runTestExclusionsInclusions(ManifestEntry entry) {
