@@ -7,6 +7,7 @@ import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 
+import javax.naming.OperationNotSupportedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,12 +27,16 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
 
     @Override
     public boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus) {
-        return semAct.getCode().indexOf("fail") == -1;
+        throw new RuntimeException("This feature is currently not supported");
     }
 
     @Override
     public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
-
-        return semAct.getCode().indexOf("fail") == -1;
+        if(semAct.getCode().indexOf("fail") >= 0) {
+            return false;
+        } else {
+            out.add(semAct.getCode());
+            return true;
+        }
     }
 }
