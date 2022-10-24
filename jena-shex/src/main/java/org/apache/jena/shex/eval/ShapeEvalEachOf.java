@@ -98,7 +98,7 @@ public
             }
             // This partition works.
             if ( success )
-                return true;
+                return eachOf.testSemanticActions(vCxt, matchables);
         }
         return false;
     }

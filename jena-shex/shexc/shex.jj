@@ -115,9 +115,9 @@ void start() : { }
     { finishStartClause(); }
 }
 
-void startActions() : {}
+void startActions() : {SemAct semAct;}
 {
-    (codeDecl())+
+    (semAct = codeDecl() { semActs(semAct, token.beginLine, token.beginColumn); })+
 }
 
 void statement() : {}
@@ -657,7 +657,7 @@ List<SemAct> semanticActions() : {
 }
 {
     // semanticAction	: '%' iri (CODE | '%') ;
-    (semAct = codeDecl() { semActs.add(semAct); })* { return semActs; }
+    (LOOKAHEAD(2)semAct = codeDecl() { semActs.add(semAct); })* { return semActs; }
 }
 
 SemAct codeDecl() : { Token t; }

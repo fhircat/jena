@@ -67,6 +67,7 @@ public class ParserShExC extends LangParserBase {
     // The distinguished start shape. This is also in the list of all shapes.
     private ShexShape startShape = null;
     private List<String> imports = null;
+    private List<SemAct> semActs = new ArrayList<>();
     private String sourceURI = null;
     private boolean explicitBase = false;
     private String baseURI = null;
@@ -141,7 +142,11 @@ public class ParserShExC extends LangParserBase {
         if (! shapeExprStack.isEmpty() )
             throw new InternalErrorException("shape expresion stack not empty");
         // last base seen.
-        return ShexSchema.shapes(sourceURI, baseURI, super.profile.getPrefixMap(), startShape, shapes, imports, tripleExprRefs);
+        return ShexSchema.shapes(sourceURI, baseURI, super.profile.getPrefixMap(), startShape, shapes, imports, semActs, tripleExprRefs);
+    }
+
+    protected void semActs(SemAct semAct, int line, int column) {
+        semActs.add(semAct);
     }
 
     protected void imports(String iri, int line, int column) {
@@ -416,6 +421,8 @@ public class ParserShExC extends LangParserBase {
         TripleExpression tripleExpr2 = tripleExpr;
         if ( cardinality != null )
             tripleExpr2 = new TripleExprCardinality(tripleExpr, cardinality, semActs);
+        else
+            tripleExpr2.setSemActs(semActs);
         push(tripleExprStack, tripleExpr2);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr2);
@@ -637,36 +644,43 @@ public class ParserShExC extends LangParserBase {
     protected SemAct crackSemanticAction(String iriAndCode, int line, int column) {
         // e.g. % <http://shex.io/extensions/Test/> { print(s) %}
         // or   % ex:Test { print(s) %}
+        // or   %<http://shex.io/extensions/Test/>%
 
         // Trim leading '%' and ws and trim trailing '%}'
         String whitespaces = " \t\n\r\f";
         int startOfIri = 1; // get past '%'
         for (; whitespaces.indexOf(iriAndCode.charAt(startOfIri)) != -1; ++startOfIri)
             ;
-        iriAndCode = iriAndCode.substring(startOfIri, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
+        // iriAndCode = iriAndCode.substring(startOfIri, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
 
         // parse the IRI and extract the code
         String iri, code;
-        if (iriAndCode.startsWith("<")) {
+        if (iriAndCode.charAt(startOfIri) == '<') {
             // relative IRI
-            int iriLen = iriAndCode.indexOf('>');
-            iri = resolveQuotedIRI(iriAndCode.substring(0, iriLen + 1), line, column);
+            int iriEnd = iriAndCode.indexOf('>');
+            iri = profile.resolveIRI(iriAndCode.substring(startOfIri + 1, iriEnd), line, column);
 
-            int codeDelimiter = iriAndCode.indexOf('{', iriLen);
-            code = iriAndCode.substring(codeDelimiter + 1);
+            int codeDelimiter = iriAndCode.indexOf('{', iriEnd);
+            code = codeDelimiter == -1
+                ? null
+                : iriAndCode.substring(codeDelimiter + 1, iriAndCode.length() - 2);
         } else {
             // PNAME
-            int codeDelimiter = iriAndCode.indexOf('{');
-            int endOfLocalName = codeDelimiter - 1;
+            int codeDelimiter = iriAndCode.indexOf('{', startOfIri);
+            int endOfLocalName = codeDelimiter == -1
+                ? iriAndCode.length()
+                : codeDelimiter - 1;
             for (; whitespaces.indexOf(iriAndCode.charAt(endOfLocalName)) != -1; --endOfLocalName)
                 ;
-            String pname = iriAndCode.substring(0, endOfLocalName + 1);
+            String pname = iriAndCode.substring(startOfIri, endOfLocalName + 1);
             iri = resolvePName(pname, line, column);
 
-            code = iriAndCode.substring(codeDelimiter + 1);
+            code = codeDelimiter == -1
+                ? null
+                : iriAndCode.substring(codeDelimiter + 1, iriAndCode.length() - 2);
         }
 
-        return new SemAct(iri, code);
+        return new SemAct(iri, EscapeStr.unescapeUnicode(code));
     }
 
     // Metacharacters ., ?, *, +, {, } (, ), [ or ].

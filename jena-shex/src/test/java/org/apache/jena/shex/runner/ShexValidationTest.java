@@ -41,6 +41,7 @@ import org.apache.jena.shex.sys.ShexLib;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** A Shex validation test. Created by {@link RunnerShexValidation}.  */
 public class ShexValidationTest implements Runnable {
@@ -56,6 +57,7 @@ public class ShexValidationTest implements Runnable {
     private final ShapeMap shapeMap;
     private final boolean positiveTest;
     private final boolean verbose = false;
+    private final List<Resource> traits;
     private List<Pair<Resource,String>> extensionResults;
 
     enum TestType{ ShapeFocus, StartFocus, ShapeMap }
@@ -120,6 +122,7 @@ public class ShexValidationTest implements Runnable {
                 : Shex.readShapeMapJson(shapeMapRef);
         this.shapes = Shex.readSchema(schema.getURI(), base);
         this.positiveTest = entry.getTestType().equals(ShexT.cValidationTest);
+        this.traits = ShexTests.extractTraits(entry);
         this.extensionResults = entry.extractExtensionResults();
     }
 
@@ -155,7 +158,7 @@ public class ShexValidationTest implements Runnable {
             }
             if (this.extensionResults != null) {
                 List<String> output = semActPlugin.getOut();
-                assertEquals(output.size(), extensionResults.size());
+                assertEquals(String.format("expected %s lines from SemAct, got %s", String.join("\n", extensionResults.stream().map(p -> p.getRight()).collect(Collectors.toList())), String.join("\n", output)), output.size(), extensionResults.size());
                 for(int i = 0; i < extensionResults.size(); i++) {
                     String expected = extensionResults.get(i).getRight();
                     String actual = output.get(i);

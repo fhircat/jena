@@ -190,7 +190,7 @@ public class Manifest
         }
     }
 
-    private static Resource getResource(Resource r, Property p)
+    public static Resource getResource(Resource r, Property p)
     {
         if ( r == null )
             return null ;

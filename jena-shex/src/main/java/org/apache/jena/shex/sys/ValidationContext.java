@@ -130,6 +130,17 @@ public class ValidationContext {
         return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
     }
 
+    public boolean dispatchStartSemanticAction(ShexSchema schema) {
+        return !schema.getSemActs().stream().anyMatch(semAct -> {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if (semActPlugin != null) {
+                if (!semActPlugin.evaluateStart(semAct, schema))
+                    return true;
+            }
+            return false;
+        });
+    }
+
     public boolean dispatchShapeExprSemanticAction(ShapeExpression se, Node focus) {
         return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());

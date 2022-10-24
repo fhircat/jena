@@ -55,10 +55,17 @@ Also class:
 
     public static final String NS = BASE_URI + "#";
 
+    // Classes
     public final static Resource cValidationTest        = ResourceFactory.createResource(NS + "ValidationTest");
     public final static Resource cValidationFailure     = ResourceFactory.createResource(NS + "ValidationFailure");
     public final static Resource cRepresentationTest    = ResourceFactory.createResource(NS + "RepresentationTest");
 
+    // Traits
+    public final static Resource tSemanticAction    = ResourceFactory.createResource(NS + "SemanticAction");
+    public final static Resource tExternalSemanticAction    = ResourceFactory.createResource(NS + "ExternalSemanticAction");
+    public final static Resource tOrderedSemanticAction    = ResourceFactory.createResource(NS + "OrderedSemanticAction");
+
+    // Properties
     public final static Property shape = ResourceFactory.createProperty(NS + "shape");
     public final static Property data = ResourceFactory.createProperty(NS + "data");
     public final static Property schema = ResourceFactory.createProperty(NS + "schema");

@@ -154,7 +154,8 @@ public class ShapeExprTripleExpr extends ShapeExpression {
         public Builder semActs(List<SemAct> semActsList) {
             if ( semActs == null )
                 semActs = new ArrayList<>();
-            this.semActs.addAll(semActsList);
+            if (semActsList != null)
+                this.semActs.addAll(semActsList);
             return this;
         }
 

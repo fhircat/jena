@@ -72,6 +72,11 @@ public class ShapeEvalTripleConstraint {
             vCxt.reportEntry(new ReportItem("Cardinality violation (max="+max+"): "+N, null));
             return false;
         }
+
+        boolean b = tripleConstraint.testSemanticActions(vCxt, matchables);
+        if ( ! b )
+            return false;
+
         return true;
     }
 }

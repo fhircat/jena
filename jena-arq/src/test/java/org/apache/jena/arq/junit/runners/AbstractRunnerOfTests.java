@@ -19,6 +19,7 @@
 package org.apache.jena.arq.junit.runners;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -156,9 +157,14 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
     }
 
     public static void prepareTests(EarlReport report, RunnerOneManifest level, Manifest manifest, Function<ManifestEntry, Runnable> maker, String prefix) {
+        String envTests = System.getenv("TESTS");
+        List<String> selectedTests = envTests == null
+                ? null
+                : Arrays.asList(envTests.split("\\s+"));
+
         manifest.entries().forEach(entry->{
-            String label = prepareTestLabel(entry, prefix);
-            Runnable runnable = label.equals("1dotCode1_pass") ? maker.apply(entry) : null;
+            String label = prepareTestLabel(entry, prefix);System.out.println("Consiering " + label);
+            Runnable runnable = (selectedTests != null && !selectedTests.contains(label)) ? null : maker.apply(entry);
             if ( runnable != null ) {
                 Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
                 level.add(r);
