@@ -55,8 +55,6 @@ public class ShexTests {
         VERBOSE = ! includes.isEmpty();
 
         // --- Exclusions - development
-        excludeTraits.add(ShexT.tExternalSemanticAction);
-        excludeTraits.add(ShexT.tOrderedSemanticAction);
 
         // # External
         excludes.add("#shapeExtern_pass");
@@ -65,12 +63,15 @@ public class ShexTests {
         excludes.add("#shapeExternRef_fail");
 
         // ## semantic actions
-////        excludes.add("#1dotCode1_pass");
+//        excludeTraits.add(ShexT.tSemanticAction);
+        excludeTraits.add(ShexT.tExternalSemanticAction);
+        excludeTraits.add(ShexT.tOrderedSemanticAction);
+//        excludes.add("#1dotCode1_pass");
 //        excludes.add("#1dotNoCode1_pass");
 //        excludes.add("#1inversedotCode1_pass");
 //        excludes.add("#1dotCode3_pass");
 //        excludes.add("#1dotNoCode3_pass");
-////        excludes.add("#1dotCode3fail_abort");
+//        excludes.add("#1dotCode3fail_abort");
 //        excludes.add("#1dotCodeWithEscapes1_pass");
 //        excludes.add("#1dotShapeCode1_pass");
 //        excludes.add("#1dotShapeNoCode1_pass");
