@@ -79,9 +79,13 @@ class ShexValidatorImpl implements ShexValidator{
         ShexRecord entry = new ShexRecord(focus, shapeRef);
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
-        boolean isValid = vCxt.dispatchStartSemanticAction(shapes);
-        if ( isValid )
+
+        boolean isValid = vCxt.dispatchStartSemanticAction(shapes, vCxt);
+        if ( !isValid )
+            report(vCxt, entry, focus, ShexStatus.nonconformant, null);
+        else
             isValid = validationStep(vCxt, entry, shapeRef, focus);
+
         return vCxt.generateReport();
     }
 

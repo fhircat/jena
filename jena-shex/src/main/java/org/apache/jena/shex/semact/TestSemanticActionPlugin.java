@@ -19,7 +19,9 @@ interface ExtractVar {
 
 public class TestSemanticActionPlugin implements SemanticActionPlugin {
     static String SemActIri = "http://shex.io/extensions/Test/";
-    static Pattern ParsePattern = Pattern.compile("^\\s*([a-zA-Z]+)\\s*\\(([a-zA-Z]+|\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\")\\)\\s*$");
+    static Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
+    //       tic Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
+    //      atic Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\( *(\\\"(?:[^\\\\\\\"]|\\\\\\\\|\\\\\"+)\\\"|[spo]) *\\) *$");
 
     @Override
     public List<String> getUris() {
@@ -52,25 +54,15 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
         String code = semAct.getCode();
         if (code == null)
             return true;
-        Matcher m = ParsePattern.matcher(code);
-        boolean passed = false;
-        if (m.find()) {
-            String fStr = m.group(1);
 
-            switch (fStr) {
-                case "print":
-                    out.add(extractor.run(m.group(2)));
-                    passed = true;
-                case "fail":
-                    // do something with the argument?
-                    break;
-                default:
-                    throw new RuntimeException(String.format("%s semantic action function %s was not 'print', or 'fail'", SemActIri, fStr));
-            }
-        } else {
+        Matcher m = ParsePattern.matcher(code);
+        if (!m.find())
             throw new RuntimeException(String.format("%s semantic action %s did not match %s", SemActIri, code, ParsePattern));
-        }
-        return passed;
+        String function = m.group(1);
+        String argument = m.group(2);
+
+        out.add(extractor.run(argument));
+        return function.equals("fail") ? false : true;
     }
 
     private static String resolveStartVar(String varName) {
