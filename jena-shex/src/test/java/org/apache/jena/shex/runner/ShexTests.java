@@ -33,7 +33,6 @@ import org.apache.jena.riot.system.stream.Locator;
 import org.apache.jena.riot.system.stream.LocatorFile;
 import org.apache.jena.riot.system.stream.StreamManager;
 import org.apache.jena.shex.expressions.Sx2;
-import org.apache.jena.vocabulary.RDF;
 
 public class ShexTests {
     static boolean VERBOSE = false;
@@ -65,7 +64,8 @@ public class ShexTests {
         // ## semantic actions
 //        excludeTraits.add(ShexT.tSemanticAction);
         excludeTraits.add(ShexT.tExternalSemanticAction);
-        excludeTraits.add(ShexT.tOrderedSemanticAction);
+//        excludeTraits.add(ShexT.tOrderedSemanticActions);
+
 //        excludes.add("#1dotCode1_pass");
 //        excludes.add("#1dotNoCode1_pass");
 //        excludes.add("#1inversedotCode1_pass");

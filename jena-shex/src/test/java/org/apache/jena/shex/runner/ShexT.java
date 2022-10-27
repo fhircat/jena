@@ -63,7 +63,7 @@ Also class:
     // Traits
     public final static Resource tSemanticAction    = ResourceFactory.createResource(NS + "SemanticAction");
     public final static Resource tExternalSemanticAction    = ResourceFactory.createResource(NS + "ExternalSemanticAction");
-    public final static Resource tOrderedSemanticAction    = ResourceFactory.createResource(NS + "OrderedSemanticAction");
+    public final static Resource tOrderedSemanticActions = ResourceFactory.createResource(NS + "OrderedSemanticActions");
 
     // Properties
     public final static Property shape = ResourceFactory.createProperty(NS + "shape");
