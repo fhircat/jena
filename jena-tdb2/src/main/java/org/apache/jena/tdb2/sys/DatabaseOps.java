@@ -35,14 +35,16 @@ import org.apache.jena.dboe.base.file.Location;
 import org.apache.jena.dboe.sys.IO_DB;
 import org.apache.jena.dboe.sys.Names;
 import org.apache.jena.dboe.transaction.txn.TransactionCoordinator;
+import org.apache.jena.query.ARQ;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.engine.optimizer.reorder.ReorderLib;
+import org.apache.jena.sparql.engine.optimizer.reorder.ReorderTransformation;
+import org.apache.jena.sparql.sse.SSE_ParseException;
 import org.apache.jena.system.Txn;
 import org.apache.jena.tdb2.TDBException;
-import org.apache.jena.tdb2.params.StoreParams;
-import org.apache.jena.tdb2.params.StoreParamsCodec;
-import org.apache.jena.tdb2.params.StoreParamsFactory;
+import org.apache.jena.tdb2.params.*;
 import org.apache.jena.tdb2.store.DatasetGraphSwitchable;
 import org.apache.jena.tdb2.store.DatasetGraphTDB;
 import org.slf4j.Logger;
@@ -68,30 +70,37 @@ public class DatabaseOps {
     private static Logger LOG = LoggerFactory.getLogger(DatabaseOps.class);
     public static final String dbPrefix     = "Data";
     public static final String SEP          = "-";
-    private static final String startCount   = "0001";
+    public static final String startCount   = "0001";
 
     private static final String BACKUPS_DIR  = "Backups";
     // Basename of the backup file. "backup_{DateTime}.nq.gz
     private static final String BACKUPS_FN   = "backup";
 
-    /** Create a fresh database - called by {@code DatabaseMgr}.
+    /**
+     * Create a fresh database - called by {@code DatabaseMgr}.
      * It is important to go via {@code DatabaseConnection} to avoid
      * duplicate {@code DatasetGraphSwitchable}s for the same location.
      */
-    /*package*/ static DatasetGraph create(Location location, StoreParams params) {
+    /*package*/ static DatasetGraph create(Location location, StoreParams params, ReorderTransformation reorderTransform) {
         // Hide implementation class.
-        return createSwitchable(location, params);
+        return createSwitchable(location, params, reorderTransform);
     }
 
-    private static DatasetGraphSwitchable createSwitchable(Location location, StoreParams appParams) {
-        if ( location.isMem() ) {
-            DatasetGraph dsg = StoreConnection.connectCreate(location).getDatasetGraph();
-            return new DatasetGraphSwitchable(null, location, dsg);
+    private static boolean warnAboutOptimizer = true;
+
+    private static DatasetGraphSwitchable createSwitchable(Location containerLocation, StoreParams appParams, ReorderTransformation appReorderTransform) {
+        if ( containerLocation.isMem() ) {
+            // A memory store is create in the container directly - compact does not apply.
+            Location storageLocation = containerLocation;
+            StoreParams params = appParams != null ? appParams : StoreParams.getDftMemStoreParams();
+            ReorderTransformation reorderTransform = (appReorderTransform != null) ? appReorderTransform : ReorderLib.fixed();
+            DatasetGraph dsg = StoreConnection.connectCreate(storageLocation, params, reorderTransform).getDatasetGraph();
+            return new DatasetGraphSwitchable(null, containerLocation, dsg);
         }
         // Exists?
-        if ( ! location.exists() )
-            throw new TDBException("No such location: "+location);
-        Path path = IO_DB.asPath(location);
+        if ( ! containerLocation.exists() )
+            throw new TDBException("No such location: "+containerLocation);
+        Path path = IO_DB.asPath(containerLocation);
         // Scan for DBs
         Path existingStorage = findLocation(path, dbPrefix);
         boolean isNewArea = (existingStorage == null);
@@ -101,30 +110,77 @@ public class DatabaseOps {
             db = path.resolve(dbPrefix+SEP+startCount);
             IOX.createDirectory(db);
         }
-        Location locationStorage = IO_DB.asLocation(db);
+        Location storageLocation = IO_DB.asLocation(db);
 
-        // Find the params (if any).
-        StoreParams switchableParams = StoreParamsCodec.read(location);
-        StoreParams storageParams    = StoreParamsCodec.read(locationStorage);
-        StoreParams locParams        = storageParams != null ? storageParams : switchableParams;
-        StoreParams dftParams =
-                //location.isMem() ? StoreParams.getMemParams() :
-                StoreParams.getDftStoreParams();
+        // ---- Find the params (if any).
+        StoreParams switchableParams = StoreParamsCodec.read(containerLocation);
+        StoreParams storageParams    = StoreParamsCodec.read(storageLocation);
+        StoreParams dftParams        = containerLocation.isMem() ? StoreParams.getDftMemStoreParams() : StoreParams.getDftStoreParams();
 
-        StoreParams params = StoreParamsFactory.decideStoreParams(location, isNewArea, appParams, switchableParams, storageParams, dftParams);
+        StoreParams params = StoreParamsFactory.decideStoreParams(null, isNewArea, appParams, switchableParams, storageParams, dftParams);
 
-//        *** Check for params in switchable
-//        *** Check for params in storage.
-        // Remove access in
+        // If new and some form of custom setup (appParams) passed in by code: write it to the container location
+        if ( isNewArea && /* !containerLocation.isMem() &&*/ switchableParams == null && storageParams == null && ! params.equals(dftParams) ) {
+            StoreParamsCodec.write(containerLocation, params);
+        }
 
-        DatasetGraphTDB dsg = StoreConnection.connectCreate(locationStorage, params).getDatasetGraphTDB();
-        DatasetGraphSwitchable appDSG = new DatasetGraphSwitchable(path, location, dsg);
+        // ---- Reorder
+        ReorderTransformation reorderTransform = appReorderTransform;
+        reorderTransform = maybeTransform(reorderTransform, storageLocation);
+        reorderTransform = maybeTransform(reorderTransform, containerLocation);
+        if ( reorderTransform == null )
+            reorderTransform = SystemTDB.getDefaultReorderTransform();
+
+        if ( reorderTransform == null && warnAboutOptimizer )
+            ARQ.getExecLogger().warn("No BGP optimizer");
+
+
+
+        DatasetGraphTDB dsg = StoreConnection.connectCreate(storageLocation, params, reorderTransform).getDatasetGraphTDB();
+        DatasetGraphSwitchable appDSG = new DatasetGraphSwitchable(path, containerLocation, dsg);
         return appDSG;
     }
 
-    private static void chooseStoreParams(Location containerLocation, Location storageLocation, StoreParams appParams) {
 
+    private static ReorderTransformation maybeTransform(ReorderTransformation reorderTransform, Location location) {
+        if ( reorderTransform != null )
+            return reorderTransform;
+        return chooseReorderTransformation(location);
+    }
 
+    private static StoreParams buildStoreParams(boolean isNewArea, Location paramsLocation, StoreParams switchableParams, StoreParams storageParams, StoreParams appParams, StoreParams dftParams) {
+        StoreParams params = null;
+        params = buildParamsHelper(params, storageParams);
+        params = buildParamsHelper(params, switchableParams);
+        params = buildParamsHelper(params, appParams);
+
+        if ( isNewArea && params != null && ! params.equals(dftParams) ) {
+            StoreParamsCodec.write(paramsLocation, params);
+        }
+
+        if ( storageParams != null )
+            params = storageParams;
+        if ( switchableParams != null ) {
+            if ( params != null  )
+                params = StoreParamsBuilder.modify(params, switchableParams);
+            else
+                params = switchableParams;
+        }
+        if ( appParams != null ) {
+            if ( params != null  )
+                params = StoreParamsBuilder.modify(params, appParams);
+            else
+                params = appParams;
+        }
+        return params;
+    }
+
+    private static StoreParams buildParamsHelper(StoreParams baseParams, StoreParams additionalParams) {
+        if ( baseParams == null )
+            return additionalParams;
+        if ( additionalParams == null )
+            return null;
+        return StoreParamsBuilder.modify(baseParams, additionalParams);
     }
 
     public static String backup(DatasetGraphSwitchable container) {
@@ -359,5 +415,35 @@ public class DatabaseOps {
         // In-order, low to high.
         List<Path> maybe = IO_DB.scanForDirByPattern(directory, namebase, SEP);
         return Util.getLastOrNull(maybe);
+    }
+
+    // Find an optimizer settings file at a locations.
+    public static ReorderTransformation chooseReorderTransformation(Location location) {
+        if ( location == null )
+            return ReorderLib.identity();
+
+        ReorderTransformation reorder = null;
+        if ( location.exists(Names.optStats) ) {
+            try {
+                reorder = ReorderLib.weighted(location.getPath(Names.optStats));
+                LOG.debug("Statistics-based BGP optimizer");
+            }
+            catch (SSE_ParseException ex) {
+                LOG.warn("Error in stats file: " + ex.getMessage());
+                reorder = null;
+            }
+        }
+
+        if ( location.exists(Names.optFixed) ) {
+            reorder = ReorderLib.fixed();
+            LOG.debug("Fixed pattern BGP optimizer");
+        }
+
+        if ( location.exists(Names.optNone) ) {
+            reorder = ReorderLib.identity();
+            LOG.debug("Optimizer explicitly turned off");
+        }
+
+        return reorder;
     }
 }

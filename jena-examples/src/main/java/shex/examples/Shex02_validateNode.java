@@ -32,7 +32,7 @@ public class Shex02_validateNode {
 
     public static void main(String ...args) {
         String SHAPES = "examples/schema.shex";
-        String SHAPES_MAP = "examples/shape-map.shexmap";
+        String SHAPES_MAP = "examples/shape-map.smap";
         String DATA = "examples/data.ttl";
 
         System.out.println("Read data");

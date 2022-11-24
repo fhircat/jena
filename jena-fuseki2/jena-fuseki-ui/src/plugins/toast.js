@@ -24,7 +24,7 @@ import Toast from '@/components/Toast'
 export default {
   install (vm) {
     // Add the global $toast object.
-    vm.prototype.$toast = {
+    vm.config.globalProperties.$toast = {
       error (message, options = {}) {
         this.send(message, 'danger', options)
       },
@@ -32,7 +32,7 @@ export default {
         this.send(message, 'primary', options)
       },
       send (message, type, options) {
-        BUS.$emit('toast', {
+        BUS.emit('toast', {
           message,
           type,
           options
