@@ -122,10 +122,9 @@ public class Manifest
                     Resource entry = listItem.getRequiredProperty(RDF.first).getResource();
                     String testName = getLiteral(entry, TestManifest.name) ;
                     Resource action = getResource(entry, TestManifest.action) ;
-                    Resource extensionResults = getResource(entry, TestManifest.extensionResults);
                     Resource result = getResource(entry, TestManifest.result) ;
                     Resource testType = getResource(entry, RDF.type);
-                    ManifestEntry manifestEntry = new ManifestEntry(this, entry, testName, testType, action, extensionResults, result);
+                    ManifestEntry manifestEntry = new ManifestEntry(this, entry, testName, testType, action, result);
                     entries.add(manifestEntry);
                     // Move to next list item
                     listItem = listItem.getRequiredProperty(RDF.rest).getResource();

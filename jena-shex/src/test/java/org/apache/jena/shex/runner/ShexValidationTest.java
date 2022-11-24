@@ -123,7 +123,7 @@ public class ShexValidationTest implements Runnable {
         this.shapes = Shex.readSchema(schema.getURI(), base);
         this.positiveTest = entry.getTestType().equals(ShexT.cValidationTest);
         this.traits = ShexTests.extractTraits(entry);
-        this.extensionResults = entry.extractExtensionResults();
+        this.extensionResults = ShexTests.extractExtensionResults(entry);
     }
 
     @Override

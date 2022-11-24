@@ -26,6 +26,7 @@ import org.apache.jena.arq.junit.manifest.ManifestEntry;
 import org.apache.jena.arq.junit.manifest.Prefix;
 import org.apache.jena.arq.junit.runners.Label;
 import org.apache.jena.atlas.lib.FileOps;
+import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.atlas.logging.Log;
 import org.apache.jena.atlas.web.TypedInputStream;
 import org.apache.jena.rdf.model.*;
@@ -33,6 +34,7 @@ import org.apache.jena.riot.system.stream.Locator;
 import org.apache.jena.riot.system.stream.LocatorFile;
 import org.apache.jena.riot.system.stream.StreamManager;
 import org.apache.jena.shex.expressions.Sx2;
+import org.apache.jena.vocabulary.RDF;
 
 public class ShexTests {
     static boolean VERBOSE = false;
@@ -62,27 +64,9 @@ public class ShexTests {
         excludes.add("#shapeExternRef_fail");
 
         // ## semantic actions
-//        excludeTraits.add(ShexT.tSemanticAction);
-        excludeTraits.add(ShexT.tExternalSemanticAction);
-//        excludeTraits.add(ShexT.tOrderedSemanticActions);
-
-//        excludes.add("#1dotCode1_pass");
-//        excludes.add("#1dotNoCode1_pass");
-//        excludes.add("#1inversedotCode1_pass");
-//        excludes.add("#1dotCode3_pass");
-//        excludes.add("#1dotNoCode3_pass");
-//        excludes.add("#1dotCode3fail_abort");
-//        excludes.add("#1dotCodeWithEscapes1_pass");
-//        excludes.add("#1dotShapeCode1_pass");
-//        excludes.add("#1dotShapeNoCode1_pass");
-//        excludes.add("#open3EachdotcloseCode1-p1p2p3");
-//        excludes.add("#startCode1_pass");
-//        excludes.add("#startNoCode1_pass");
-//        excludes.add("#startCode1fail_abort");
-//        excludes.add("#startCode1startRef_pass");
-//        excludes.add("#startCode1startReffail_abort");
-//        excludes.add("#startCode3_pass");
-//        excludes.add("#startCode3fail_abort");
+        // SemanticAction trait supported
+        // OrderedSemanticActions trait supported
+        excludeTraits.add(ShexT.tExternalSemanticAction); // add external parser
 
         // ## annotations + semantic actions
         excludes.add("#open3Eachdotclosecard23Annot3Code2-p1p2p3X3");
@@ -350,6 +334,30 @@ public class ShexTests {
             }
         }
         return true;
+    }
+
+    public static List<Pair<Resource, String>> extractExtensionResults(ManifestEntry entry) {
+        Resource extensionResults = Manifest.getResource(entry.getEntry(), ShexT.extensionResults) ;
+        if (extensionResults == null)
+            return null;
+        List<Pair<Resource, String>> pairs = new ArrayList<>();
+        StmtIterator listIter = entry.getEntry().listProperties(ShexT.extensionResults);
+        while (listIter.hasNext()) {
+            //List head
+            Resource listItem = listIter.nextStatement().getResource();
+            while (!listItem.equals(RDF.nil)) {
+                Resource extensionResult = listItem.getRequiredProperty(RDF.first).getResource(); //TODO Eric, please review. Hopefully this does the trick
+                Resource extension = extensionResult.getProperty(ShexT.extension).getResource();
+                Literal prints = extensionResult.getProperty(ShexT.prints).getLiteral();
+                String printStr = prints.getString() ;
+                Pair<Resource, String> pair = new Pair<>(extension, printStr);
+                pairs.add(pair);
+                // Move to next list item
+                listItem = listItem.getRequiredProperty(RDF.rest).getResource();
+            }
+        }
+        listIter.close();
+        return pairs;
     }
 
     // [shex] Migrate
