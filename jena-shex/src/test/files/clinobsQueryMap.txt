@@ -1,0 +1,2 @@
+{FOCUS :status _}@START,
+<Patient2>@!<ObservationShape>
