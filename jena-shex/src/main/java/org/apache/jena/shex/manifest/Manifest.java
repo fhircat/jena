@@ -3,12 +3,16 @@ package org.apache.jena.shex.manifest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Manifest {
-    List<ValidationEntry> entries = new ArrayList<>();
+abstract class Manifest<T extends ManifestEntry> {
+    List<T> entries = new ArrayList<T>();
 
-    public ValidationEntry newEntry () {
-        ValidationEntry ret = new ValidationEntry();
-        entries.add(ret);
-        return ret;
+    abstract public T newEntry ();
+
+    public List<T> getEntries() {
+        return entries;
+    }
+
+    public void setEntries(List<T> entries) {
+        this.entries = entries;
     }
 }

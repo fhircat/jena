@@ -45,7 +45,7 @@ public class ManifestReader {
         }
 
         private enum State {
-            start, x, list, key, value, done
+            start, entries, list, key, value, done
         };
         State state = State.start;
         String lastString;
@@ -72,19 +72,19 @@ public class ManifestReader {
 
         @Override
         public void startParse(long currLine, long currCol) {
-            // System.out.println("startParse" + currLine + ":" + currCol);
+            System.out.println("startParse" + currLine + ":" + currCol);
         }
 
         @Override
         public void finishParse(long currLine, long currCol) {
-            // System.out.println("finishParse" + currLine + ":" + currCol);
+            System.out.println("finishParse" + currLine + ":" + currCol);
         }
 
         @Override
         public void startObject(long currLine, long currCol) {
-            // System.out.println("startObject" + currLine + ":" + currCol);
+            System.out.println("startObject" + currLine + ":" + currCol);
             switch (state) {
-                case start: state = State.x; break;
+                case start: state = State.entries; break;
                 case list: ValidationEntry entry = manifest.newEntry(); curEntry = entry; state = State.key; break;
                 default: assert(false);
             }
@@ -92,7 +92,7 @@ public class ManifestReader {
 
         @Override
         public void finishObject(long currLine, long currCol) {
-            // System.out.println("finishObject" + currLine + ":" + currCol);
+            System.out.println("finishObject" + currLine + ":" + currCol);
             switch (state) {
                 case key: state = State.list; break;
                 case done: break;
@@ -102,14 +102,14 @@ public class ManifestReader {
 
         @Override
         public void startPair(long currLine, long currCol) {
-            // System.out.println("startPair" + currLine + ":" + currCol);
+            System.out.println("startPair" + currLine + ":" + currCol);
         }
 
         @Override
         public void keyPair(long currLine, long currCol) {
-            // System.out.println("keyPair" + currLine + ":" + currCol);
+            System.out.println("keyPair" + currLine + ":" + currCol);
             switch (state) {
-                case x: assert(lastString.equals("x")); state = State.list; break;
+                case entries: assert(lastString.equals("entries")); state = State.list; break;
                 case start: break;
                 case list: throw new Error("");
                 case key: lastKey = lastString; state = State.value; break;
@@ -118,7 +118,7 @@ public class ManifestReader {
 
         @Override
         public void finishPair(long currLine, long currCol) {
-            // System.out.println("finishPair" + currLine + ":" + currCol);
+            System.out.println("finishPair" + currLine + ":" + currCol);
             if (state == State.done) return;
             assert(state == State.value);
             switch (lastKey) {
@@ -137,50 +137,50 @@ public class ManifestReader {
 
         @Override
         public void startArray(long currLine, long currCol) {
-            // System.out.println("startArray" + currLine + ":" + currCol);
+            System.out.println("startArray" + currLine + ":" + currCol);
             assert(state == State.list);
         }
 
         @Override
         public void element(long currLine, long currCol) {
-            // System.out.println("element" + currLine + ":" + currCol);
+            System.out.println("element" + currLine + ":" + currCol);
         }
 
         @Override
         public void finishArray(long currLine, long currCol) {
-            // System.out.println("finishArray" + currLine + ":" + currCol);
+            System.out.println("finishArray" + currLine + ":" + currCol);
             state = State.done;
         }
 
         @Override
         public void valueString(String image, long currLine, long currCol) {
-            // System.out.println("valueString" + image + ":" + currLine + ":" + currCol);
+            System.out.println("valueString" + image + ":" + currLine + ":" + currCol);
             lastString = image;
         }
 
         @Override
         public void valueInteger(String image, long currLine, long currCol) {
-            // System.out.println("valueInteger" + image + ":" + currLine + ":" + currCol);
+            System.out.println("valueInteger" + image + ":" + currLine + ":" + currCol);
         }
 
         @Override
         public void valueDouble(String image, long currLine, long currCol) {
-            // System.out.println("valueDouble" + image + ":" + currLine + ":" + currCol);
+            System.out.println("valueDouble" + image + ":" + currLine + ":" + currCol);
         }
 
         @Override
         public void valueBoolean(boolean b, long currLine, long currCol) {
-            // System.out.println("valueBoolean" + b + ":" + currLine + ":" + currCol);
+            System.out.println("valueBoolean" + b + ":" + currLine + ":" + currCol);
         }
 
         @Override
         public void valueNull(long currLine, long currCol) {
-            // System.out.println("valueNull" + currLine + ":" + currCol);
+            System.out.println("valueNull" + currLine + ":" + currCol);
         }
 
         @Override
         public void valueDecimal(String image, long currLine, long currCol) {
-            // System.out.println("valueDecimal" + image + ":" + currLine + ":" + currCol);
+            System.out.println("valueDecimal" + image + ":" + currLine + ":" + currCol);
         }
     }
 }
