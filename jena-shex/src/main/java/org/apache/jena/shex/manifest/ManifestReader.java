@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ManifestReader {
     public static Manifest test (Path path) {
         ManifestReader mr = new ManifestReader();
-        Manifest red = mr.read(path);
+        ValidationManifest manifest = new ValidationManifest();
+        Manifest red = mr.read(path,manifest);
         System.out.println(red);
         return red;
     }
@@ -25,8 +28,8 @@ public class ManifestReader {
         return 999;
     }
 
-    public Manifest read (Path path) {
-        ManifestHandler manifestHandler = new ManifestHandler(path.getParent().toString());
+    public Manifest read (Path path, Manifest manifest) {
+        ManifestHandler manifestHandler = new ManifestHandler(path.getParent().toString(), manifest);
         try {
             jsonParser.parse(new FileReader(path.toString()), manifestHandler);
             return manifestHandler.getManifest();
@@ -35,12 +38,14 @@ public class ManifestReader {
         }
     }
 
-    private static class ManifestHandler implements JSONHandler {
+    private static class ManifestHandler<T extends Manifest> implements JSONHandler {
         private final String base;
-        Manifest manifest = new Manifest();
-        ValidationEntry curEntry;
+        private T manifest;
+        ManifestEntry curEntry;
 
-        public ManifestHandler(String base) {
+        private Map<String,String> curEntryState;
+
+        public ManifestHandler(String base, T manifest) {
             this.base = base;
         }
 
@@ -51,7 +56,7 @@ public class ManifestReader {
         String lastString;
         String lastKey;
 
-        public Manifest getManifest() {
+        public T getManifest() {
             return manifest;
         }
 
@@ -85,7 +90,7 @@ public class ManifestReader {
             System.out.println("startObject" + currLine + ":" + currCol);
             switch (state) {
                 case start: state = State.entries; break;
-                case list: ValidationEntry entry = manifest.newEntry(); curEntry = entry; state = State.key; break;
+                case list: curEntryState = new HashMap<>(); state = State.key; break;
                 default: assert(false);
             }
         }
@@ -93,6 +98,7 @@ public class ManifestReader {
         @Override
         public void finishObject(long currLine, long currCol) {
             System.out.println("finishObject" + currLine + ":" + currCol);
+            curEntry = manifest.newEntry(curEntryState);
             switch (state) {
                 case key: state = State.list; break;
                 case done: break;
@@ -121,17 +127,7 @@ public class ManifestReader {
             System.out.println("finishPair" + currLine + ":" + currCol);
             if (state == State.done) return;
             assert(state == State.value);
-            switch (lastKey) {
-                case "schemaLabel": curEntry.schemaLabel = lastString; break;
-                case "schema": curEntry.schema = lastString; break;
-                case "schemaURL": curEntry.schema = readResource(lastString); break;
-                case "dataLabel": curEntry.dataLabel = lastString; break;
-                case "data": curEntry.data = lastString; break;
-                case "dataURL": curEntry.data = readResource(lastString); break;
-                case "queryMap": curEntry.queryMap = lastString; break;
-                case "queryMapURL": curEntry.queryMap = readResource(lastString); break;
-                case "status": curEntry.status = lastString; break;
-            }
+            curEntryState.put(lastKey, lastString);
             state = State.key;
         }
 
