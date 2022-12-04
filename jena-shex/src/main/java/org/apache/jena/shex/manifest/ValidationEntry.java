@@ -4,11 +4,8 @@ import java.util.Map;
 
 public class ValidationEntry extends ManifestEntry {
 
-    public static ValidationEntry newEntry() {
-        return new ValidationEntry();
-    }
     public static ValidationEntry newEntry(Map<String,SourcedString> nvps) {
-        ValidationEntry validationEntry = newEntry();
+        ValidationEntry validationEntry = new ValidationEntry();
         validationEntry.configureState(nvps);
         return validationEntry;
     }

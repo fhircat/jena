@@ -32,7 +32,9 @@ public class ManifestReader {
         private Map<String,SourcedString> curEntryState;
         private String lead = "";
 
-        protected void log(String s) { System.out.println(lead + s); }
+        protected void log(String s) {
+//            System.out.println(lead + s);
+        }
         protected void enter(String s) { log(s); lead = lead + "· "; }
         protected void level(String s) { log(s); }
         protected void exit(String s) { lead = lead.substring(0, lead.length() - 2); log(s); }
@@ -55,8 +57,8 @@ public class ManifestReader {
 
         /**
          * resolve string relative against base and read it;
-         * @param rel
-         * @return
+         * @param path
+         * @return contents of resource
          */
         private String readResource (Path path) {
             try {

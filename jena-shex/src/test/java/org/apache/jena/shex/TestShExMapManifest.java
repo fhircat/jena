@@ -19,26 +19,43 @@ package org.apache.jena.shex;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.jena.shex.manifest.ManifestReader;
-import org.apache.jena.shex.manifest.ManifestWriter;
-import org.apache.jena.shex.manifest.ValidationManifest;
+import org.apache.jena.shex.manifest.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.Map;
 
 public final class TestShExMapManifest {
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
         String base = "./src/test/files";
-        Path manifestPath = Path.of("./src/test/files", "ShExMap-manifest.json");
+
         ValidationManifest manifest = new ValidationManifest();
-        new ManifestReader().read(Path.of(base, "ShExMap-manifest.json"), manifest);
+        new ManifestReader().read(Path.of(base, "Validation-manifest.json"), manifest);
         OutputStream out = new ByteArrayOutputStream();
         new ManifestWriter().write(out, manifest);
         System.out.println(out.toString());
+
+        Manifest<ManifestEntry> hetMan = new Manifest<ManifestEntry>() {
+            @Override
+            public ManifestEntry newEntry(Map<String, SourcedString> nvps) {
+                ManifestEntry newEntry;
+                if (nvps.containsKey(ShExMapEntry.KEY_OUTPUT_SCHEMA))
+                    newEntry = ShExMapEntry.newEntry(nvps);
+                else
+                    newEntry = ValidationEntry.newEntry(nvps);
+                addEntry(newEntry);
+                return newEntry;
+            }
+        };
+        new ManifestReader().read(Path.of(base, "ShExMap-manifest.json"), hetMan);
+        OutputStream hetOut = new ByteArrayOutputStream();
+        new ManifestWriter().write(hetOut, hetMan);
+        System.out.println(hetOut.toString());
+
         suite.addTest(new ShExMapTest(1, 1));
         suite.addTest(new ShExMapTest(2, 2));
         suite.addTest(new ShExMapTest(2, 1)); // huh, for some reason, 2 != 1
