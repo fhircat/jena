@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.shex.manifest.ManifestReader;
 import org.apache.jena.shex.manifest.Manifest;
+import org.apache.jena.shex.manifest.ValidationManifest;
 
 import java.nio.file.Path;
 
@@ -30,8 +31,8 @@ public final class TestShExMapManifest {
         TestSuite suite = new TestSuite();
         String base = "./src/test/files";
         Path manifestPath = Path.of("./src/test/files", "ShExMap-manifest.json");
-        int i = ManifestReader.getI();
-        Manifest manifest = ManifestReader.test(manifestPath);// new ManifestReader().read(Path.of(base, "ShExMap-manifest.json"));
+        ValidationManifest manifest = new ValidationManifest();
+        new ManifestReader().read(Path.of(base, "ShExMap-manifest.json"), manifest);
         System.out.println(manifest);
         suite.addTest(new ShExMapTest(1, 1));
         suite.addTest(new ShExMapTest(2, 2));
