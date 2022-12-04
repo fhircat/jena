@@ -84,7 +84,6 @@ public class ManifestReader {
         public void startObject(long currLine, long currCol) {
             enter("startObject(" + currLine + ", " + currCol + ")");
             switch (state) {
-                case start: state = State.entries; break;
                 case list: curEntryState = new HashMap<>(); state = State.key; break;
                 default: assert(false);
             }
@@ -109,10 +108,8 @@ public class ManifestReader {
         public void keyPair(long currLine, long currCol) {
             level("keyPair(" + currLine + ", " + currCol + ")");
             switch (state) {
-                case entries: assert(lastString.equals("entries")); state = State.list; break;
-                case start: break;
-                case list: throw new Error("");
                 case key: lastKey = lastString; state = State.value; break;
+                default: assert(false);
             }
         }
 
@@ -135,7 +132,10 @@ public class ManifestReader {
         @Override
         public void startArray(long currLine, long currCol) {
             enter("startArray(" + currLine + ", " + currCol + ")");
-            assert(state == State.list);
+            switch (state) {
+                case start: state = State.list; break;
+                default: assert(false);
+            }
         }
 
         @Override
