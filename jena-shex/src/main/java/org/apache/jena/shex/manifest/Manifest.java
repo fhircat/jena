@@ -9,7 +9,7 @@ public abstract class Manifest<T extends ManifestEntry> {
 
     abstract public T newEntry ();
 
-    abstract public T newEntry (Map<String,String> nvps);
+    abstract public T newEntry (Map<String, SourcedString> nvps);
 
     public List<T> getEntries() {
         return entries;

@@ -30,7 +30,7 @@ public class ManifestReader {
         private final String base;
         private T manifest;
         ManifestEntry curEntry;
-        private Map<String,String> curEntryState;
+        private Map<String,SourcedString> curEntryState;
         private String lead = "";
 
         protected void log(String s) { System.out.println(lead + s); }
@@ -121,7 +121,10 @@ public class ManifestReader {
             exit("finishPair(" + currLine + ", " + currCol + ")");
             if (state == State.done) return;
             assert(state == State.value);
-            curEntryState.put(lastKey, lastString);
+            if (lastKey.endsWith("URL")) {
+                curEntryState.put(lastKey, new SourcedString(lastString, readResource(lastString)));
+            } else {
+            }
             state = State.key;
         }
 
