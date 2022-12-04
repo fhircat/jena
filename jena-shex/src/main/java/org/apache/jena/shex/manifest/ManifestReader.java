@@ -59,9 +59,9 @@ public class ManifestReader {
          * @param rel
          * @return
          */
-        private String readResource (String rel) {
+        private String readResource (Path path) {
             try {
-                return Files.readString(Path.of(base, rel), StandardCharsets.UTF_8);
+                return Files.readString(path, StandardCharsets.UTF_8);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -122,7 +122,8 @@ public class ManifestReader {
             if (state == State.done) return;
             assert(state == State.value);
             if (lastKey.endsWith("URL")) {
-                curEntryState.put(lastKey, new SourcedString(lastString, readResource(lastString)));
+                Path source = Path.of(base, lastString);
+                curEntryState.put(lastKey, new SourcedString(source.toUri(), readResource(source)));
             } else {
             }
             state = State.key;

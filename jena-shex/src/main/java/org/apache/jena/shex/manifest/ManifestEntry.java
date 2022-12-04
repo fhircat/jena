@@ -2,6 +2,7 @@ package org.apache.jena.shex.manifest;
 
 import java.util.Map;
 import java.util.Set;
+import java.net.URI;
 
 public abstract class ManifestEntry {
 
@@ -18,12 +19,12 @@ public abstract class ManifestEntry {
 
     private String schemaLabel;
     private String schema;
-    private String schemaUrl;
+    private URI schemaUrl;
     private String dataLabel;
     private String data;
-    private String dataUrl;
+    private URI dataUrl;
     private String queryMap;
-    private String queryMapUrl;
+    private URI queryMapUrl;
     private String status;
 
     public void configureState(Map<String, SourcedString> nvps) {
@@ -41,12 +42,12 @@ public abstract class ManifestEntry {
                     setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
                     break;
                 case KEY_DATA:
-                    setData(nvps.get(KEY_DATA).getSource());
-                    setDataUrl(nvps.get(KEY_DATA_URL).getValue());
+                    setData(nvps.get(KEY_DATA).getValue());
+                    setDataUrl(nvps.get(KEY_DATA_URL).getSource());
                     break;
                 case KEY_QUERY_MAP:
-                    setQueryMap(nvps.get(KEY_QUERY_MAP).getSource());
-                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP_URL).getValue());
+                    setQueryMap(nvps.get(KEY_QUERY_MAP).getValue());
+                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP_URL).getSource());
                     break;
                 case KEY_STATUS:
                     setStatus(nvps.get(KEY_STATUS).getValue());
@@ -71,11 +72,11 @@ public abstract class ManifestEntry {
         this.schema = schema;
     }
 
-    public String getSchemaUrl() {
+    public URI getSchemaUrl() {
         return schemaUrl;
     }
 
-    public void setSchemaUrl(String schemaUrl) {
+    public void setSchemaUrl(URI schemaUrl) {
         this.schemaUrl = schemaUrl;
     }
 
@@ -95,11 +96,11 @@ public abstract class ManifestEntry {
         this.data = data;
     }
 
-    public String getDataUrl() {
+    public URI getDataUrl() {
         return dataUrl;
     }
 
-    public void setDataUrl(String dataUrl) {
+    public void setDataUrl(URI dataUrl) {
         this.dataUrl = dataUrl;
     }
 
@@ -107,11 +108,11 @@ public abstract class ManifestEntry {
         return queryMap;
     }
 
-    public String getQueryMapUrl() {
+    public URI getQueryMapUrl() {
         return queryMapUrl;
     }
 
-    public void setQueryMapUrl(String queryMapUrl) {
+    public void setQueryMapUrl(URI queryMapUrl) {
         this.queryMapUrl = queryMapUrl;
     }
 
