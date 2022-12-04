@@ -3,6 +3,7 @@ package org.apache.jena.shex.manifest;
 import org.apache.jena.atlas.json.io.JSWriter;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.net.URI;
 
@@ -160,5 +161,18 @@ public abstract class ManifestEntry {
         if (status != null) {
             out.pair(KEY_STATUS, status);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ManifestEntry)) return false;
+        ManifestEntry that = (ManifestEntry) o;
+        return Objects.equals(getSchemaLabel(), that.getSchemaLabel()) && Objects.equals(getSchema(), that.getSchema()) && Objects.equals(getSchemaUrl(), that.getSchemaUrl()) && Objects.equals(getDataLabel(), that.getDataLabel()) && Objects.equals(getData(), that.getData()) && Objects.equals(getDataUrl(), that.getDataUrl()) && Objects.equals(getQueryMap(), that.getQueryMap()) && Objects.equals(getQueryMapUrl(), that.getQueryMapUrl()) && Objects.equals(getStatus(), that.getStatus());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSchemaLabel(), getSchema(), getSchemaUrl(), getDataLabel(), getData(), getDataUrl(), getQueryMap(), getQueryMapUrl(), getStatus());
     }
 }

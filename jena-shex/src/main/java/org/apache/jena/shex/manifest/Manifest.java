@@ -3,6 +3,7 @@ package org.apache.jena.shex.manifest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class Manifest<T extends ManifestEntry> {
     List<T> entries = new ArrayList<T>();
@@ -23,5 +24,18 @@ public abstract class Manifest<T extends ManifestEntry> {
 
     public void clearEntries() {
         entries.clear();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Manifest)) return false;
+        Manifest<?> manifest = (Manifest<?>) o;
+        return getEntries().equals(manifest.getEntries());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getEntries());
     }
 }

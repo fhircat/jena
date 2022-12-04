@@ -4,6 +4,7 @@ import org.apache.jena.atlas.json.io.JSWriter;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class ShExMapEntry extends ManifestEntry {
@@ -56,5 +57,19 @@ public class ShExMapEntry extends ManifestEntry {
 
     public void setOutputSchemaUrl(URI outputSchemaUrl) {
         this.outputSchemaUrl = outputSchemaUrl;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ShExMapEntry)) return false;
+        if (!super.equals(o)) return false;
+        ShExMapEntry that = (ShExMapEntry) o;
+        return Objects.equals(getOutputSchema(), that.getOutputSchema()) && Objects.equals(getOutputSchemaUrl(), that.getOutputSchemaUrl());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), getOutputSchema(), getOutputSchemaUrl());
     }
 }

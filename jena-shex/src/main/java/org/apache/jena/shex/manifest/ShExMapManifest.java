@@ -8,4 +8,14 @@ public class ShExMapManifest extends Manifest<ShExMapEntry> {
         addEntry(entry);
         return entry;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }
