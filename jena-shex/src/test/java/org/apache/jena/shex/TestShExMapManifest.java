@@ -20,9 +20,12 @@ package org.apache.jena.shex;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.shex.manifest.ManifestReader;
-import org.apache.jena.shex.manifest.Manifest;
+import org.apache.jena.shex.manifest.ManifestWriter;
 import org.apache.jena.shex.manifest.ValidationManifest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.nio.file.Path;
 
 public final class TestShExMapManifest {
@@ -33,7 +36,9 @@ public final class TestShExMapManifest {
         Path manifestPath = Path.of("./src/test/files", "ShExMap-manifest.json");
         ValidationManifest manifest = new ValidationManifest();
         new ManifestReader().read(Path.of(base, "ShExMap-manifest.json"), manifest);
-        System.out.println(manifest);
+        OutputStream out = new ByteArrayOutputStream();
+        new ManifestWriter().write(out, manifest);
+        System.out.println(out.toString());
         suite.addTest(new ShExMapTest(1, 1));
         suite.addTest(new ShExMapTest(2, 2));
         suite.addTest(new ShExMapTest(2, 1)); // huh, for some reason, 2 != 1

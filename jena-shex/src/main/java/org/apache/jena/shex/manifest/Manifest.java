@@ -7,8 +7,6 @@ import java.util.Map;
 public abstract class Manifest<T extends ManifestEntry> {
     List<T> entries = new ArrayList<T>();
 
-    abstract public T newEntry ();
-
     abstract public T newEntry (Map<String, SourcedString> nvps);
 
     public List<T> getEntries() {

@@ -29,7 +29,6 @@ public class ManifestReader {
     private static class ManifestHandler<T extends Manifest> implements JSONHandler {
         private final String base;
         private T manifest;
-        ManifestEntry curEntry;
         private Map<String,SourcedString> curEntryState;
         private String lead = "";
 
@@ -92,9 +91,8 @@ public class ManifestReader {
         @Override
         public void finishObject(long currLine, long currCol) {
             exit("finishObject(" + currLine + ", " + currCol + ")");
-            curEntry = manifest.newEntry(curEntryState);
             switch (state) {
-                case key: state = State.list; break;
+                case key: manifest.newEntry(curEntryState); state = State.list; break;
                 case done: break;
                 default: assert(false);
             }
@@ -122,9 +120,12 @@ public class ManifestReader {
             if (state == State.done) return;
             assert(state == State.value);
             if (lastKey.endsWith("URL")) {
+                String label = lastKey.substring(0, lastKey.length() - 3);
                 Path source = Path.of(base, lastString);
-                curEntryState.put(lastKey, new SourcedString(source.toUri(), readResource(source)));
+                String fetched = readResource(source);
+                curEntryState.put(label, new SourcedString(source.toUri(), fetched));
             } else {
+                curEntryState.put(lastKey, new SourcedString(null, lastString));
             }
             state = State.key;
         }
