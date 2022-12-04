@@ -18,7 +18,6 @@ public abstract class ManifestEntry {
     public static final String KEY_QUERY_MAP_URL = "queryMapURL";
     public static final String KEY_STATUS = "status";
 
-
     private String schemaLabel;
     private String schema;
     private URI schemaUrl;
@@ -28,35 +27,6 @@ public abstract class ManifestEntry {
     private String queryMap;
     private URI queryMapUrl;
     private String status;
-
-    public void configureState(Map<String, SourcedString> nvps) {
-        Set<String> keys = nvps.keySet();
-        for(String key: keys) {
-            switch (key) {
-                case KEY_SCHEMA_LABEL:
-                    setSchemaLabel(nvps.get(KEY_SCHEMA_LABEL).getValue());
-                    break;
-                case KEY_SCHEMA:
-                    setSchema(nvps.get(KEY_SCHEMA).getValue());
-                    setSchemaUrl(nvps.get(KEY_SCHEMA).getSource());
-                    break;
-                case KEY_DATA_LABEL:
-                    setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
-                    break;
-                case KEY_DATA:
-                    setData(nvps.get(KEY_DATA).getValue());
-                    setDataUrl(nvps.get(KEY_DATA).getSource());
-                    break;
-                case KEY_QUERY_MAP:
-                    setQueryMap(nvps.get(KEY_QUERY_MAP).getValue());
-                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP).getSource());
-                    break;
-                case KEY_STATUS:
-                    setStatus(nvps.get(KEY_STATUS).getValue());
-                    break;
-            }
-        }
-    }
 
     public String getSchemaLabel() {
         return schemaLabel;
@@ -130,6 +100,35 @@ public abstract class ManifestEntry {
         this.status = status;
     }
 
+    public void configureState(Map<String, SourcedString> nvps) {
+        Set<String> keys = nvps.keySet();
+        for(String key: keys) {
+            switch (key) {
+                case KEY_SCHEMA_LABEL:
+                    setSchemaLabel(nvps.get(KEY_SCHEMA_LABEL).getValue());
+                    break;
+                case KEY_SCHEMA:
+                    setSchema(nvps.get(KEY_SCHEMA).getValue());
+                    setSchemaUrl(nvps.get(KEY_SCHEMA).getSource());
+                    break;
+                case KEY_DATA_LABEL:
+                    setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
+                    break;
+                case KEY_DATA:
+                    setData(nvps.get(KEY_DATA).getValue());
+                    setDataUrl(nvps.get(KEY_DATA).getSource());
+                    break;
+                case KEY_QUERY_MAP:
+                    setQueryMap(nvps.get(KEY_QUERY_MAP).getValue());
+                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP).getSource());
+                    break;
+                case KEY_STATUS:
+                    setStatus(nvps.get(KEY_STATUS).getValue());
+                    break;
+            }
+        }
+    }
+
     public void writeJSON(JSWriter out) {
 
         if (schemaLabel != null) {
@@ -161,6 +160,5 @@ public abstract class ManifestEntry {
         if (status != null) {
             out.pair(KEY_STATUS, status);
         }
-
     }
 }

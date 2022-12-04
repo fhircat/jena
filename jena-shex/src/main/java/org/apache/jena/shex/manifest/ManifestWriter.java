@@ -7,20 +7,21 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 
 public class ManifestWriter {
-    public void write(OutputStream os, ValidationManifest manifest) {
+    public <T extends Manifest> void write(OutputStream os, T manifest) {
         JSWriter out = new JSWriter(os);
         out.startOutput();
 //        out.startObject();
 //        out.key("entries");
         out.startArray();
         boolean first = true;
-        for (ValidationEntry entry: manifest.getEntries()) {
-            if (first)
+        for (Object entry: manifest.getEntries()) {
+            if (first) {
                 first = false;
-            else
+            } else {
                 out.arraySep();
+            }
             out.startObject();
-            entry.writeJSON(out);
+            ((ManifestEntry) entry).writeJSON(out);
             out.finishObject();
         }
         out.finishArray();
