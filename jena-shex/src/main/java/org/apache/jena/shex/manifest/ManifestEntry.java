@@ -26,36 +26,30 @@ public abstract class ManifestEntry {
     private String queryMapUrl;
     private String status;
 
-    public void configureState(Map<String,String> nvps) {
+    public void configureState(Map<String, SourcedString> nvps) {
         Set<String> keys = nvps.keySet();
         for(String key: keys) {
             switch (key) {
                 case KEY_SCHEMA_LABEL:
-                    setSchemaLabel(nvps.get(KEY_SCHEMA_LABEL));
+                    setSchemaLabel(nvps.get(KEY_SCHEMA_LABEL).getValue());
                     break;
                 case KEY_SCHEMA:
-                    setSchema(nvps.get(KEY_SCHEMA));
-                    break;
-                case KEY_SCHEMA_URL:
-                    setSchemaUrl(nvps.get(KEY_SCHEMA_URL));
+                    setSchema(nvps.get(KEY_SCHEMA).getValue());
+                    setSchemaUrl(nvps.get(KEY_SCHEMA_URL).getSource());
                     break;
                 case KEY_DATA_LABEL:
-                    setDataLabel(nvps.get(KEY_DATA_LABEL));
+                    setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
                     break;
                 case KEY_DATA:
-                    setData(nvps.get(KEY_DATA));
-                    break;
-                case KEY_DATA_URL:
-                    setDataUrl(nvps.get(KEY_DATA_URL));
+                    setData(nvps.get(KEY_DATA).getSource());
+                    setDataUrl(nvps.get(KEY_DATA_URL).getValue());
                     break;
                 case KEY_QUERY_MAP:
-                    setQueryMap(nvps.get(KEY_QUERY_MAP));
-                    break;
-                case KEY_QUERY_MAP_URL:
-                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP_URL));
+                    setQueryMap(nvps.get(KEY_QUERY_MAP).getSource());
+                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP_URL).getValue());
                     break;
                 case KEY_STATUS:
-                    setStatus(nvps.get(KEY_STATUS));
+                    setStatus(nvps.get(KEY_STATUS).getValue());
                     break;
             }
         }

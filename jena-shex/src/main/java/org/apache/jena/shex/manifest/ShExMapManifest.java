@@ -10,7 +10,7 @@ public class ShExMapManifest extends Manifest<ShExMapEntry> {
         return entry;
     }
 
-    public ShExMapEntry newEntry(Map<String,String> nvps) {
+    public ShExMapEntry newEntry(Map<String, SourcedString> nvps) {
         ShExMapEntry entry = ShExMapEntry.newEntry(nvps);
         addEntry(entry);
         return entry;

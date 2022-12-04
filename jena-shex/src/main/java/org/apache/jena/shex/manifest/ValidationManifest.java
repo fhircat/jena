@@ -10,7 +10,7 @@ public class ValidationManifest extends Manifest<ValidationEntry> {
         return entry;
     }
 
-    public ValidationEntry newEntry (Map<String,String> nvps) {
+    public ValidationEntry newEntry (Map<String, SourcedString> nvps) {
         ValidationEntry entry = ValidationEntry.newEntry(nvps);
         addEntry(entry);
         return entry;
