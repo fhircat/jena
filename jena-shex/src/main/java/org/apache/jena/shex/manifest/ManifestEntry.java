@@ -1,5 +1,7 @@
 package org.apache.jena.shex.manifest;
 
+import org.apache.jena.atlas.json.io.JSWriter;
+
 import java.util.Map;
 import java.util.Set;
 import java.net.URI;
@@ -36,18 +38,18 @@ public abstract class ManifestEntry {
                     break;
                 case KEY_SCHEMA:
                     setSchema(nvps.get(KEY_SCHEMA).getValue());
-                    setSchemaUrl(nvps.get(KEY_SCHEMA_URL).getSource());
+                    setSchemaUrl(nvps.get(KEY_SCHEMA).getSource());
                     break;
                 case KEY_DATA_LABEL:
                     setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
                     break;
                 case KEY_DATA:
                     setData(nvps.get(KEY_DATA).getValue());
-                    setDataUrl(nvps.get(KEY_DATA_URL).getSource());
+                    setDataUrl(nvps.get(KEY_DATA).getSource());
                     break;
                 case KEY_QUERY_MAP:
                     setQueryMap(nvps.get(KEY_QUERY_MAP).getValue());
-                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP_URL).getSource());
+                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP).getSource());
                     break;
                 case KEY_STATUS:
                     setStatus(nvps.get(KEY_STATUS).getValue());
@@ -126,5 +128,39 @@ public abstract class ManifestEntry {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void writeJSON(JSWriter out) {
+
+        if (schemaLabel != null) {
+            out.pair(KEY_SCHEMA_LABEL, schemaLabel);
+        }
+
+        if (schemaUrl != null) {
+            out.pair(KEY_SCHEMA_URL, schemaUrl.toString());
+        } else if (schema != null) {
+            out.pair(KEY_SCHEMA, schema);
+        }
+
+        if (dataLabel != null) {
+            out.pair(KEY_DATA_LABEL, dataLabel);
+        }
+
+        if (dataUrl != null) {
+            out.pair(KEY_DATA_URL, dataUrl.toString());
+        } else if (data != null) {
+            out.pair(KEY_DATA, data);
+        }
+
+        if (queryMapUrl != null) {
+            out.pair(KEY_QUERY_MAP_URL, queryMapUrl.toString());
+        } else if (queryMap != null) {
+            out.pair(KEY_QUERY_MAP, queryMap);
+        }
+
+        if (status != null) {
+            out.pair(KEY_STATUS, status);
+        }
+
     }
 }
