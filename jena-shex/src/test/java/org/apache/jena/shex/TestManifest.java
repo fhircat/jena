@@ -21,7 +21,15 @@ package org.apache.jena.shex;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.atlas.json.io.JSWriter;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.irix.IRIx;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.manifest.*;
+import org.apache.jena.sparql.graph.GraphFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,8 +39,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-
 public final class TestManifest {
     static String base = "./src/test/files";
 
@@ -41,24 +47,18 @@ public final class TestManifest {
         suite.addTest(new SmallParsedVsManual());
         suite.addTest(new HeterogenousLocal());
 
+        String manifestFile = "Validation-manifest.json";
         ValidationManifest manifest = new ValidationManifest();
-        new ManifestReader().read(Path.of(base, "Validation-manifest.json"), manifest);
+        new ManifestReader().read(Path.of(base, manifestFile), manifest);
 
 //        OutputStream out = new ByteArrayOutputStream();
 //        new ManifestWriter().writeJson(out, manifest);
 //        System.out.println(out);
 
-        for (ManifestEntry entry: manifest.getEntries()) {
-            OutputStream eltJson = new ByteArrayOutputStream();
-            JSWriter writer = new JSWriter(eltJson);
-            writer.startOutput();
-            writer.startObject();
-            entry.writeJson(writer);
-            writer.finishObject();
-            writer.finishOutput();
-            System.out.println(eltJson);
-
-            suite.addTest(new ValidationTest(1, 1));
+        List<ValidationEntry> manifestEntries = manifest.getEntries();
+        for (int i = 0; i < manifestEntries.size(); ++i) {
+            ManifestEntry entry = manifestEntries.get(i);
+            suite.addTest(new ValidationTest(manifestFile, i, entry));
         }
 
         return suite;
@@ -195,17 +195,32 @@ public final class TestManifest {
     }
 
     static public class ValidationTest extends TestCase {
-        private final int got;
-        private final int expected;
+        private final ManifestEntry entry;
 
-        ValidationTest(int got, int expected) {
-            super("Does " + got + " = " + expected);
-            this.got = got;
-            this.expected = expected;
+        ValidationTest(String manifestFile, int i, ManifestEntry entry) {
+            super(getTestName(manifestFile, i, entry));
+            this.entry = entry;
         }
+
+        static String getTestName(String manifestFile, int i, ManifestEntry entry) {
+            return manifestFile + "[" + i + "] " + entry.getDataLabel() + " \\ " + entry.getSchemaLabel();
+        }
+
         @Override
         public void runTest() {
-            assertEquals(got, expected);
+            System.out.println(getName());
+            assertEquals(2, 2);
+
+            InputStream queryMap = new ByteArrayInputStream(entry.getQueryMap().getBytes());
+            ShapeMap smap = Shex.readShapeMap(queryMap, base);
+
+            InputStream dataInputStream = new ByteArrayInputStream(entry.getData().getBytes());
+            Graph graph = GraphFactory.createDefaultGraph();
+            RDFDataMgr.read(graph, dataInputStream, base, Lang.TTL);
+
+            ShexSchema schema = Shex.schemaFromString(entry.getSchema(), base);
+            ShexReport report = ShexValidator.get().validate(graph, schema, smap);
+            assertTrue(report.conforms());
         }
     }
 }
