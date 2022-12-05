@@ -19,11 +19,10 @@
 package org.apache.jena.shex.manifest;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class ValidationManifest extends Manifest<ValidationEntry> {
     public ValidationEntry newEntry (Map<String, SourcedString> nvps) {
-        ValidationEntry entry = ValidationEntry.newEntry(nvps);
+        ValidationEntry entry = new ValidationEntry(nvps);
         addEntry(entry);
         return entry;
     }
