@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.manifest;
+package io.shex.jena.shexmap.manifest;
 
 import org.apache.jena.atlas.json.io.JSWriter;
+import org.apache.jena.shex.manifest.ManifestEntry;
+import org.apache.jena.shex.manifest.SourcedString;
 
 import java.net.URI;
 import java.util.Map;
@@ -32,10 +34,8 @@ public class ShExMapEntry extends ManifestEntry {
     public static final String KEY_OUTPUT_SCHEMA_URL = "outputSchemaURL";
     private URI outputSchemaUrl;
 
-    public static ShExMapEntry newEntry(Map<String, SourcedString> nvps) {
-        ShExMapEntry entry = new ShExMapEntry();
-        entry.configureState(nvps);
-        return entry;
+    public ShExMapEntry(Map<String, SourcedString> nvps) {
+        configureState(nvps);
     }
 
     public void configureState(Map<String, SourcedString> nvps) {
@@ -52,8 +52,8 @@ public class ShExMapEntry extends ManifestEntry {
         //process additional items here
     }
 
-    public void writeJSON(JSWriter out) {
-        super.writeJSON(out);
+    public void writeJson(JSWriter out) {
+        super.writeJson(out);
         if (outputSchemaUrl != null) {
             out.pair(KEY_OUTPUT_SCHEMA_URL, outputSchemaUrl.toString());
         } else if (outputSchema != null) {

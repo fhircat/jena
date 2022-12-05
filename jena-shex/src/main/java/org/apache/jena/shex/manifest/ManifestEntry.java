@@ -148,7 +148,7 @@ public abstract class ManifestEntry {
         }
     }
 
-    public void writeJSON(JSWriter out) {
+    public void writeJson(JSWriter out) {
 
         if (schemaLabel != null) {
             out.pair(KEY_SCHEMA_LABEL, schemaLabel);

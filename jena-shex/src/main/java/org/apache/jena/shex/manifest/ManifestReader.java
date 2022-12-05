@@ -24,6 +24,9 @@ import org.apache.jena.atlas.json.io.parser.JSONParser;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +45,12 @@ public class ManifestReader {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public ManifestReader read(InputStream in, String base, Manifest manifest) {
+        ManifestHandler manifestHandler = new ManifestHandler(base, manifest);
+        jsonParser.parseAny(in, manifestHandler);
+        return this;
     }
 
     private static class ManifestHandler<T extends Manifest> implements JSONHandler {
@@ -138,9 +147,15 @@ public class ManifestReader {
             assert(state == State.value);
             if (lastKey.endsWith("URL")) {
                 String label = lastKey.substring(0, lastKey.length() - 3);
-                Path source = Path.of(base, lastString);
-                String fetched = readResource(source);
-                curEntryState.put(label, new SourcedString(source.toUri(), fetched));
+                try {
+                    Path source = lastString.startsWith("file://")
+                            ? Path.of(new URI(lastString).getPath())
+                            : Path.of(base, lastString);
+                    String fetched = readResource(source);
+                    curEntryState.put(label, new SourcedString(source.toUri(), fetched));
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
             } else {
                 curEntryState.put(lastKey, new SourcedString(null, lastString));
             }

@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.manifest;
+package io.shex.jena.shexmap.manifest;
+
+import org.apache.jena.shex.manifest.Manifest;
+import org.apache.jena.shex.manifest.SourcedString;
 
 import java.util.Map;
 
 public class ShExMapManifest extends Manifest<ShExMapEntry> {
     public ShExMapEntry newEntry(Map<String, SourcedString> nvps) {
-        ShExMapEntry entry = ShExMapEntry.newEntry(nvps);
+        ShExMapEntry entry = new ShExMapEntry(nvps);
         addEntry(entry);
         return entry;
     }
