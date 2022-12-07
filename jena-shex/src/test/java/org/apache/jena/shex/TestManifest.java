@@ -35,7 +35,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 
-public final class TestManifest {
+public class TestManifest {
     static String base = "./src/test/files";
 
     public static TestSuite suite() {
@@ -193,7 +193,7 @@ public final class TestManifest {
     static public class ValidationTest extends TestCase {
         private final ManifestEntry entry;
 
-        ValidationTest(String manifestFile, int i, ManifestEntry entry) {
+        public ValidationTest(String manifestFile, int i, ManifestEntry entry) {
             super(getTestName(manifestFile, i, entry));
             this.entry = entry;
         }
@@ -204,8 +204,7 @@ public final class TestManifest {
 
         @Override
         public void runTest() {
-            System.out.println(getName());
-            assertEquals(2, 2);
+//            System.out.println(getName());
 
             InputStream queryMap = new ByteArrayInputStream(entry.getQueryMap().getBytes());
             ShapeMap smap = Shex.readShapeMap(queryMap, base);
