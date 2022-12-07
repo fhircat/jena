@@ -35,21 +35,20 @@ public class ShExMapEntry extends ManifestEntry {
     private URI outputSchemaUrl;
 
     public ShExMapEntry(Map<String, SourcedString> nvps) {
-        configureState(nvps);
+        super(nvps);
     }
 
-    public void configureState(Map<String, SourcedString> nvps) {
-        super.configureState(nvps);
-        Set<String> keys = nvps.keySet();
-        for(String key: keys) {
+    public boolean setProperty(String key, String value, URI source) {
+        boolean found = super.setProperty(key, value, source);
+        if (!found) {
             switch (key) {
                 case KEY_OUTPUT_SCHEMA:
-                    setOutputSchema(nvps.get(KEY_OUTPUT_SCHEMA).getValue());
-                    setOutputSchemaUrl(nvps.get(KEY_OUTPUT_SCHEMA).getSource());
+                    setOutputSchema(value);
+                    setOutputSchemaUrl(source);
                     break;
             }
         }
-        //process additional items here
+        return found;
     }
 
     public void writeJson(JSWriter out) {

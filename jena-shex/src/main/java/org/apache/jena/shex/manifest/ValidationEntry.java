@@ -23,12 +23,7 @@ import java.util.Map;
 public class ValidationEntry extends ManifestEntry {
 
     public ValidationEntry(Map<String,SourcedString> nvps) {
-        configureState(nvps);
-    }
-
-    public void configureState(Map<String, SourcedString> nvps) {
-        super.configureState(nvps);
-        //process additional items here
+        super(nvps);
     }
 
     @Override

@@ -22,10 +22,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.atlas.json.io.JSWriter;
 import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.Node;
-import org.apache.jena.irix.IRIx;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.manifest.*;
@@ -139,21 +135,21 @@ public final class TestManifest {
             private URI outputSchemaUrl;
 
             public LocalEntry(Map<String, SourcedString> nvps) {
-                configureState(nvps);
+                super(nvps);
             }
 
-            public void configureState(Map<String, SourcedString> nvps) {
-                super.configureState(nvps);
-                Set<String> keys = nvps.keySet();
-                for(String key: keys) {
+
+            public boolean setProperty(String key, String value, URI source) {
+                boolean found = super.setProperty(key, value, source);
+                if (!found) {
                     switch (key) {
                         case KEY_OUTPUT_SCHEMA:
-                            setOutputSchema(nvps.get(KEY_OUTPUT_SCHEMA).getValue());
-                            setOutputSchemaUrl(nvps.get(KEY_OUTPUT_SCHEMA).getSource());
+                            setOutputSchema(value);
+                            setOutputSchemaUrl(source);
                             break;
                     }
                 }
-                //process additional items here
+                return found;
             }
 
             public void writeJson(JSWriter out) {

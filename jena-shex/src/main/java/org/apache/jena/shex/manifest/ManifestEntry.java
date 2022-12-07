@@ -20,9 +20,7 @@ package org.apache.jena.shex.manifest;
 
 import org.apache.jena.atlas.json.io.JSWriter;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.net.URI;
 
 public abstract class ManifestEntry {
@@ -119,33 +117,48 @@ public abstract class ManifestEntry {
         this.status = status;
     }
 
-    public void configureState(Map<String, SourcedString> nvps) {
-        Set<String> keys = nvps.keySet();
-        for(String key: keys) {
-            switch (key) {
-                case KEY_SCHEMA_LABEL:
-                    setSchemaLabel(nvps.get(KEY_SCHEMA_LABEL).getValue());
-                    break;
-                case KEY_SCHEMA:
-                    setSchema(nvps.get(KEY_SCHEMA).getValue());
-                    setSchemaUrl(nvps.get(KEY_SCHEMA).getSource());
-                    break;
-                case KEY_DATA_LABEL:
-                    setDataLabel(nvps.get(KEY_DATA_LABEL).getValue());
-                    break;
-                case KEY_DATA:
-                    setData(nvps.get(KEY_DATA).getValue());
-                    setDataUrl(nvps.get(KEY_DATA).getSource());
-                    break;
-                case KEY_QUERY_MAP:
-                    setQueryMap(nvps.get(KEY_QUERY_MAP).getValue());
-                    setQueryMapUrl(nvps.get(KEY_QUERY_MAP).getSource());
-                    break;
-                case KEY_STATUS:
-                    setStatus(nvps.get(KEY_STATUS).getValue());
-                    break;
-            }
+    public ManifestEntry(Map<String, SourcedString> nvps) {
+        List<String> matched = new ArrayList<>();
+        for(String key: nvps.keySet()) {
+            boolean found = true;
+            String value = nvps.get(key).getValue();
+            URI source = nvps.get(key).getSource();
+            found = setProperty(key, value, source);
+            if (found)
+                matched.add(key);
         }
+        for (String key: matched)
+            nvps.remove(key);
+    }
+
+    public boolean setProperty(String key, String value, URI source) {
+        boolean found = true;
+        switch (key) {
+            case KEY_SCHEMA_LABEL:
+                setSchemaLabel(value);
+                break;
+            case KEY_SCHEMA:
+                setSchema(value);
+                setSchemaUrl(source);
+                break;
+            case KEY_DATA_LABEL:
+                setDataLabel(value);
+                break;
+            case KEY_DATA:
+                setData(value);
+                setDataUrl(source);
+                break;
+            case KEY_QUERY_MAP:
+                setQueryMap(value);
+                setQueryMapUrl(source);
+                break;
+            case KEY_STATUS:
+                setStatus(value);
+                break;
+            default:
+                found = false;
+        }
+        return found;
     }
 
     public void writeJson(JSWriter out) {
