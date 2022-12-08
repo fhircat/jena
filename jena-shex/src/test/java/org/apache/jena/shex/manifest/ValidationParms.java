@@ -4,10 +4,12 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.sparql.graph.GraphFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 
 public class ValidationParms {
     public Graph graph;
@@ -25,7 +27,9 @@ public class ValidationParms {
         smap = Shex.readShapeMap(queryMap, base);
     }
 
-    public ShexReport validate() {
-        return ShexValidator.get().validate(graph, schema, smap);
+    public ShexReport validate(List<SemanticActionPlugin> semanticActionPlugins) {
+        return (semanticActionPlugins == null
+                ? ShexValidator.get()
+                : ShexValidator.getNew(semanticActionPlugins)).validate(graph, schema, smap);
     }
 }

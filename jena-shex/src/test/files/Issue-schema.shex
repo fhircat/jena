@@ -1,0 +1,42 @@
+## Licensed under the terms of http://www.apache.org/licenses/LICENSE-2.0
+
+# Issue-simple-annotated.shex - Issue representation in RDF
+
+BASE <http://base.example/>
+PREFIX ex: <http://ex.example/#>
+PREFIX foaf: <http://xmlns.com/foaf/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX log: <http://shex.io/extensions/Map/>
+
+start = @<#IssueShape>  # Issue validation starts with <#IssueShape>
+
+<#IssueShape> {
+    ex:state [ex:unassigned ex:assigned]%log:{ print("state", o) %};
+    ex:reportedBy @<#UserShape>;
+    ex:reportedOn xsd:dateTime          %log:{ print("reported on", o) %};
+    (
+     ex:reproducedBy @<#EmployeeShape>;
+     ex:reproducedOn xsd:dateTime       %log:{ print("reproduced on", o) %};
+    );
+    ex:related @<#IssueShape>*
+}
+
+<#UserShape> {
+    (
+       foaf:name @<#str>                %log:{ print("user's name", o) %}
+     |
+       foaf:givenName @<#str>+          %log:{ print("user's given name", o) %};
+       foaf:familyName @<#str>          %log:{ print("user's family name", o) %};
+    );
+    foaf:mbox IRI                       %log:{ print("user's email", o) %}
+}
+
+<#EmployeeShape> {
+    foaf:givenName @<#str>+             %log:{ print("employee's given name", o) %};
+    foaf:familyName @<#str>             %log:{ print("employee's family name", o) %};
+    foaf:phone IRI*                     %log:{ print("employee's email", o) %};
+    foaf:mbox IRI                       %log:{ print("employee's email", o) %}
+}
+
+<#str> xsd:string                       %log:{ print("NodeConstraint str", s) %}
