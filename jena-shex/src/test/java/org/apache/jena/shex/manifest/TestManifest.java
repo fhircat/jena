@@ -200,7 +200,7 @@ public class TestManifest {
         @Override
         public void runTest() {
 //            System.out.println(getName());
-            assertTrue(new ValidationParms(manifestEntry, base).validate().conforms());
+            assertTrue(new ValidationParms(manifestEntry, base).validate(null).conforms());
         }
 
     }

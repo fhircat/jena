@@ -15,5 +15,14 @@
     "queryMap": "{FOCUS <http://hl7.org/fhir/status> _}@START",
     "outputSchema": "blah blah blah",
     "status": "conformant"
+  },
+  {
+    "schemaLabel": "clinical observation all refs",
+    "schemaURL": "Issue-schema.shex",
+    "dataLabel": "with birthdate",
+    "dataURL": "Issue1.ttl",
+    "queryMap": "BASE <http://base.example/>\n<#Issue1>@<#IssueShape>",
+    "outputSchema": "blah blah blah",
+    "status": "conformant"
   }
 ]

@@ -4,8 +4,12 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.manifest.*;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.semact.ShExMapSemanticActionPlugin;
+import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +56,10 @@ public class ShExMapManifestTest {
 
             // Check against some structural expectations.
             List<ManifestEntry> entries = manifest.getEntries();
-            assertEquals(entries.size(), 2);
+            assertEquals(entries.size(), 3);
             assertEquals(entries.get(0).getClass().getName(), ValidationEntry.class.getName());
             assertEquals(entries.get(1).getClass().getName(), ShExMapEntry.class.getName());
+            assertEquals(entries.get(2).getClass().getName(), ShExMapEntry.class.getName());
         }
     }
 
@@ -81,9 +86,19 @@ public class ShExMapManifestTest {
         public void runTest() {
 //            System.out.println(getName());
 
+            // Set up validation parameters
             ValidationParms parms = new ValidationParms(manifestEntry, base);
-            ShexReport report = parms.validate();
+
+            // validate with ShExMap plugin
+            ShExMapSemanticActionPlugin semActPlugin = new ShExMapSemanticActionPlugin(parms.schema);
+            List<SemanticActionPlugin> semanticActionPlugins = Collections.singletonList(semActPlugin);
+            ShexReport report = parms.validate(semanticActionPlugins);
+
+            // Nothing works if it doesn't pass validation
             assertTrue(report.conforms());
+
+            List<String> output = semActPlugin.getOut();
+            System.out.println(String.join("\n", output));
         }
     }
 }
