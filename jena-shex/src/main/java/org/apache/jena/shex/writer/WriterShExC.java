@@ -158,10 +158,12 @@ public class WriterShExC {
 
         private void printShapeExpression(ShapeExpression shapeExpression) {
             shapeExpression.visit(this);
+            renderSemacts(shapeExpression.getSemActs());
         }
 
         private void printTripleExpression(TripleExpression tripleExpr) {
             tripleExpr.visit(this);
+            renderSemacts(tripleExpr.getSemActs());
             out.print(" ;");
         }
 
@@ -219,6 +221,18 @@ public class WriterShExC {
                 return;
             }
             item.print(out, formatter);
+        }
+
+        public void renderSemacts(List<SemAct> semActs) {
+            if (semActs != null) {
+                for (SemAct semAct : semActs) {
+                    out.print(" %");
+                    out.print(semAct.getIri());
+                    out.print("{");
+                    out.print(semAct.getCode());
+                    out.print("%}");
+                }
+            }
         }
 
         @Override
