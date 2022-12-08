@@ -16,16 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex;
+package org.apache.jena.shex.manifest;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.atlas.json.io.JSWriter;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.shex.manifest.*;
-import org.apache.jena.sparql.graph.GraphFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,8 +48,8 @@ public class TestManifest {
 
         List<ValidationEntry> manifestEntries = manifest.getEntries();
         for (int i = 0; i < manifestEntries.size(); ++i) {
-            ManifestEntry entry = manifestEntries.get(i);
-            suite.addTest(new ValidationTest(manifestFile, i, entry));
+            ValidationEntry entry = manifestEntries.get(i);
+            suite.addTest(new ManifestEntryTest(manifestFile, i, entry));
         }
 
         return suite;
@@ -190,32 +185,23 @@ public class TestManifest {
         }
     }
 
-    static public class ValidationTest extends TestCase {
-        private final ManifestEntry entry;
+    static public class ManifestEntryTest extends TestCase {
+        protected final ManifestEntry manifestEntry;
 
-        public ValidationTest(String manifestFile, int i, ManifestEntry entry) {
-            super(getTestName(manifestFile, i, entry));
-            this.entry = entry;
+        public ManifestEntryTest(String manifestFile, int manifestIndex, ManifestEntry entry) {
+            super(getTestName(manifestFile, manifestIndex, entry));
+            this.manifestEntry = entry;
         }
 
         static String getTestName(String manifestFile, int i, ManifestEntry entry) {
-            return manifestFile + "[" + i + "] " + entry.getDataLabel() + " \\ " + entry.getSchemaLabel();
+            return manifestFile + "[" + i + "]: " + entry.getDataLabel() + " \\ " + entry.getSchemaLabel();
         }
 
         @Override
         public void runTest() {
 //            System.out.println(getName());
-
-            InputStream queryMap = new ByteArrayInputStream(entry.getQueryMap().getBytes());
-            ShapeMap smap = Shex.readShapeMap(queryMap, base);
-
-            InputStream dataInputStream = new ByteArrayInputStream(entry.getData().getBytes());
-            Graph graph = GraphFactory.createDefaultGraph();
-            RDFDataMgr.read(graph, dataInputStream, base, Lang.TTL);
-
-            ShexSchema schema = Shex.schemaFromString(entry.getSchema(), base);
-            ShexReport report = ShexValidator.get().validate(graph, schema, smap);
-            assertTrue(report.conforms());
+            assertTrue(new ValidationParms(manifestEntry, base).validate().conforms());
         }
+
     }
 }

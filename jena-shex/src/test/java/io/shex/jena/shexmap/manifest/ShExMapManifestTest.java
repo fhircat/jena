@@ -2,15 +2,9 @@ package io.shex.jena.shexmap.manifest;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.manifest.*;
-import org.apache.jena.sparql.graph.GraphFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +30,8 @@ public class ShExMapManifestTest {
         for (int i = 0; i < manifestEntries.size(); ++i) {
             ManifestEntry entry = manifestEntries.get(i);
             suite.addTest(entry instanceof ValidationEntry
-                    ? new TestManifest.ValidationTest(manifestFile, i, entry)
-                    : new ShExMapTest(manifestFile, i, entry)
+                    ? new TestManifest.ManifestEntryTest(manifestFile, i, (ValidationEntry)entry)
+                    : new ShExMapTest(manifestFile, i, (ShExMapEntry)entry)
             );
         }
 
@@ -77,31 +71,18 @@ public class ShExMapManifestTest {
         }
     }
 
-    static public class ShExMapTest extends TestCase {
-        private final ManifestEntry entry;
+    static public class ShExMapTest extends TestManifest.ManifestEntryTest {
 
-        public ShExMapTest(String manifestFile, int i, ManifestEntry entry) {
-            super(getTestName(manifestFile, i, entry));
-            this.entry = entry;
-        }
-
-        static String getTestName(String manifestFile, int i, ManifestEntry entry) {
-            return manifestFile + "[" + i + "] " + entry.getDataLabel() + " \\ " + entry.getSchemaLabel();
+        public ShExMapTest(String manifestFile, int manifestIndex, ManifestEntry entry) {
+            super(manifestFile, manifestIndex, entry);
         }
 
         @Override
         public void runTest() {
 //            System.out.println(getName());
 
-            InputStream queryMap = new ByteArrayInputStream(entry.getQueryMap().getBytes());
-            ShapeMap smap = Shex.readShapeMap(queryMap, base);
-
-            InputStream dataInputStream = new ByteArrayInputStream(entry.getData().getBytes());
-            Graph graph = GraphFactory.createDefaultGraph();
-            RDFDataMgr.read(graph, dataInputStream, base, Lang.TTL);
-
-            ShexSchema schema = Shex.schemaFromString(entry.getSchema(), base);
-            ShexReport report = ShexValidator.get().validate(graph, schema, smap);
+            ValidationParms parms = new ValidationParms(manifestEntry, base);
+            ShexReport report = parms.validate();
             assertTrue(report.conforms());
         }
     }
