@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-interface ExtractVar {
-    String run (String str);
-}
-
 public class TestSemanticActionPlugin implements SemanticActionPlugin {
     static String SemActIri = "http://shex.io/extensions/Test/";
     static Pattern ParsePattern, LeadPattern, LastPattern;
@@ -136,5 +132,9 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
                 throw new RuntimeException(String.format("%s semantic action argument %s was not a literal or 's', 'p', or 'o'", SemActIri, varName));
         }
         return pos.toString();
+    }
+
+    static interface ExtractVar {
+        String run (String str);
     }
 }
