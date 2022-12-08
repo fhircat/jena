@@ -19,7 +19,16 @@
 package org.apache.jena.shex.manifest;
 
 import org.apache.jena.atlas.json.io.JSWriter;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shex.ShapeMap;
+import org.apache.jena.shex.Shex;
+import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.sparql.graph.GraphFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.*;
 import java.net.URI;
 
