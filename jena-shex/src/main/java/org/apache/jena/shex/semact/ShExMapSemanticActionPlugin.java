@@ -18,13 +18,15 @@
 
 package org.apache.jena.shex.semact;
 
-import com.github.jsonldjava.utils.Obj;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShExPathCalculator;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.ShexShape;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -47,21 +49,22 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
 
     static Pattern ParsePatter1 = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
 
-    Map<Object, String> paths = new HashMap<>();
+//    Map<Object, String> paths = new HashMap<>(); -- could be generic
+    Map<ShapeExpression, String> shapeExprs = new HashMap<>();
+    Map<TripleExpression, String> tripleExprs = new HashMap<>();
+    Stack<ShapeExpression> shapeExprStack = new Stack<>();
 
     public ShExMapSemanticActionPlugin(ShexSchema schema) {
-        paths = calculatePaths(schema, SemActIri);
-    }
-
-    /**
-     * map ShEx schema elements with the semActIri to unique strings
-     * @param schema
-     * @param semActIri
-     * @return
-     */
-    private static Map<Object, String> calculatePaths(ShexSchema schema, String semActIri) {
-        Map<Object, String> ret = new HashMap<>();
-        return ret;
+/*
+        IndentedLineBuffer out = new IndentedLineBuffer();
+        out.println("## Print");
+        WriterShExC.print(out, schema);
+        String s = out.toString();
+        System.out.println(s);
+*/
+        ShExPathCalculator c = new ShExPathCalculator(schema);
+        shapeExprs = c.getShapeExprs();
+        tripleExprs = c.getTripleExprs();
     }
 
     @Override
@@ -76,23 +79,48 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     public List<String> getOut () { return out; }
 
     @Override
-    public boolean evaluateStart(SemAct semAct, ShexSchema schema) {
-        return parse(semAct, (str) -> resolveStartVar(str));
+    public boolean evaluateStart(SemAct semAct, ValidationContext vCxt, ShexSchema schema) {
+        return parse(semAct, (str) -> resolveStartVar(str), vCxt, null);
     }
 
     @Override
-    public boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus) {
-        return parse(semAct, (str) -> resolveNodeVar(str, focus));
+    public boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpression shapeExpression, Node focus) {
+        return parse(semAct, (str) -> resolveNodeVar(str, focus), vCxt, shapeExprs.get(shapeExpression));
     }
 
     @Override
-    public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
+    public boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpression tripleExpression, Collection<Triple> triples) {
         Iterator<Triple> tripleIterator = triples.iterator();
         Triple triple = tripleIterator.hasNext() ? tripleIterator.next() : null; // should be one triple, as currently defined.
-        return parse(semAct, (str) -> resolveTripleVar(str, triple));
+        return parse(semAct, (str) -> resolveTripleVar(str, triple), vCxt, tripleExprs.get(tripleExpression));
     }
 
-    private boolean parse(SemAct semAct, ExtractVar extractor) {
+    private boolean parse(SemAct semAct, TestSemanticActionPlugin.ExtractVar extractor, ValidationContext vCxt, String path) {
+
+        List<ShapeExpression> curStack = new ArrayList<>();
+        for (ValidationContext parent = vCxt; parent != null; parent = parent.getParent()) {
+            ShapeExpression s = parent.getContextShape();
+            if (s != null)
+                curStack.add(s);
+        }
+        Collections.reverse(curStack);
+        for (int depth = 0; depth < curStack.size(); ++depth) {
+            ShapeExpression curShape = curStack.get(depth);
+            int curHash = System.identityHashCode(curShape);
+            if (depth > shapeExprStack.size() - 1) {
+                shapeExprStack.add(curShape);
+                System.out.printf("> %x ", curHash);
+            } else if (shapeExprStack.get(depth) == curShape) {
+                System.out.printf("= %x ", curHash);
+                if (depth == curStack.size() - 1)
+                    trimStack(curStack, depth + 1);
+            } else {
+                trimStack(curStack, depth);
+                shapeExprStack.add(curShape);
+                System.out.printf("> %x ", curHash);
+            }
+        }
+
         String code = semAct.getCode();
         if (code == null)
             throw new RuntimeException(String.format("%s semantic action should not be null", SemActIri));
@@ -111,8 +139,20 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         m = LastPattern.matcher(argument);
         m.find();
         printed.add(extractor.run(m.group(1)));
-        out.add(String.join(", ", printed));
+        out.add(path + ": " + String.join(", ", printed));
+        System.out.printf(": %s\n", String.join(", ", printed));
         return function.equals("fail") ? false : true;
+    }
+
+    private void trimStack(List<ShapeExpression> curStack, int depth) {
+        List<ShapeExpression> toTrim = shapeExprStack.subList(depth, shapeExprStack.size());
+
+        // Make a reversed copy and close each one.
+        List<ShapeExpression> toWalk = new ArrayList<>(toTrim);
+        Collections.reverse(toWalk);
+        toWalk.forEach(s -> System.out.printf("< %x ", System.identityHashCode(s)));
+
+        toTrim.clear();
     }
 
     private static String resolveStartVar(String varName) {

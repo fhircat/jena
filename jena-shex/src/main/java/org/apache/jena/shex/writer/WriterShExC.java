@@ -226,9 +226,9 @@ public class WriterShExC {
         public void renderSemacts(List<SemAct> semActs) {
             if (semActs != null) {
                 for (SemAct semAct : semActs) {
-                    out.print(" %");
+                    out.print(" %<");
                     out.print(semAct.getIri());
-                    out.print("{");
+                    out.print(">{");
                     out.print(semAct.getCode());
                     out.print("%}");
                 }

@@ -6,7 +6,6 @@ import org.apache.jena.shex.*;
 import org.apache.jena.shex.manifest.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.semact.ShExMapSemanticActionPlugin;
-import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 
 import java.nio.file.Path;
 import java.util.Collections;

@@ -21,7 +21,15 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <#User2>
     foaf:givenName "Bob" ;
     foaf:familyName "Smith" ;
-    foaf:mbox <mailto:bob@example.org>
+    foaf:mbox <mailto:bob@example.org> ;
+    ex:customerRep <#Walker.A> ;
+.
+
+<#Walker.A>
+    foaf:givenName "Alice" ;
+    foaf:familyName "Walker" ;
+    foaf:phone <tel:+123> ;
+    foaf:mbox <mailto:alice@example.org>
 .
 
 <#Thompson.J>

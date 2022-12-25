@@ -24,6 +24,7 @@ import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,17 +58,17 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     public List<String> getOut () { return out; }
 
     @Override
-    public boolean evaluateStart(SemAct semAct, ShexSchema schema) {
+    public boolean evaluateStart(SemAct semAct, ValidationContext vCxt, ShexSchema schema) {
         return parse(semAct, (str) -> resolveStartVar(str));
     }
 
     @Override
-    public boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus) {
+    public boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpression shapeExpression, Node focus) {
         return parse(semAct, (str) -> resolveNodeVar(str, focus));
     }
 
     @Override
-    public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
+    public boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpression tripleExpression, Collection<Triple> triples) {
         Iterator<Triple> tripleIterator = triples.iterator();
         Triple triple = tripleIterator.hasNext() ? tripleIterator.next() : null; // should be one triple, as currently defined.
         return parse(semAct, (str) -> resolveTripleVar(str, triple));
