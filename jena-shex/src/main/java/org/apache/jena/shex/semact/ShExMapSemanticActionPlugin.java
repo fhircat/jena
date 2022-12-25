@@ -65,7 +65,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         return root;
     }
     public void getBindingTreeAsJson(OutputStream os) {
-        BindingNodeWriter w = new BindingNodeWriter();
+        BindingTreeWriter w = new BindingTreeWriter();
         w.writeJson(os, root);
     }
 
@@ -244,7 +244,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         }
     }
 
-    public class BindingNodeWriter {
+    public class BindingTreeWriter {
         public void writeJson(OutputStream os, BindingNode b) {
             JSWriter out = new JSWriter(os);
             out.startOutput();
@@ -258,26 +258,14 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
             Map<String, List<String>> bindings = b.getVars();
             if (!bindings.isEmpty()) {
                 first[0] = false;
-                final boolean[] firstBinding = {true}; // what I gotta do for a closure in Java
                 out.startObject();
                 bindings.forEach((var, vals) -> {
-                    if (firstBinding[0]) {
-                        firstBinding[0] = false;
-                    } else {
-                        out.arraySep();
-                    }
                     if (vals.size() == 1) {
                         out.pair(var, vals.get(0));
                     } else {
                         out.key(var);
                         out.startArray();
-                        final boolean[] firstVal = {true};
                         vals.forEach(val -> {
-                            if (firstVal[0]) {
-                                firstVal[0] = false;
-                            } else {
-                                out.arraySep();
-                            }
                             out.arrayElement(val);
                         });
                         out.finishArray();
@@ -291,9 +279,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
                 } else {
                     out.arraySep();
                 }
-                out.startObject();
                 writeNode(out, entry);
-                out.finishObject();
             }
             out.finishArray();
         }
