@@ -98,6 +98,9 @@ public class ShExMapManifestTest {
 
             List<String> output = semActPlugin.getOut();
             System.out.println(String.join("\n", output));
+            ShExMapSemanticActionPlugin.BindingNode tree = semActPlugin.getBindingTree();
+            if (tree != null)
+                semActPlugin.getBindingTreeAsJson(System.out);
         }
     }
 }

@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.semact;
 
+import org.apache.jena.atlas.json.io.JSWriter;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShExPathCalculator;
@@ -26,8 +27,11 @@ import org.apache.jena.shex.ShexShape;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.manifest.Manifest;
+import org.apache.jena.shex.manifest.ManifestEntry;
 import org.apache.jena.shex.sys.ValidationContext;
 
+import java.io.OutputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,6 +57,17 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     Map<ShapeExpression, String> shapeExprs = new HashMap<>();
     Map<TripleExpression, String> tripleExprs = new HashMap<>();
     Stack<ShapeExpression> shapeExprStack = new Stack<>();
+    BindingNode root = null;
+    BindingNode cur = null;
+    Stack<BindingNode> nodeStack = new Stack<>();
+
+    public BindingNode getBindingTree() {
+        return root;
+    }
+    public void getBindingTreeAsJson(OutputStream os) {
+        BindingNodeWriter w = new BindingNodeWriter();
+        w.writeJson(os, root);
+    }
 
     public ShExMapSemanticActionPlugin(ShexSchema schema) {
 /*
@@ -109,6 +124,12 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
             int curHash = System.identityHashCode(curShape);
             if (depth > shapeExprStack.size() - 1) {
                 shapeExprStack.add(curShape);
+                if (root == null) {
+                    root = cur = new BindingNode();
+                } else {
+                    cur = cur.nest();
+                }
+                nodeStack.push(cur);
                 System.out.printf("> %x ", curHash);
             } else if (shapeExprStack.get(depth) == curShape) {
                 System.out.printf("= %x ", curHash);
@@ -117,6 +138,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
             } else {
                 trimStack(curStack, depth);
                 shapeExprStack.add(curShape);
+                cur = nodeStack.pop();
                 System.out.printf("> %x ", curHash);
             }
         }
@@ -140,6 +162,9 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         m.find();
         printed.add(extractor.run(m.group(1)));
         out.add(path + ": " + String.join(", ", printed));
+        String var = printed.get(0);
+        String val = String.join(", ", printed.subList(1, printed.size()));
+        cur.bind(var, val);
         System.out.printf(": %s\n", String.join(", ", printed));
         return function.equals("fail") ? false : true;
     }
@@ -191,5 +216,86 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
                 throw new RuntimeException(String.format("%s semantic action argument %s was not a literal or 's', 'p', or 'o'", SemActIri, varName));
         }
         return pos.toString();
+    }
+
+    public class BindingNode {
+        Map<String , List<String>> vars = new HashMap<>();
+        List<BindingNode> children = new ArrayList<>();
+
+        public Map<String, List<String>> getVars() {
+            return vars;
+        }
+
+        public List<BindingNode> getChildren() {
+            return children;
+        }
+
+        void bind(String var, String val) {
+            if (vars.containsKey(var))
+                vars.get(var).add(val);
+            else
+                vars.put(var, new ArrayList<String>(Arrays.asList(val)));
+        }
+
+        BindingNode nest() {
+            BindingNode ret = new BindingNode();
+            children.add(ret);
+            return ret;
+        }
+    }
+
+    public class BindingNodeWriter {
+        public void writeJson(OutputStream os, BindingNode b) {
+            JSWriter out = new JSWriter(os);
+            out.startOutput();
+            writeNode(out, b);
+            out.finishOutput();
+        }
+
+        private void writeNode(JSWriter out, BindingNode b) {
+            out.startArray();
+            final boolean[] first = {true};
+            Map<String, List<String>> bindings = b.getVars();
+            if (!bindings.isEmpty()) {
+                first[0] = false;
+                final boolean[] firstBinding = {true}; // what I gotta do for a closure in Java
+                out.startObject();
+                bindings.forEach((var, vals) -> {
+                    if (firstBinding[0]) {
+                        firstBinding[0] = false;
+                    } else {
+                        out.arraySep();
+                    }
+                    if (vals.size() == 1) {
+                        out.pair(var, vals.get(0));
+                    } else {
+                        out.key(var);
+                        out.startArray();
+                        final boolean[] firstVal = {true};
+                        vals.forEach(val -> {
+                            if (firstVal[0]) {
+                                firstVal[0] = false;
+                            } else {
+                                out.arraySep();
+                            }
+                            out.arrayElement(val);
+                        });
+                        out.finishArray();
+                    }
+                });
+                out.finishObject();
+            }
+            for (BindingNode entry: b.getChildren()) {
+                if (first[0]) {
+                    first[0] = false;
+                } else {
+                    out.arraySep();
+                }
+                out.startObject();
+                writeNode(out, entry);
+                out.finishObject();
+            }
+            out.finishArray();
+        }
     }
 }
