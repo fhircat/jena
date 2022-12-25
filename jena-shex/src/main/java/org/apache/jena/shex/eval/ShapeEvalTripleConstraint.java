@@ -53,7 +53,7 @@ import org.apache.jena.shex.sys.ValidationContext;
 
         Set<Triple> positive = triples.stream().filter(t->{
             Node v = tripleConstraint.reverse() ? t.getSubject() : t.getObject();
-            return shExpr.satisfies(vCxt, v);
+            return shExpr.satisfies(vCxt.create(shExpr), v);
         }).collect(Collectors.toSet());
 
         int N = positive.size();

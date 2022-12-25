@@ -26,6 +26,7 @@ import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.Collection;
 import java.util.List;
@@ -42,9 +43,9 @@ public interface SemanticActionPlugin extends Plugin {
 
     List<String> getUris();
 
-    boolean evaluateStart(SemAct semAct, ShexSchema schema);
+    boolean evaluateStart(SemAct semAct, ValidationContext vCxt, ShexSchema schema);
 
-    boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples);
+    boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpression tripleExpression, Collection<Triple> triples);
 
-    boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus);
+    boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpression shapeExpression, Node focus);
 }

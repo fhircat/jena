@@ -40,6 +40,8 @@ public class ValidationContext {
     private boolean seenReportEntry = false;
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
+
+    private ShapeExpression shapeExpr;
     // <data node, shape>
     private Deque<Pair<Node, ShexShape>> inProgress = new ArrayDeque<>();
 
@@ -47,8 +49,8 @@ public class ValidationContext {
 
     /** @deprecated Use method {@link #create()} */
     @Deprecated
-    public static ValidationContext create(ValidationContext vCxt) {
-        return vCxt.create();
+    public static ValidationContext create(ValidationContext vCxt, ShapeExpression shape) {
+        return vCxt.create(shape);
     }
 
     public ValidationContext(Graph data, ShexSchema shapes) {
@@ -60,19 +62,20 @@ public class ValidationContext {
      *
      * @param vCxt
      */
-    private ValidationContext(ValidationContext vCxt) {
-        this(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex);
+    private ValidationContext(ValidationContext vCxt, ShapeExpression shapeExpr) {
+        this(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex, shapeExpr);
     }
 
     public ValidationContext(Graph data, ShexSchema shapes, Map<String, SemanticActionPlugin> semActPluginIndex) {
-        this(null, data, shapes, null, semActPluginIndex);
+        this(null, data, shapes, null, semActPluginIndex, null);
     }
 
-    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShexShape>> progress, Map<String, SemanticActionPlugin> semActPluginIndex) {
+    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShexShape>> progress, Map<String, SemanticActionPlugin> semActPluginIndex, ShapeExpression shapeExpr) {
         this.parentCtx = parentCtx;
         this.data = data;
         this.shapes = shapes;
         this.semActPluginIndex = semActPluginIndex;
+        this.shapeExpr = shapeExpr;
         if (progress != null)
             this.inProgress.addAll(progress);
     }
@@ -101,6 +104,10 @@ public class ValidationContext {
         return shapes.get(label);
     }
 
+    public ShapeExpression getContextShape() {
+        return shapeExpr;
+    }
+
     public Graph getData() {
         return data;
     }
@@ -111,9 +118,9 @@ public class ValidationContext {
      *
      * @return new ValidationContext with this as parent.
      */
-    public ValidationContext create() {
+    public ValidationContext create(ShapeExpression shapeExpr) {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.shapes, this.inProgress, this.semActPluginIndex);
+        return new ValidationContext(this, this.data, this.shapes, this.inProgress, this.semActPluginIndex, shapeExpr);
     }
 
     public void startValidate(ShexShape shape, Node data) {
@@ -130,7 +137,7 @@ public class ValidationContext {
             String semActIri = semAct.getIri();
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateStart(semAct, schema)) {
+                if (!semActPlugin.evaluateStart(semAct, this, schema)) {
                     vCxt.reportEntry(new ReportItem(String.format("%s start shape failed", semActIri), null));
                     return true;
                 }
@@ -143,7 +150,7 @@ public class ValidationContext {
         return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateShapeExpr(semAct, se, focus))
+                if (!semActPlugin.evaluateShapeExpr(semAct, this, se, focus))
                     return true;
             }
             return false;
@@ -154,7 +161,7 @@ public class ValidationContext {
         return !te.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateTripleExpr(semAct, te, matchables))
+                if (!semActPlugin.evaluateTripleExpr(semAct, this, te, matchables))
                     return true;
             }
             return false;

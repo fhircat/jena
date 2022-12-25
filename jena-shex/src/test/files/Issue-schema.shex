@@ -14,13 +14,13 @@ start = @<#IssueShape>  # Issue validation starts with <#IssueShape>
 <#IssueShape> {
     ex:state [ex:unassigned ex:assigned]%log:{ print("state", o) %};
     ex:reportedBy @<#UserShape>;
-    ex:reportedOn xsd:dateTime          %log:{ print("reported on", o) %};
+#    ex:reportedOn xsd:dateTime          %log:{ print("reported on", o) %};
     (
      ex:reproducedBy @<#EmployeeShape>;
      ex:reproducedOn xsd:dateTime       %log:{ print("reproduced on", o) %};
     );
-    ex:related @<#IssueShape>*
-}
+#    ex:related @<#IssueShape>*
+}                                       %log:{ print("<root>", s) %}
 
 <#UserShape> {
     (
@@ -29,14 +29,15 @@ start = @<#IssueShape>  # Issue validation starts with <#IssueShape>
        foaf:givenName @<#str>+          %log:{ print("user's given name", o) %};
        foaf:familyName @<#str>          %log:{ print("user's family name", o) %};
     );
-    foaf:mbox IRI                       %log:{ print("user's email", o) %}
+#    foaf:mbox IRI                       %log:{ print("user's email", o) %};
+    ex:customerRep @<#EmployeeShape>    %log:{ print("user's representative", o) %}
 }
 
 <#EmployeeShape> {
     foaf:givenName @<#str>+             %log:{ print("employee's given name", o) %};
     foaf:familyName @<#str>             %log:{ print("employee's family name", o) %};
     foaf:phone IRI*                     %log:{ print("employee's email", o) %};
-    foaf:mbox IRI                       %log:{ print("employee's email", o) %}
+#    foaf:mbox IRI                       %log:{ print("employee's email", o) %}
 }
 
 <#str> xsd:string                       %log:{ print("NodeConstraint str", s) %}
