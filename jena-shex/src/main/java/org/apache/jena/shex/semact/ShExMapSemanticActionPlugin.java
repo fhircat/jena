@@ -23,12 +23,9 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShExPathCalculator;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShexShape;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpression;
 import org.apache.jena.shex.expressions.TripleExpression;
-import org.apache.jena.shex.manifest.Manifest;
-import org.apache.jena.shex.manifest.ManifestEntry;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.io.OutputStream;
@@ -65,7 +62,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         return root;
     }
     public void getBindingTreeAsJson(OutputStream os) {
-        BindingTreeWriter w = new BindingTreeWriter();
+        BindingTreeJsonWriter w = new BindingTreeJsonWriter();
         w.writeJson(os, root);
     }
 
@@ -244,7 +241,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         }
     }
 
-    public class BindingTreeWriter {
+    public class BindingTreeJsonWriter {
         public void writeJson(OutputStream os, BindingNode b) {
             JSWriter out = new JSWriter(os);
             out.startOutput();
