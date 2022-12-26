@@ -1628,6 +1628,12 @@ public class ParameterizedSparqlString implements PrefixMapping {
         return this.prefixes.samePrefixMappingAs(other);
     }
 
+    @Override
+    public PrefixMapping setBase( String base ) { return this.prefixes.setBase(base); }
+
+    @Override
+    public String getBase() { return this.prefixes.getBase(); }
+
     /**
      * Represents information about delimiters in a string
      *

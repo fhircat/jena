@@ -43,6 +43,7 @@ public class PrefixMappingImpl implements PrefixMapping
     {
     private Map<String, String> prefixToURI;
     private Map<String, String> URItoPrefix;
+    private String base;
     private boolean locked;
     
     public PrefixMappingImpl()
@@ -268,8 +269,22 @@ public class PrefixMappingImpl implements PrefixMapping
     @Override
     public int numPrefixes()
         { return prefixToURI.size(); }
-    
-    protected boolean equals( PrefixMappingImpl other )
+
+    @Override
+    public PrefixMapping setBase( String base )
+        {
+        checkUnlocked();
+        checkProper( base );
+        if (base == null) throw new NullPointerException( "null URIs are prohibited as arguments to setNsPrefix" );
+        this.base = base;
+        return this;
+        }
+
+    @Override
+    public String getBase()
+        { return base; }
+
+    protected boolean equals(PrefixMappingImpl other )
         { return other.sameAs( this ); }
     
     protected boolean sameAs( PrefixMappingImpl other )

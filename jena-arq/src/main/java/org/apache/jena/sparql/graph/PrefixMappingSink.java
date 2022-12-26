@@ -73,6 +73,12 @@ public class PrefixMappingSink extends PrefixMappingBase {
     }
 
     @Override
+    public void setBaseURI(String base) { }
+
+    @Override
+    public String getBaseURI() { return null; }
+
+    @Override
     protected void apply(BiConsumer<String, String> action) {}
 
     @Override

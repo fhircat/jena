@@ -1065,6 +1065,19 @@ implements Model, PrefixMapping, Lock
     }
 
     @Override
+    public Model setBase( String base )
+    {
+        getPrefixMapping().setBase( base );
+        return this;
+    }
+
+    @Override
+    public String getBase( )
+    {
+        return getPrefixMapping().getBase( );
+    }
+
+    @Override
     public StmtIterator listStatements()
     { return IteratorFactory.asStmtIterator( GraphUtil.findAll( graph ), this); }
 

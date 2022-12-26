@@ -103,7 +103,17 @@ public abstract class PrefixMappingBase implements PrefixMapping {
 
     /** Apply the {@link BiConsumer} to each (prefix, uri) pair. */
     abstract protected void apply(BiConsumer<String, String> action);
-    
+
+    /**
+     * Syntax-checked version of PrefixMapping#setBase
+     * @see org.apache.jena.shared.PrefixMapping#setBase(java.lang.String) */
+    abstract protected void setBaseURI(String base);
+
+    /**
+     * Pass-through for PrefixMapping#setBase
+     * @see org.apache.jena.shared.PrefixMapping#getBase() */
+    abstract protected String getBaseURI();
+
     /**
      * This part of the subclass API and may be overridden if an implementation can do
      * better This general implementation is based on asMap() which may be a copy or may
@@ -153,6 +163,14 @@ public abstract class PrefixMappingBase implements PrefixMapping {
             throw new PrefixMapping.IllegalPrefixException("null for prefix");
         if ( prefix.length() > 0 && !XMLChar.isValidNCName(prefix) )
             throw new PrefixMapping.IllegalPrefixException(prefix);
+    }
+
+    /**
+     * Checks that a base is "legal" - TBD
+     */
+    public static void checkLegalBase(String base) {
+        if ( base != null && base.length() > 0 && base.indexOf('#') != -1 )
+            throw new PrefixMapping.IllegalBaseException(base);
     }
 
     @Override
@@ -264,6 +282,18 @@ public abstract class PrefixMappingBase implements PrefixMapping {
     @Override
     public int numPrefixes() {
         return size();
+    }
+
+    @Override
+    public PrefixMapping setBase(String base) {
+        checkLegalBase(base);
+        setBaseURI(base);
+        return this;
+    }
+
+    @Override
+    public String getBase() {
+        return getBaseURI();
     }
 
     @Override

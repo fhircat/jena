@@ -176,4 +176,16 @@ public interface PrefixMap {
      * Return the number of entries in the prefix map.
      */
     public int size();
+
+    /**
+     * Set base URI for RFC3986 relative URI resolution.
+     * @param base
+     */
+    void setBase(String base);
+
+    /**
+     * Get base URI for RFC3986 relative URI resolution.
+     * @return String URI
+     */
+    String getBase();
 }
