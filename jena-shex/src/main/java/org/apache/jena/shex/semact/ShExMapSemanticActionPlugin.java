@@ -109,36 +109,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
 
     private boolean parse(SemAct semAct, TestSemanticActionPlugin.ExtractVar extractor, ValidationContext vCxt, String path) {
 
-        List<ShapeExpression> curStack = new ArrayList<>();
-        for (ValidationContext parent = vCxt; parent != null; parent = parent.getParent()) {
-            ShapeExpression s = parent.getContextShape();
-            if (s != null)
-                curStack.add(s);
-        }
-        Collections.reverse(curStack);
-        for (int depth = 0; depth < curStack.size(); ++depth) {
-            ShapeExpression curShape = curStack.get(depth);
-            int curHash = System.identityHashCode(curShape);
-            if (depth > shapeExprStack.size() - 1) {
-                shapeExprStack.add(curShape);
-                if (root == null) {
-                    root = cur = new BindingNode();
-                } else {
-                    cur = cur.nest();
-                }
-                nodeStack.push(cur);
-                System.out.printf("> %x ", curHash);
-            } else if (shapeExprStack.get(depth) == curShape) {
-                System.out.printf("= %x ", curHash);
-                if (depth == curStack.size() - 1)
-                    trimStack(curStack, depth + 1);
-            } else {
-                trimStack(curStack, depth);
-                shapeExprStack.add(curShape);
-                cur = nodeStack.pop();
-                System.out.printf("> %x ", curHash);
-            }
-        }
+        updatePosition(vCxt);
 
         String code = semAct.getCode();
         if (code == null)
@@ -162,17 +133,56 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         String var = printed.get(0);
         String val = String.join(", ", printed.subList(1, printed.size()));
         cur.bind(var, val);
-        System.out.printf(": %s\n", String.join(", ", printed));
+//        System.out.printf(": %s\n", String.join(", ", printed));
         return function.equals("fail") ? false : true;
+    }
+
+    private void updatePosition(ValidationContext vCxt) {
+        // Walk up the ValidationContexts to build a list of our nested ShapeExpressions.
+        List<ShapeExpression> newStack = new ArrayList<>();
+        for (ValidationContext parent = vCxt; parent != null; parent = parent.getParent()) {
+            ShapeExpression s = parent.getContextShape();
+            if (s != null)
+                newStack.add(s);
+        }
+        Collections.reverse(newStack);
+
+        // Compare to shapeExprStack to newStack.
+        for (int depth = 0; depth < newStack.size(); ++depth) {
+            ShapeExpression curShape = newStack.get(depth);
+            int curHash = System.identityHashCode(curShape);
+            if (depth > shapeExprStack.size() - 1) {
+                // newStack is deeper than shapeExprStack
+                shapeExprStack.add(curShape);
+                if (root == null) {
+                    // We need to create the top node in the tree.
+                    root = cur = new BindingNode();
+                } else {
+                    // We're creating a nested node in the tree.
+                    cur = cur.nest();
+                }
+                nodeStack.push(cur);
+//                System.out.printf("> %x ", curHash);
+            } else if (shapeExprStack.get(depth) == curShape) {
+//                System.out.printf("= %x ", curHash);
+                if (depth == newStack.size() - 1)
+                    trimStack(newStack, depth + 1);
+            } else {
+                trimStack(newStack, depth);
+                shapeExprStack.add(curShape);
+                cur = nodeStack.pop();
+//                System.out.printf("> %x ", curHash);
+            }
+        }
     }
 
     private void trimStack(List<ShapeExpression> curStack, int depth) {
         List<ShapeExpression> toTrim = shapeExprStack.subList(depth, shapeExprStack.size());
 
         // Make a reversed copy and close each one.
-        List<ShapeExpression> toWalk = new ArrayList<>(toTrim);
-        Collections.reverse(toWalk);
-        toWalk.forEach(s -> System.out.printf("< %x ", System.identityHashCode(s)));
+//        List<ShapeExpression> toWalk = new ArrayList<>(toTrim);
+//        Collections.reverse(toWalk);
+//        toWalk.forEach(s -> System.out.printf("< %x ", System.identityHashCode(s)));
 
         toTrim.clear();
     }
