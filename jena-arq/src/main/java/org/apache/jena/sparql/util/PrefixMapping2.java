@@ -193,8 +193,22 @@ public class PrefixMapping2 implements PrefixMapping
         x.putAll(pmapLocal.getNsPrefixMap()) ;
         x.putAll(pmapGlobal.getNsPrefixMap()) ;
         return x.size() ;
-    }    
-    
+    }
+
+    /** @see org.apache.jena.shared.PrefixMapping#setBase(java.lang.String) */
+    @Override
+    public PrefixMapping setBase(String base)
+    {
+        pmapLocal.setBase(base) ;
+        return this ;
+    }
+
+    /** @see org.apache.jena.shared.PrefixMapping#getBase() */
+    @Override
+    public String getBase()
+    {
+        return pmapLocal.getBase() ;
+    }
 
     
     /** @see org.apache.jena.shared.PrefixMapping#lock() */

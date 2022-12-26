@@ -37,6 +37,7 @@ public class PrefixMappingMem extends PrefixMappingBase {
 
     private Map<String, String> prefixToUri = new ConcurrentHashMap<>();
     private Map<String, String> uriToPrefix = new ConcurrentHashMap<>();
+    private String base = null;
 
     public PrefixMappingMem() {}
 
@@ -111,6 +112,12 @@ public class PrefixMappingMem extends PrefixMappingBase {
     protected Map<String, String> asMapCopy() {
         return Map.copyOf(prefixToUri);
     }
+
+    @Override
+    public void setBaseURI(String base) { this.base = base; }
+
+    @Override
+    public String getBaseURI() { return this.base; }
 
     @Override
     protected void apply(BiConsumer<String, String> action) {

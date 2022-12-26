@@ -187,8 +187,26 @@ public interface PrefixMapping
          Return the number of defined prefixes.
      */
     int numPrefixes() ;
-    
-    /**
+
+        /**
+         Specify a base URI for relative URI resolution. Any previous value is overwritten.
+         <p>
+         Need not check the RFC2396 validity of the URI. Bad URIs are either silently
+         ignored or behave as if they were good. The earlier restriction that the URI
+         should end with a non-NCName character has been removed.
+         <p>
+
+         Note, that base URIs must not include a fragment or '#' is not legal
+         in the local part of an NCName.
+
+         @param base the new value of the base URI
+         @exception IllegalBaseException if the prefix is not an XML NCName
+         @return this PrefixMapping
+         */
+        PrefixMapping setBase( String base );
+        String getBase( );
+
+        /**
         Exception to throw when the prefix argument to setNsPrefix is
         illegal for some reason.
     */
@@ -197,7 +215,16 @@ public interface PrefixMapping
         public IllegalPrefixException( String prefixName ) { super( prefixName ); }
         }
 
-    /**
+        /**
+         Exception to throw when the base argument to setBase is
+         illegal for some reason.
+         */
+        public static class IllegalBaseException extends JenaException
+        {
+            public IllegalBaseException( String baseIRI ) { super( baseIRI ); }
+        }
+
+        /**
         Exception to throw when trying to update a locked PrefixMapping.
     */
     public static class JenaLockedException extends JenaException
