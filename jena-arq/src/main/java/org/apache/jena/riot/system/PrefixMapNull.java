@@ -122,10 +122,4 @@ public abstract class PrefixMapNull implements PrefixMap {
     public int size() {
         return 0 ;
     }
-
-    @Override
-    public void setBase(String base) { }
-
-    @Override
-    public String getBase() { return null; }
 }

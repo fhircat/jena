@@ -56,8 +56,6 @@ public class PrefixMapStd extends PrefixMapBase {
     // resorting to a full search. See abbrev(String) below.
     private final Map<String, String> uriToPrefix = new ConcurrentHashMap<>();
 
-    private String base = null;
-
     /**
      * Creates a new empty prefix mapping
      */
@@ -176,15 +174,5 @@ public class PrefixMapStd extends PrefixMapBase {
     @Override
     public int size() {
         return prefixes.size();
-    }
-
-    @Override
-    public void setBase(String iriString) {
-        this.base = iriString;
-    }
-
-    @Override
-    public String getBase() {
-        return this.base;
     }
 }

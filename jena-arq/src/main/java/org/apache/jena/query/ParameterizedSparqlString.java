@@ -1629,7 +1629,7 @@ public class ParameterizedSparqlString implements PrefixMapping {
     }
 
     @Override
-    public PrefixMapping setBase( String base ) { return this.prefixes.setBase(base); }
+    public PrefixMapping setBase( String base ) { this.prefixes.setBase(base); return this; }
 
     @Override
     public String getBase() { return this.prefixes.getBase(); }

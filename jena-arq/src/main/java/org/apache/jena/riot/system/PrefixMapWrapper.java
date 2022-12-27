@@ -108,10 +108,4 @@ public class PrefixMapWrapper implements PrefixMap
     @Override
     public int size()
     { return getR().size() ; }
-
-    @Override
-    public void setBase(String base) { getR().setBase(base); }
-
-    @Override
-    public String getBase() { return getR().getBase(); }
 }

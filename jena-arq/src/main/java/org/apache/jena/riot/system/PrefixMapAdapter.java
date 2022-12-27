@@ -110,14 +110,6 @@ public class PrefixMapAdapter extends PrefixMapBase implements PrefixMap {
     }
 
     @Override
-    public void setBase(String iriString) {
-        prefixMapping.setBase(iriString);
-    } // !! return?
-
-    @Override
-    public String getBase() { return prefixMapping.getBase(); }
-
-    @Override
     public String toString() {
         return Prefixes.toString(this);
     }
