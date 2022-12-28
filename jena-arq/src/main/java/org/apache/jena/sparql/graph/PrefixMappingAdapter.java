@@ -95,10 +95,10 @@ public class PrefixMappingAdapter extends PrefixMappingBase {
     }
 
     @Override
-    public void setBaseURI(String base) { prefixMap.setBase(base); }
+    public void setBaseURI(String base) { }
 
     @Override
-    public String getBaseURI() { return prefixMap.getBase(); }
+    public String getBaseURI() { return null; }
 
     @Override
     protected void apply(BiConsumer<String, String> action) {

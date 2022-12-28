@@ -134,4 +134,15 @@ public class PrefixMappingMonitor implements PrefixMapping {
     public boolean samePrefixMappingAs(PrefixMapping other) {
         return get().samePrefixMappingAs(other);
     }
+
+    @Override
+    public PrefixMapping setBase(String base) {
+        // TODO: add base support to PrefixMappingChanges and RDFChanges
+        get().setBase(base);
+        return this;
+    }
+
+    public String getBase() {
+        return get().getBase();
+    }
 }

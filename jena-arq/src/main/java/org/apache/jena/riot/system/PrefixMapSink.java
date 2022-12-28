@@ -50,10 +50,4 @@ public class PrefixMapSink extends PrefixMapNull {
     public String toString() {
         return "PrefixMapSink";
     }
-
-    @Override
-    public void setBase(String base) { }
-
-    @Override
-    public String getBase() { return null; }
 }
