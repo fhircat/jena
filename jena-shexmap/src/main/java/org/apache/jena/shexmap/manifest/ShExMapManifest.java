@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.shex.jena.shexmap.manifest;
+package org.apache.jena.shexmap.manifest;
 
 import org.apache.jena.shex.manifest.Manifest;
 import org.apache.jena.shex.manifest.SourcedString;

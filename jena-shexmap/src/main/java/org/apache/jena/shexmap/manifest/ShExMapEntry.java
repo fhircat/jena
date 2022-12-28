@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.shex.jena.shexmap.manifest;
+package org.apache.jena.shexmap.manifest;
 
 import org.apache.jena.atlas.json.io.JSWriter;
 import org.apache.jena.shex.manifest.ManifestEntry;
@@ -25,7 +25,6 @@ import org.apache.jena.shex.manifest.SourcedString;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class ShExMapEntry extends ManifestEntry {
 
