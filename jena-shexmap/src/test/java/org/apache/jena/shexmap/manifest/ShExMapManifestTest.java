@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.shex.jena.shexmap.manifest;
+package org.apache.jena.shexmap.manifest;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

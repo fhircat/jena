@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shexmap.manifest;
+package io.shex.jena.shexmap.manifest;
 
 import org.apache.jena.shex.manifest.Manifest;
 import org.apache.jena.shex.manifest.SourcedString;
@@ -39,6 +39,4 @@ public class ShExMapManifest extends Manifest<ShExMapEntry> {
     public int hashCode() {
         return super.hashCode();
     }
-
-
 }

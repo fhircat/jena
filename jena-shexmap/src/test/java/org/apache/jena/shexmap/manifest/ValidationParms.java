@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.manifest;
+package org.apache.jena.shexmap.manifest;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.manifest.ManifestEntry;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.sparql.graph.GraphFactory;
 

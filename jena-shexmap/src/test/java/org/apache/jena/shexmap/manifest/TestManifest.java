@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.manifest;
+package org.apache.jena.shexmap.manifest;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jena.atlas.json.io.JSWriter;
+import org.apache.jena.shex.manifest.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
