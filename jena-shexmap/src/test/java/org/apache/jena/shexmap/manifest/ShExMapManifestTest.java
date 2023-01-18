@@ -51,7 +51,7 @@ public class ShExMapManifestTest {
             ManifestEntry entry = manifestEntries.get(i);
             suite.addTest(entry instanceof ValidationEntry
                     ? new TestManifest.ManifestEntryTest(manifestFile, i, (ValidationEntry)entry)
-                    : new ShExMapTest(manifestFile, i, (ShExMapEntry)entry)
+                    : new ShExMapTest(manifestFile, i, (ShExMapManifestEntry)entry)
             );
         }
 
@@ -74,8 +74,8 @@ public class ShExMapManifestTest {
             List<ManifestEntry> entries = manifest.getEntries();
             assertEquals(entries.size(), 3);
             assertEquals(entries.get(0).getClass().getName(), ValidationEntry.class.getName());
-            assertEquals(entries.get(1).getClass().getName(), ShExMapEntry.class.getName());
-            assertEquals(entries.get(2).getClass().getName(), ShExMapEntry.class.getName());
+            assertEquals(entries.get(1).getClass().getName(), ShExMapManifestEntry.class.getName());
+            assertEquals(entries.get(2).getClass().getName(), ShExMapManifestEntry.class.getName());
         }
     }
 
@@ -83,8 +83,8 @@ public class ShExMapManifestTest {
         @Override
         public ManifestEntry newEntry(Map<String, SourcedString> nvps) {
             ManifestEntry newEntry;
-            if (nvps.containsKey(ShExMapEntry.KEY_OUTPUT_SCHEMA))
-                newEntry = new ShExMapEntry(nvps);
+            if (nvps.containsKey(ShExMapManifestEntry.KEY_OUTPUT_SCHEMA))
+                newEntry = new ShExMapManifestEntry(nvps);
             else
                 newEntry = new ValidationEntry(nvps);
             addEntry(newEntry);

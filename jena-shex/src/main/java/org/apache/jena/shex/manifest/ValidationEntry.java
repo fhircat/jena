@@ -22,6 +22,8 @@ import java.util.Map;
 
 public class ValidationEntry extends ManifestEntry {
 
+    public ValidationEntry() {}
+
     public ValidationEntry(Map<String,SourcedString> nvps) {
         super(nvps);
     }

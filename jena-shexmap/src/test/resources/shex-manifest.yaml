@@ -1,4 +1,3 @@
----
 - schemaLabel: clinical observation
   schema: |
     PREFIX : <http://hl7.org/fhir/>
@@ -179,9 +178,9 @@
   queryMap: "<Obs1>@START"
   status: nonconformant
 - schemaLabel: GO-CAM example
-  schemaURL: GO-CAM-schema.shex
+  schemaUrl: GO-CAM-schema.shex
   dataLabel: 1 instance with parents
-  dataURL: GO-CAM-instance.ttl
+  dataUrl: GO-CAM-instance.ttl
   queryMap: |
     <http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>
   status: conformant

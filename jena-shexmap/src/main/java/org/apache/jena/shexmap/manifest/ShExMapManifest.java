@@ -23,9 +23,9 @@ import org.apache.jena.shex.manifest.SourcedString;
 
 import java.util.Map;
 
-public class ShExMapManifest extends Manifest<ShExMapEntry> {
-    public ShExMapEntry newEntry(Map<String, SourcedString> nvps) {
-        ShExMapEntry entry = new ShExMapEntry(nvps);
+public class ShExMapManifest extends Manifest<ShExMapManifestEntry> {
+    public ShExMapManifestEntry newEntry(Map<String, SourcedString> nvps) {
+        ShExMapManifestEntry entry = new ShExMapManifestEntry(nvps);
         addEntry(entry);
         return entry;
     }

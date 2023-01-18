@@ -26,14 +26,25 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 
-public class ShExMapEntry extends ManifestEntry {
+public class ShExMapManifestEntry extends ManifestEntry {
 
     public static final String KEY_OUTPUT_SCHEMA = "outputSchema";
     private String outputSchema;
     public static final String KEY_OUTPUT_SCHEMA_URL = "outputSchemaURL";
     private URI outputSchemaUrl;
 
-    public ShExMapEntry(Map<String, SourcedString> nvps) {
+    public static final String KEY_OUTPUT_QUERY_MAP = "outputQueryMap";
+
+    private String outputQueryMap;
+
+    public static final String KEY_STATIC_VARS = "staticVars";
+
+    private Map<String,Object> staticVars;
+
+    public ShExMapManifestEntry() {
+    }
+
+    public ShExMapManifestEntry(Map<String, SourcedString> nvps) {
         super(nvps);
     }
 
@@ -44,6 +55,9 @@ public class ShExMapEntry extends ManifestEntry {
                 case KEY_OUTPUT_SCHEMA:
                     setOutputSchema(value);
                     setOutputSchemaUrl(source);
+                    break;
+                case KEY_OUTPUT_QUERY_MAP:
+                    setOutputQueryMap(value);
                     break;
             }
         }
@@ -56,6 +70,12 @@ public class ShExMapEntry extends ManifestEntry {
             out.pair(KEY_OUTPUT_SCHEMA_URL, outputSchemaUrl.toString());
         } else if (outputSchema != null) {
             out.pair(KEY_OUTPUT_SCHEMA, outputSchema);
+        } else if(outputQueryMap != null) {
+            out.pair(KEY_OUTPUT_QUERY_MAP, outputQueryMap);
+        } else if(staticVars != null) {
+            staticVars.forEach((name,value) -> {
+                out.pair(name, "" + value);//TODO Eric please take a look. Currently making all String types.
+            });
         }
     }
 
@@ -75,17 +95,33 @@ public class ShExMapEntry extends ManifestEntry {
         this.outputSchemaUrl = outputSchemaUrl;
     }
 
+    public Map<String, Object> getStaticVars() {
+        return staticVars;
+    }
+
+    public void setStaticVars(Map<String, Object> staticVars) {
+        this.staticVars = staticVars;
+    }
+
+    public String getOutputQueryMap() {
+        return outputQueryMap;
+    }
+
+    public void setOutputQueryMap(String outputQueryMap) {
+        this.outputQueryMap = outputQueryMap;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ShExMapEntry)) return false;
+        if (!(o instanceof ShExMapManifestEntry)) return false;
         if (!super.equals(o)) return false;
-        ShExMapEntry that = (ShExMapEntry) o;
-        return Objects.equals(getOutputSchema(), that.getOutputSchema()) && Objects.equals(getOutputSchemaUrl(), that.getOutputSchemaUrl());
+        ShExMapManifestEntry that = (ShExMapManifestEntry) o;
+        return Objects.equals(getOutputSchema(), that.getOutputSchema()) && Objects.equals(getOutputSchemaUrl(), that.getOutputSchemaUrl()) && Objects.equals(getOutputQueryMap(), that.getOutputQueryMap()) && Objects.equals(getStaticVars(), that.getStaticVars());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getOutputSchema(), getOutputSchemaUrl());
+        return Objects.hash(super.hashCode(), getOutputSchema(), getOutputSchemaUrl(), getOutputQueryMap(), getStaticVars());
     }
 }

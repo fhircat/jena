@@ -54,6 +54,25 @@ public abstract class ManifestEntry {
     private URI queryMapUrl;
     private String status;
 
+    public ManifestEntry() {}
+
+    public ManifestEntry(Map<String, SourcedString> nvps) {
+        List<String> matched = new ArrayList<>();
+        if(nvps != null) {
+            for (String key : nvps.keySet()) {
+                boolean found = true;
+                String value = nvps.get(key).getValue();
+                URI source = nvps.get(key).getSource();
+                found = setProperty(key, value, source);
+                if (found)
+                    matched.add(key);
+            }
+            for (String key : matched) {
+                nvps.remove(key);
+            }
+        }
+    }
+
     public String getSchemaLabel() {
         return schemaLabel;
     }
@@ -124,20 +143,6 @@ public abstract class ManifestEntry {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public ManifestEntry(Map<String, SourcedString> nvps) {
-        List<String> matched = new ArrayList<>();
-        for(String key: nvps.keySet()) {
-            boolean found = true;
-            String value = nvps.get(key).getValue();
-            URI source = nvps.get(key).getSource();
-            found = setProperty(key, value, source);
-            if (found)
-                matched.add(key);
-        }
-        for (String key: matched)
-            nvps.remove(key);
     }
 
     public boolean setProperty(String key, String value, URI source) {
@@ -214,5 +219,21 @@ public abstract class ManifestEntry {
     @Override
     public int hashCode() {
         return Objects.hash(getSchemaLabel(), getSchema(), getSchemaUrl(), getDataLabel(), getData(), getDataUrl(), getQueryMap(), getQueryMapUrl(), getStatus());
+    }
+
+    public static boolean hasProperty(String key) {
+        boolean found = true;
+        switch (key) {
+            case KEY_SCHEMA_LABEL:
+            case KEY_SCHEMA:
+            case KEY_DATA_LABEL:
+            case KEY_DATA:
+            case KEY_QUERY_MAP:
+            case KEY_STATUS:
+                break;
+            default:
+                found = false;
+        }
+        return found;
     }
 }

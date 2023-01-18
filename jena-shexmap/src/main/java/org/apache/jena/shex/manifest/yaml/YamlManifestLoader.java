@@ -16,17 +16,20 @@
 **/
 package org.apache.jena.shex.manifest.yaml;
 
-import org.apache.jena.shex.manifest.Manifest;
+import org.apache.jena.shex.manifest.ValidationManifest;
+import org.apache.jena.shexmap.manifest.ShExMapManifest;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
-import java.util.Map;
 
 public class YamlManifestLoader {
-    public Manifest loadManifest(InputStream inputStream) {
-        Yaml yaml = new Yaml();
-        Map<String, Object> obj = yaml.load(inputStream);
-        System.out.println(obj);
-        return null;
+    public ShExMapManifest loadShExMapManifest(InputStream inputStream) {
+        Yaml yaml = new Yaml(new ShExMapManifestConstructor());
+        return yaml.load(inputStream);
+    }
+
+    public ValidationManifest loadValidationManifest(InputStream inputStream) {
+        Yaml yaml = new Yaml(new ValidationManifestConstructor());
+        return yaml.load(inputStream);
     }
 }
