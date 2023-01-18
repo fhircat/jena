@@ -116,7 +116,7 @@
     <Patient2>
       :name "Bob" ;
       :birthdate "1999-12-31"^^xsd:date .
-  queryMap: "<Obs1>@START\n"
+  queryMap: "<Obs1>@START"
   status: nonconformant
 - schemaLabel: clinical observation
   schema: |

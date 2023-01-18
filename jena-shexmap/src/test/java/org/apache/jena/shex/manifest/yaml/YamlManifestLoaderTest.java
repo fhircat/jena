@@ -16,8 +16,10 @@
  **/
 package org.apache.jena.shex.manifest.yaml;
 
+import org.apache.jena.shex.manifest.ValidationEntry;
 import org.apache.jena.shex.manifest.ValidationManifest;
 import org.apache.jena.shexmap.manifest.ShExMapManifest;
+import org.apache.jena.shexmap.manifest.ShExMapManifestEntry;
 import org.junit.Test;
 import org.yaml.snakeyaml.Yaml;
 
@@ -30,6 +32,10 @@ public class YamlManifestLoaderTest {
         YamlManifestLoader yamlLoader = new YamlManifestLoader();
         ValidationManifest manifest = yamlLoader.loadValidationManifest(YamlManifestLoaderTest.class.getResourceAsStream("/shex-manifest.yaml"));
         assertEquals(7, manifest.getEntries().size());
+        ValidationEntry entry = manifest.getEntries().get(3);
+        assertEquals("bad status", entry.getDataLabel());
+        assertEquals("<Obs1>@START", entry.getQueryMap());
+        assertEquals("nonconformant", entry.getStatus());
     }
 
     @Test
@@ -37,6 +43,9 @@ public class YamlManifestLoaderTest {
         YamlManifestLoader yamlLoader = new YamlManifestLoader();
         ShExMapManifest manifest = yamlLoader.loadShExMapManifest(YamlManifestLoaderTest.class.getResourceAsStream("/shexmap-manifest.yaml"));
         assertEquals(9, manifest.getEntries().size());
+        ShExMapManifestEntry entry = manifest.getEntries().get(0);
+        assertEquals(1, entry.getStaticVars().size());
+        assertEquals("\"123-456\"", entry.getStaticVars().get("http://abc.example/someConstant"));
     }
 
     @Test
