@@ -44,23 +44,23 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
 
-    private void before(ShapeExpression shape) {
+    private void before(ShapeExpr shape) {
         if ( beforeVisitor != null )
             shape.visit(beforeVisitor);
     }
 
-    private void after(ShapeExpression shape) {
+    private void after(ShapeExpr shape) {
         if ( afterVisitor != null )
             shape.visit(afterVisitor);
     }
 
-    @Override public void visit(ShapeExprAND shape) {
+    @Override public void visit(ShapeAnd shape) {
         before(shape);
         shape.expressions().forEach(sh->sh.visit(this));
         after(shape);
     }
 
-    @Override public void visit(ShapeExprOR shape) {
+    @Override public void visit(ShapeOr shape) {
         before(shape);
         shape.expressions().forEach(sh->sh.visit(this));
         after(shape);

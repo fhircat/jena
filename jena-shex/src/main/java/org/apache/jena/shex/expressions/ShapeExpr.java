@@ -25,15 +25,15 @@ import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.List;
 
-public abstract class ShapeExpression implements ShapeElement {
+public abstract class ShapeExpr implements ShapeElement {
 
     private List<SemAct> semActs;
 
-    public ShapeExpression(List<SemAct> semActs) {
+    public ShapeExpr(List<SemAct> semActs) {
         this.semActs = semActs;
     }
 
-    protected ShapeExpression() { this(null); }
+    protected ShapeExpr() { this(null); }
 
     public List<SemAct> getSemActs() {
         return semActs;

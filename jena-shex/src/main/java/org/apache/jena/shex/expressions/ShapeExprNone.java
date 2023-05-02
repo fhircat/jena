@@ -24,10 +24,10 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** Absence of a shape expression. For example, the outcome of "{}" */
-public class ShapeExprNone extends ShapeExpression {
+public class ShapeExprNone extends ShapeExpr {
 
-    private static ShapeExpression instance = new ShapeExprNone();
-    public static ShapeExpression get() { return instance ; }
+    private static ShapeExpr instance = new ShapeExprNone();
+    public static ShapeExpr get() { return instance ; }
 
     private ShapeExprNone() {
         super();

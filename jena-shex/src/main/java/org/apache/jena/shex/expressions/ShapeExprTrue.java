@@ -27,7 +27,7 @@ import org.apache.jena.shex.sys.ValidationContext;
  *  A shape expression that is always true.
  *  This is not a syntax element (see ShapeExprDOT).
  */
-public class ShapeExprTrue extends ShapeExpression {
+public class ShapeExprTrue extends ShapeExpr {
 
     public ShapeExprTrue(int x) {
         super();

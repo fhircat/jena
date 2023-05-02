@@ -36,7 +36,7 @@ ShapeAtom := ( nonLitNodeConstraint ( inlineShapeOrRef )?
              )
 </pre>
 */
-public class ShapeNodeConstraint extends ShapeExpression {
+public class ShapeNodeConstraint extends ShapeExpr {
 
     private final NodeConstraint nodeConstraint;
 
@@ -44,7 +44,7 @@ public class ShapeNodeConstraint extends ShapeExpression {
         this(null, Objects.requireNonNull(nodeConstraint, "NodeConstraint"), semActs);
     }
 
-    private ShapeNodeConstraint(ShapeExpression shapeExpression, NodeConstraint nodeConstraint, List<SemAct> semActs) {
+    private ShapeNodeConstraint(ShapeExpr shapeExpr, NodeConstraint nodeConstraint, List<SemAct> semActs) {
         super(semActs);
         this.nodeConstraint = nodeConstraint;
 

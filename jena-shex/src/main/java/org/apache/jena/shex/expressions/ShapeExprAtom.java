@@ -26,15 +26,15 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** ShapeAtom - element of the ShEx abstract syntax. */
-public class ShapeExprAtom extends ShapeExpression {
+public class ShapeExprAtom extends ShapeExpr {
 
-    private final ShapeExpression other;
+    private final ShapeExpr other;
 
-    public ShapeExprAtom(ShapeExpression other) {
+    public ShapeExprAtom(ShapeExpr other) {
         this.other = other;
     }
 
-    public ShapeExpression getShape() { return other; }
+    public ShapeExpr getShape() { return other; }
 
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {

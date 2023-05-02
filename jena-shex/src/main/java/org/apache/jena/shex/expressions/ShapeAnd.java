@@ -27,35 +27,35 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprAND extends ShapeExpression {
+public class ShapeAnd extends ShapeExpr {
 
     // Could pull out ShapeExpressionN
     // [ ] print
     // [ ] Most of equals.
 
-    public static ShapeExpression create(List<ShapeExpression> acc) {
+    public static ShapeExpr create(List<ShapeExpr> acc) {
         if ( acc.size() == 0 )
             throw new InternalErrorException("Empty list");
         if ( acc.size() == 1 )
             return acc.get(0);
-        return new ShapeExprAND(acc);
+        return new ShapeAnd(acc);
     }
 
-    List<ShapeExpression> shapeExpressions;
+    List<ShapeExpr> shapeExprs;
 
-    private ShapeExprAND(List<ShapeExpression> expressions) {
+    private ShapeAnd(List<ShapeExpr> expressions) {
         super();
-        this.shapeExpressions = expressions;
+        this.shapeExprs = expressions;
     }
 
-    public List<ShapeExpression> expressions() {
-        return shapeExpressions;
+    public List<ShapeExpr> expressions() {
+        return shapeExprs;
     }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
         // Record all reports?
-        for ( ShapeExpression shExpr : shapeExpressions ) {
+        for ( ShapeExpr shExpr : shapeExprs) {
             boolean innerSatisfies = shExpr.satisfies(vCxt, data);
             if ( !innerSatisfies )
                 return false;
@@ -73,7 +73,7 @@ public class ShapeExprAND extends ShapeExpression {
         //out.printf("AND(%d)\n", shapeExpressions.size());
         out.println("AND");
         int idx = 0;
-        for ( ShapeExpression shExpr : shapeExpressions ) {
+        for ( ShapeExpr shExpr : shapeExprs) {
             idx++;
             out.printf("%d -", idx);
             out.incIndent(4);
@@ -90,7 +90,7 @@ public class ShapeExprAND extends ShapeExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(1, shapeExpressions);
+        return Objects.hash(1, shapeExprs);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class ShapeExprAND extends ShapeExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeExprAND other = (ShapeExprAND)obj;
-        return Objects.equals(shapeExpressions, other.shapeExpressions);
+        ShapeAnd other = (ShapeAnd)obj;
+        return Objects.equals(shapeExprs, other.shapeExprs);
     }
 }

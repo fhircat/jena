@@ -26,7 +26,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprNOT extends ShapeExpression {
+public class ShapeExprNOT extends ShapeExpr {
 
 //    public static ShapeExpression create(List<ShapeExpression> args) {
 //        if ( args.size() == 0 )
@@ -36,11 +36,11 @@ public class ShapeExprNOT extends ShapeExpression {
 //        ShapeExpression shapeExpr = args.get(0);
 //        return new ShapeExpressionNOT(shapeExpr);
 //    }
-    private final ShapeExpression other;
+    private final ShapeExpr other;
 
-    public ShapeExprNOT(ShapeExpression shapeExpression) {
+    public ShapeExprNOT(ShapeExpr shapeExpr) {
         super();
-        this.other = shapeExpression;
+        this.other = shapeExpr;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ShapeExprNOT extends ShapeExpression {
         return false;
     }
 
-    public ShapeExpression subShape() {
+    public ShapeExpr subShape() {
         return other;
     }
 

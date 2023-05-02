@@ -28,7 +28,7 @@ import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** Shape expression that redirects. */
-public class ShapeExprRef extends ShapeExpression {
+public class ShapeExprRef extends ShapeExpr {
     private final Node ref;
 
     public ShapeExprRef(Node ref) {

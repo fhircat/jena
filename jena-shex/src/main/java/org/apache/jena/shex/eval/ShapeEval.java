@@ -51,7 +51,7 @@ public class ShapeEval {
     // With help from the ideas (not code) of:
     // https://github.com/hsolbrig/PyShEx/blob/master/pyshex/shape_expressions_language/p5_5_shapes_and_triple_expressions.py
 
-    public static boolean matchesShapeExpr(ValidationContext vCxt, ShapeExpression shapeExpr, Node node) {
+    public static boolean matchesShapeExpr(ValidationContext vCxt, ShapeExpr shapeExpr, Node node) {
         return shapeExpr.satisfies(vCxt, node);
     }
 

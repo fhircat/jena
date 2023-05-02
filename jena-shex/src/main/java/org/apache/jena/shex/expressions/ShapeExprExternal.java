@@ -23,7 +23,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprExternal extends ShapeExpression {
+public class ShapeExprExternal extends ShapeExpr {
 
     public ShapeExprExternal() {
         super();

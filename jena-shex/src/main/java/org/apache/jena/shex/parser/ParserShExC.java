@@ -78,8 +78,8 @@ public class ParserShExC extends LangParserBase {
     private Map<Node, TripleExpression> tripleExprRefs = new HashMap<>();
 
     // Stack of shape expressions used during parsing a top level shape.
-    private Deque<ShapeExpression> shapeExprStack = new ArrayDeque<>();
-    private ShapeExpression currentShapeExpression() { return peek(shapeExprStack); }
+    private Deque<ShapeExpr> shapeExprStack = new ArrayDeque<>();
+    private ShapeExpr currentShapeExpression() { return peek(shapeExprStack); }
 
     private Deque<TripleExpression> tripleExprStack = new ArrayDeque<>();
     private TripleExpression currentTripleExpression() { return peek(tripleExprStack); }
@@ -170,7 +170,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeExprDecl() {
-        ShapeExpression sExpr = finishShapeExpressionTop();
+        ShapeExpr sExpr = finishShapeExpressionTop();
         newShape(sExpr);
         finish("ShapeExprDecl");
     }
@@ -192,12 +192,12 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishStartClause() {
-        ShapeExpression sExpr = finishShapeExpressionTop();
+        ShapeExpr sExpr = finishShapeExpressionTop();
         startShape = newShape(sExpr);
         finish("StartClause");
     }
 
-    private ShexShape newShape(ShapeExpression sExpr) {
+    private ShexShape newShape(ShapeExpr sExpr) {
         ShexShape newShexShape = new ShexShape(currentShexShapeLabel, sExpr);
         shapes.add(newShexShape);
         currentShexShapeLabel = null;
@@ -215,11 +215,11 @@ public class ParserShExC extends LangParserBase {
         }
     }
 
-    private ShapeExpression finishShapeExpressionTop() {
+    private ShapeExpr finishShapeExpressionTop() {
         if ( shapeExprStack.isEmpty() )
             return ShapeExprNone.get();
 
-        ShapeExpression sExpr = pop(shapeExprStack);
+        ShapeExpr sExpr = pop(shapeExprStack);
         if ( DEBUG_DEV ) {
             if ( ! shapeExprStack.isEmpty() )
                 debug("finishShapeExpressionTop: Stack not empty");
@@ -237,22 +237,22 @@ public class ParserShExC extends LangParserBase {
     // Do nothing with the stack but pairs with startShapeOp
     private void finishShapeOpNoAction(String operation, int idx) { }
 
-    private List<ShapeExpression> finishShapeOp(int idx) {
+    private List<ShapeExpr> finishShapeOp(int idx) {
         return pop(shapeExprStack, idx);
     }
 
-    private void finishShapeOp(int idx, Function<List<ShapeExpression>, ShapeExpression> action) {
+    private void finishShapeOp(int idx, Function<List<ShapeExpr>, ShapeExpr> action) {
         if ( action == null )
             return ;
-        List<ShapeExpression> args = finishShapeOp(idx);
+        List<ShapeExpr> args = finishShapeOp(idx);
         if ( args == null )
             return ;
         processShapeExprArgs(args, action);
     }
 
-    private void processShapeExprArgs(List<ShapeExpression> args, Function<List<ShapeExpression>, ShapeExpression> action) {
+    private void processShapeExprArgs(List<ShapeExpr> args, Function<List<ShapeExpr>, ShapeExpr> action) {
         if ( action != null ) {
-            ShapeExpression sExpr = action.apply(args);
+            ShapeExpr sExpr = action.apply(args);
             if ( sExpr != null )
                 push(shapeExprStack, sExpr);
         }
@@ -306,7 +306,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeOr(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeExprOR::create);
+        finishShapeOp(idx, ShapeOr::create);
         finish(inline, "ShapeOr");
     }
 
@@ -316,7 +316,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeAnd(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeExprAND::create);
+        finishShapeOp(idx, ShapeAnd::create);
         finish(inline, "ShapeAnd");
     }
 
@@ -330,8 +330,8 @@ public class ParserShExC extends LangParserBase {
         if ( x > 1 )
             throw new InternalErrorException("Shape NOT - multiple items on the stack");
         if ( negate && ! shapeExprStack.isEmpty() ) {
-            ShapeExpression shExpr = pop(shapeExprStack);
-            ShapeExpression shExpr2 = new ShapeExprNOT(shExpr);
+            ShapeExpr shExpr = pop(shapeExprStack);
+            ShapeExpr shExpr2 = new ShapeExprNOT(shExpr);
             push(shapeExprStack, shExpr2);
         }
         finish(inline, "ShapeNot");
@@ -349,7 +349,7 @@ public class ParserShExC extends LangParserBase {
 
     protected void finishShapeAtom(Inline inline, int idx) {
         //Gather NodeConstraints parts, Kind, datatype and facets, together.
-        finishShapeOp(idx, ShapeExprAND::create);
+        finishShapeOp(idx, ShapeAnd::create);
         finish(inline, "ShapeAtom");
     }
 
@@ -436,13 +436,13 @@ public class ParserShExC extends LangParserBase {
 
     protected void finishTripleConstraint(Node label, int idx, Node predicate, boolean reverse, Cardinality cardinality, List<SemAct> semActs) {
         if ( label != null ) { /*ref*/ } // XXX
-        List<ShapeExpression> args = finishShapeOp(idx);
+        List<ShapeExpr> args = finishShapeOp(idx);
         if ( args == null )
             throw new InternalErrorException("TripleConstraint with null argument ShapeExpression.");
         if ( args.size() != 1 )
             throw new InternalErrorException("TripleConstraint with multiple ShapeExpressions");
 
-        ShapeExpression arg = args.get(0);
+        ShapeExpr arg = args.get(0);
         // Cardinality as argument.
         TripleExpression tripleExpr = new TripleConstraint(label, predicate, reverse, arg, cardinality, semActs);
         push(tripleExprStack, tripleExpr);
@@ -485,7 +485,7 @@ public class ParserShExC extends LangParserBase {
     private void finishNodeConstraint(List<SemAct> semActs) {
         NodeConstraint nodeConstraint = new NodeConstraint(accumulator);
         accumulator.clear();
-        ShapeExpression shExpr = new ShapeNodeConstraint(nodeConstraint, semActs);
+        ShapeExpr shExpr = new ShapeNodeConstraint(nodeConstraint, semActs);
         push(shapeExprStack, shExpr);
     }
 

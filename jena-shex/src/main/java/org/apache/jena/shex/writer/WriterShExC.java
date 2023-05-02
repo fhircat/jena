@@ -84,7 +84,7 @@ public class WriterShExC {
         }
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
-        ShapeExpression shapeEx = shape.getShapeExpression();
+        ShapeExpr shapeEx = shape.getShapeExpression();
         shexPrinter.printShapeExpression(shapeEx);
     }
 
@@ -156,8 +156,8 @@ public class WriterShExC {
             this.formatter = formatter;
         }
 
-        private void printShapeExpression(ShapeExpression shapeExpression) {
-            shapeExpression.visit(this);
+        private void printShapeExpression(ShapeExpr shapeExpr) {
+            shapeExpr.visit(this);
         }
 
         private void printTripleExpression(TripleExpression tripleExpr) {
@@ -222,12 +222,12 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprAND shape) {
-            List<ShapeExpression> shapes = shape.expressions();
+        public void visit(ShapeAnd shape) {
+            List<ShapeExpr> shapes = shape.expressions();
             printList(out, shape.expressions(), null, null, " AND",
                       x->{
                           // Avoid flattening S1 AND ( S2 AND S3 )
-                          boolean needParens = ( x instanceof ShapeExprAND || x instanceof ShapeExprOR );
+                          boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
                           if ( needParens )
                               out.print("( ");
                           printShapeExpression(x);
@@ -237,12 +237,12 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprOR shape) {
-            List<ShapeExpression> shapes = shape.expressions();
+        public void visit(ShapeOr shape) {
+            List<ShapeExpr> shapes = shape.expressions();
             printList(out, shape.expressions(), null, null, " OR",
                       x->{
                           // Avoid flattening S1 OR ( S2 OR S3 )
-                          boolean needParens = ( x instanceof ShapeExprAND || x instanceof ShapeExprOR );
+                          boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
                           if ( needParens )
                               out.print("( ");
                           printShapeExpression(x);
@@ -254,7 +254,7 @@ public class WriterShExC {
         @Override
         public void visit(ShapeExprNOT shape) {
             out.print("NOT ");
-            ShapeExpression shExpr = shape.subShape();
+            ShapeExpr shExpr = shape.subShape();
             boolean needParens = true;
 
             if ( shExpr instanceof ShapeExprTripleExpr )

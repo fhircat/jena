@@ -21,17 +21,17 @@ package org.apache.jena.shex;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** A labelled ShEx shape. */
 public class ShexShape {
     private final Node label;
-    private ShapeExpression shExpression;
+    private ShapeExpr shExpression;
 
     // [shex] Future : builder.
-    public ShexShape(Node label, ShapeExpression shExpression) {
+    public ShexShape(Node label, ShapeExpr shExpression) {
         this.label = label;
         this.shExpression = shExpression;
     }
@@ -40,7 +40,7 @@ public class ShexShape {
         return label;
     }
 
-    public ShapeExpression getShapeExpression() {
+    public ShapeExpr getShapeExpression() {
         return shExpression;
     }
 

@@ -24,7 +24,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** A DOT expression -- "{ . }"  */
-public class ShapeExprDot extends ShapeExpression {
+public class ShapeExprDot extends ShapeExpr {
 
     public ShapeExprDot() {
         super();

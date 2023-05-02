@@ -22,7 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpression;
 
 import java.util.ArrayList;
@@ -66,7 +66,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     @Override
-    public boolean evaluateShapeExpr(SemAct semAct, ShapeExpression shapeExpression, Node focus) {
+    public boolean evaluateShapeExpr(SemAct semAct, ShapeExpr shapeExpr, Node focus) {
         return parse(semAct, (str) -> resolveNodeVar(str, focus));
     }
 

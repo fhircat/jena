@@ -27,7 +27,7 @@ import org.apache.jena.shex.eval.ShapeEval;
 import org.apache.jena.shex.sys.ValidationContext;
 
 // Shape
-public class ShapeExprTripleExpr extends ShapeExpression {
+public class ShapeExprTripleExpr extends ShapeExpr {
     // [shex] This is the inlineShapeDefinition
     // Can we combine with a top-level ShexShape?
 
