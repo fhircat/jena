@@ -733,7 +733,7 @@ public class ParserShExC extends LangParserBase {
         String lex = image.substring(quoteLen, idx-quoteLen);
         String lang = image.substring(idx+1);
         lex = unescapeStr(lex, line, column);
-        return NodeFactory.createLiteralLang(lex, lang);
+        return NodeFactory.createLiteral(lex, lang);
     }
 
     // Special case @ns: and @ns:foo.

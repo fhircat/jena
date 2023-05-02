@@ -56,7 +56,7 @@ public class WriterShExC {
             hasHeader = true;
         }
         if ( schema.getPrefixMap() != null && ! schema.getPrefixMap().isEmpty() ) {
-            RiotLib.writePrefixes(out, schema.getPrefixMap(), DirectiveStyle.KEYWORD);
+            RiotLib.writePrefixes(out, schema.getPrefixMap(), true);
             hasHeader = true;
         }
         if ( schema.getImports() != null && ! schema.getImports().isEmpty() ) {

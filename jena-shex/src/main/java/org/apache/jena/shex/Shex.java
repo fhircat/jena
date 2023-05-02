@@ -122,7 +122,7 @@ public class Shex {
             boolean havePrinted = false;
 
             if ( ! shexSchema.getPrefixMap().isEmpty() ) {
-                RiotLib.writePrefixes(iOut, shexSchema.getPrefixMap(), DirectiveStyle.KEYWORD);
+                RiotLib.writePrefixes(iOut, shexSchema.getPrefixMap(), true);
                 havePrinted = true;
             }
 

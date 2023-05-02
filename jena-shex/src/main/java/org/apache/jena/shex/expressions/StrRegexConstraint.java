@@ -91,8 +91,9 @@ public class StrRegexConstraint extends NodeConstraintComponent {
             return true;
         if ( obj == null )
             return false;
-        if ( !(obj instanceof StrRegexConstraint other) )
+        if ( !(obj instanceof StrRegexConstraint) )
             return false;
+        StrRegexConstraint other = (StrRegexConstraint)obj;
         return Objects.equals(patternString, other.patternString);
     }
 }
