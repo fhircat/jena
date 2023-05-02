@@ -261,8 +261,6 @@ public class WriterShExC {
                 needParens = false;
             else if ( shExpr instanceof ShapeNodeConstraint )
                 needParens = false;
-            else if ( shExpr instanceof ShapeExprAtom )
-                needParens = false;
 
             if ( needParens ) {
                 out.print("( ");
@@ -276,26 +274,6 @@ public class WriterShExC {
         @Override
         public void visit(ShapeExprDot shape) {
             out.print(". ");
-        }
-
-        @Override
-        public void visit(ShapeExprAtom shape) {
-            final boolean multiLine = false;
-            if ( shape.getShape() == null )
-                return;
-            if ( multiLine ) {
-                out.println("(");
-                out.incIndent();
-                printShapeExpression(shape.getShape());
-                out.decIndent();
-                out.println(")");
-            } else {
-                out.print("( ");
-                out.incIndent();
-                printShapeExpression(shape.getShape());
-                out.decIndent();
-                out.print(" ) ");
-            }
         }
 
         @Override
