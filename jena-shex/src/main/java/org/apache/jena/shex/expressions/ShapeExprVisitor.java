@@ -28,7 +28,4 @@ public interface ShapeExprVisitor //extends NodeConstraintVisitor
     public default void visit(ShapeExprExternal shape) {}
     public default void visit(ShapeExprTripleExpr shape) {}
     public default void visit(ShapeNodeConstraint shape) {}
-
-    public default void visit(ShapeExprTrue shape) {}
-    public default void visit(ShapeExprFalse shape) {}
 }

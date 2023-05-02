@@ -272,9 +272,6 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprFalse shape) { out.print("FALSE"); }
-
-        @Override
         public void visit(ShapeExprNone shape) {
             out.print("{ }");
         }
@@ -283,11 +280,6 @@ public class WriterShExC {
         public void visit(ShapeExprRef shape) {
             out.print("@");
             printNode(shape.getRef());
-        }
-
-        @Override
-        public void visit(ShapeExprTrue shape) {
-            out.print(" . ");
         }
 
         @Override
