@@ -31,7 +31,9 @@ public class X_RDFReaderF extends Object implements RDFReaderF {
     public static final String DEFAULTLANG = "RDF/XML" ;
     private static Map<String, Class<? extends RDFReaderI>> custom = new LinkedHashMap<>();
     private static RDFReaderF rewiredAlternative = null ;
-    /** Rewire to use an external RDFReaderF (typically, RIOT).
+
+    /**
+     * Rewire to use an external RDFReaderF (typically, RIOT).
      * Set to null to use old jena-core setup.
      * @param other
      */
@@ -74,8 +76,11 @@ public class X_RDFReaderF extends Object implements RDFReaderF {
 
     private static void reset() {
         Class<? extends RDFReaderI> rdfxmlReader = org.apache.jena.rdfxml.xmlinput.RDFXMLReader.class;
+
+        // test use only
         Class<? extends RDFReaderI> ntReader = org.apache.jena.rdf.model.impl.NTripleReader.class;
-        Class<? extends RDFReaderI> turtleReader = org.apache.jena.ttl.turtle.TurtleReader.class;
+        // test use only
+        Class<? extends RDFReaderI> turtleReader = org.apache.jena.ttl_test.turtle.TurtleReader.class;
 
         custom.put("RDF", rdfxmlReader);
         custom.put("RDF/XML", rdfxmlReader);

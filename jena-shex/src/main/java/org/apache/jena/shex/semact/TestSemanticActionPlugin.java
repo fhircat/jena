@@ -27,6 +27,7 @@ import org.apache.jena.shex.expressions.TripleExpression;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,9 +38,16 @@ interface ExtractVar {
 
 public class TestSemanticActionPlugin implements SemanticActionPlugin {
     static String SemActIri = "http://shex.io/extensions/Test/";
-    static Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
-    //       tic Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
-    //      atic Pattern ParsePattern = Pattern.compile("^ *(fail|print) *\\( *(\\\"(?:[^\\\\\\\"]|\\\\\\\\|\\\\\"+)\\\"|[spo]) *\\) *$");
+    static Pattern ParsePattern, LeadPattern, LastPattern;
+
+    static {
+        String term = "(\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])";
+        ParsePattern = Pattern.compile("^ *(fail|print) *\\(((?:" + term + ", )*" + term + ")\\) *$");
+        LeadPattern = Pattern.compile(term + ", ");
+        LastPattern = Pattern.compile("((" + term + "))");
+    }
+
+    static Pattern ParsePatter1 = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
 
     @Override
     public List<String> getUris() {
@@ -64,14 +72,15 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
 
     @Override
     public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
-        Triple triple = triples.iterator().next(); // should be one triple, as currently defined.
+        Iterator<Triple> tripleIterator = triples.iterator();
+        Triple triple = tripleIterator.hasNext() ? tripleIterator.next() : null; // should be one triple, as currently defined.
         return parse(semAct, (str) -> resolveTripleVar(str, triple));
     }
 
     private boolean parse(SemAct semAct, ExtractVar extractor) {
         String code = semAct.getCode();
         if (code == null)
-            return true;
+            throw new RuntimeException(String.format("%s semantic action should not be null", SemActIri));
 
         Matcher m = ParsePattern.matcher(code);
         if (!m.find())
@@ -79,7 +88,15 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
         String function = m.group(1);
         String argument = m.group(2);
 
-        out.add(extractor.run(argument));
+        List<String> printed = new ArrayList<>();
+        while((m = LeadPattern.matcher(argument)).find()) {
+            printed.add(extractor.run(m.group(1)));
+            argument = argument.substring(m.end());
+        }
+        m = LastPattern.matcher(argument);
+        m.find();
+        printed.add(extractor.run(m.group(1)));
+        out.add(String.join(", ", printed));
         return function.equals("fail") ? false : true;
     }
 
@@ -106,6 +123,9 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     private static String resolveTripleVar(String varName, Triple triple) {
         if (varName.charAt(0) == '"')
             return varName.replaceAll("\\\\(.)", "$1");
+
+        if (triple == null)
+            return null;
 
         Node pos;
         switch (varName) {

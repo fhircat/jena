@@ -82,11 +82,11 @@ Also class:
     public final static Property sx_ttl  = ResourceFactory.createProperty(NS_SX + "ttl");
 
 
-    /** <p>The test statusThe expected output of semantic actions</p> */
+    /** <p>Structure describing invocation of the Test semantic action</p> */
     public static final Property extensionResults = ResourceFactory.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#extensionResults" );
-    /** <p>The test statusThe expected output of semantic actions</p> */
+    /** <p>The extension name of a semantic action</p> */
     public static final Property extension = ResourceFactory.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#extension" );
-    /** <p>The test statusThe expected output of semantic actions</p> */
+    /** <p>The text output of the Test semantic action</p> */
     public static final Property prints = ResourceFactory.createProperty( "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#prints" );
 
 }

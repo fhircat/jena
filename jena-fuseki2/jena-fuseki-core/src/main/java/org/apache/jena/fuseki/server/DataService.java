@@ -41,7 +41,7 @@ import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetGraphWrapper;
 
 public class DataService {
-    // Not final - it null'ed if closed to release the dataset state.
+    // Not final - it is null'ed if closed to release the dataset state.
     private DatasetGraph dataset;
 
     private final Map<String, EndpointSet> endpoints;
@@ -64,6 +64,8 @@ public class DataService {
     private final AtomicBoolean offlineInProgress       = new AtomicBoolean(false);
     private final AtomicBoolean acceptingRequests       = new AtomicBoolean(true);
 
+    private DispatchFunction plainOperationChooser;
+
     /** Builder for a new DataService. */
     public static Builder newBuilder() { return new Builder(); }
 
@@ -74,14 +76,18 @@ public class DataService {
 
     /** Return a new builder, populated by an existing DatasetService */
     public static Builder newBuilder(DataService dSrv) {
-        return new Builder(dSrv.dataset, dSrv.endpoints, dSrv.operationsMap, dSrv.authPolicy);
+        return new Builder(dSrv.dataset, dSrv.endpoints, dSrv.operationsMap, dSrv.plainOperationChooser, dSrv.authPolicy);
     }
 
     /** Create a {@code DataService} for the given dataset. */
-    private DataService(DatasetGraph dataset, Map<String, EndpointSet> endpoints, ListMultimap<Operation, Endpoint> operationsMap, AuthPolicy authPolicy) {
+    private DataService(DatasetGraph dataset, Map<String, EndpointSet> endpoints,
+                        ListMultimap<Operation, Endpoint> operationsMap,
+                        DispatchFunction plainOperationChooser,
+                        AuthPolicy authPolicy) {
         this.dataset = dataset;
         this.endpoints = Map.copyOf(endpoints);
         this.operationsMap = ArrayListMultimap.create(operationsMap);
+        this.plainOperationChooser = plainOperationChooser;
         this.authPolicy = authPolicy;
         counters.add(CounterName.Requests);
         counters.add(CounterName.RequestsGood);
@@ -117,7 +123,7 @@ public class DataService {
 
     /** Return a collection of all endpoints for this {@linkplain DataService}. */
     public Collection<Endpoint> getEndpoints() {
-        // A copy :-(
+        // A copy
         Set<Endpoint> x = new HashSet<>();
         endpoints.forEach((k,eps)->{
             eps.forEach((op,ep)->x.add(ep));
@@ -129,10 +135,6 @@ public class DataService {
     public void forEachEndpoint(Consumer<Endpoint> action) {
         endpoints.forEach((k,eps)->{
             eps.forEach((op,ep)->action.accept(ep));
-        });
-        Set<Endpoint> x = new HashSet<>();
-        endpoints.forEach((k,eps)->{
-            eps.forEach((op,ep)->x.add(ep));
         });
     }
 
@@ -157,14 +159,6 @@ public class DataService {
         return operationsMap.keySet().contains(operation);
     }
 
-    public boolean allowUpdate()    { return true; }
-
-    public void goOffline() {
-        offlineInProgress.set(true);
-        acceptingRequests.set(false);
-        state = OFFLINE;
-    }
-
     /** Set any {@link ActionService} processors that are currently unset. */
     public void setEndpointProcessors(OperationRegistry operationRegistry) {
         // Make sure the processor is set for each endpoint.
@@ -183,11 +177,32 @@ public class DataService {
         });
     }
 
+    /**
+     * Decision function for this DataService.
+     * <p>
+     * This is the handler for the case of "no query string, no registered
+     * content-type" that occurs when a name has multiple choices in the dispatcher
+     * so the operation can not be distinguished.
+    * <p>
+     * If null, the system default (in {@code Dispatcher.selectPlainOperation}) is
+     * a quads performed on the dataset - {@link Operation#GSP_R} or
+     * {@link Operation#GSP_RW}.
+     */
+    public DispatchFunction getDefaultOperationChooser() {
+        return plainOperationChooser;
+    }
+
     public void goActive() {
         ensureEnpointProcessors();
         offlineInProgress.set(false);
         acceptingRequests.set(true);
         state = ACTIVE;
+    }
+
+    public void goOffline() {
+        offlineInProgress.set(true);
+        acceptingRequests.set(false);
+        state = OFFLINE;
     }
 
     public boolean isAcceptingRequests() {
@@ -288,17 +303,22 @@ public class DataService {
 
         private Map<String, EndpointSet> endpoints              = new HashMap<>();
         private ListMultimap<Operation, Endpoint> operationsMap = ArrayListMultimap.create();
+        private DispatchFunction plainOperationChooser  = null;
 
         // Dataset-level authorization policy.
         private AuthPolicy authPolicy = null;
 
         private Builder() {}
 
-        private Builder(DatasetGraph dataset, Map<String, EndpointSet> endpoints, ListMultimap<Operation, Endpoint> operationsMap,AuthPolicy authPolicy) {
+        private Builder(DatasetGraph dataset, Map<String, EndpointSet> endpoints,
+                        ListMultimap<Operation, Endpoint> operationsMap,
+                        DispatchFunction plainOperationChooser,
+                        AuthPolicy authPolicy) {
             this();
             this.dataset = dataset;
             this.endpoints.putAll(endpoints);
             this.operationsMap.putAll(operationsMap);
+            this.plainOperationChooser = plainOperationChooser;
             this.authPolicy = authPolicy;
         }
 
@@ -353,13 +373,18 @@ public class DataService {
             operationsMap.remove(endpoint.getOperation(), endpoint);
         }
 
+        public Builder setPlainOperationChooser(DispatchFunction plainOperationChooser) {
+            this.plainOperationChooser = plainOperationChooser;
+            return this;
+        }
+
         public Builder setAuthPolicy(AuthPolicy authPolicy) {
             this.authPolicy = authPolicy;
             return this;
         }
 
         public DataService build() {
-            return new DataService(dataset, endpoints, operationsMap, authPolicy);
+            return new DataService(dataset, endpoints, operationsMap, plainOperationChooser, authPolicy);
         }
     }
 }

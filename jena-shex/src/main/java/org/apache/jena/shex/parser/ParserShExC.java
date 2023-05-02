@@ -651,7 +651,6 @@ public class ParserShExC extends LangParserBase {
         int startOfIri = 1; // get past '%'
         for (; whitespaces.indexOf(iriAndCode.charAt(startOfIri)) != -1; ++startOfIri)
             ;
-        // iriAndCode = iriAndCode.substring(startOfIri, iriAndCode.length() - 2); // e.g. `<http://shex.io/extensions/Test/>{ print(s) `
 
         // parse the IRI and extract the code
         String iri, code;
@@ -680,7 +679,9 @@ public class ParserShExC extends LangParserBase {
                 : iriAndCode.substring(codeDelimiter + 1, iriAndCode.length() - 2);
         }
 
-        return new SemAct(iri, EscapeStr.unescapeUnicode(code));
+        SemAct ret = new SemAct(iri, code == null ? null : EscapeStr.unescapeUnicode(code));
+        stack("SemAct: %s %s", iri, code);
+        return ret;
     }
 
     // Metacharacters ., ?, *, +, {, } (, ), [ or ].

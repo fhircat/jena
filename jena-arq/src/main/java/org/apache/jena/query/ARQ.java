@@ -30,6 +30,7 @@ import org.apache.jena.sparql.core.assembler.AssemblerUtils;
 import org.apache.jena.sparql.exec.http.QuerySendMode;
 import org.apache.jena.sparql.expr.aggregate.AggregateRegistry;
 import org.apache.jena.sparql.function.FunctionRegistry;
+import org.apache.jena.sparql.function.scripting.ScriptLangSymbols;
 import org.apache.jena.sparql.mgt.ARQMgt;
 import org.apache.jena.sparql.mgt.Explain;
 import org.apache.jena.sparql.mgt.Explain.InfoLevel;
@@ -49,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class ARQ
 {
     // Initialization statics must be first in the class to avoid
-    // problems with recursive initialization.  Specifcally,
+    // problems with recursive initialization.  Specifically,
     // initLock being null because elsewhere started the initialization
     // and is calling into the TDB class.
     // The best order is:
@@ -178,8 +179,8 @@ public class ARQ
     /** Turn on/off processing of blank node labels in queries */
     public static void enableBlankNodeResultLabels(boolean val) {
         Boolean b = val;
-        globalContext.set(inputGraphBNodeLabels, b);
-        globalContext.set(outputGraphBNodeLabels, b);
+        getContext().set(inputGraphBNodeLabels, b);
+        getContext().set(outputGraphBNodeLabels, b);
     }
 
     /**
@@ -206,7 +207,7 @@ public class ARQ
     public static final Symbol stageGenerator = SystemARQ.allocSymbol("stageGenerator");
 
     /**
-     * Context key to control hiding non-distinuished variables
+     * Context key to control hiding non-distinguished variables
      */
     public static final Symbol hideNonDistiguishedVariables = SystemARQ.allocSymbol("hideNonDistiguishedVariables");
 
@@ -345,9 +346,17 @@ public class ARQ
     /**
      *  Context key controlling whether the main query engine flattens simple paths
      *  (e.g. {@code ?x :p/:q ?z =&gt; ?x :p ?.0 . ?.0 ?q ?z})
-     *  <p>Default is "true"
+     *  <p>Default is "true"</p>
      */
     public static final Symbol optPathFlatten = SystemARQ.allocSymbol("optPathFlatten");
+
+    /**
+     * Context key controlling whether the main query engine does more extensive property path flattening that involves
+     * more in-depth manipulation of the SPARQL algebra. This must be explicitly enabled and is only used if
+     * {@link #optPathFlatten} is also enabled (which it is by default).
+     * <p>Default is {@code false}</p>
+     */
+    public static final Symbol optPathFlattenAlgebra = SystemARQ.allocSymbol("optPathFlattenAlgebra");
 
     /**
      *  Context key controlling whether the main query engine moves filters to the "best" place.
@@ -515,14 +524,21 @@ public class ARQ
     public static final Symbol extensionValueTypes = SystemARQ.allocSymbol("extensionValueTypesExpr");
 
     /**
-     * Context symbol for JavaScript functions as a string value which is evaluated.
+     * Java system property to enable JavaScript functions
      */
-    public static Symbol symJavaScriptFunctions = SystemARQ.allocSymbol("js-functions");
+    public static final String systemPropertyScripting = "jena:scripting";
+
+    /**
+     * Context symbol for JavaScript functions as a string value which is evaluated.
+     * {@code arq:js-functions}.
+     */
+    public static Symbol symJavaScriptFunctions = ScriptLangSymbols.scriptFunctions("js");
 
     /**
      * Context symbol for JavaScript library of functions defined in a file.
+     * {@code arq:js-library}.
      */
-    public static Symbol symJavaScriptLibFile = SystemARQ.allocSymbol("js-library");
+    public static Symbol symJavaScriptLibFile = ScriptLangSymbols.scriptLibrary("js");
 
     /**
      * Generate the ToList operation in the algebra (as ARQ is stream based, ToList is a non-op).
@@ -599,15 +615,10 @@ public class ARQ
     /** The date and time at which this release was built */
     public static final String BUILD_DATE   = metadata.get(PATH+".build.datetime", "unset");
 
-    // Initialize now in case other initialization uses getContext().
-    private static Context globalContext = null;
-
-    /** Ensure things have started - applications do not need call this.
+    /**
+     * Ensure things have started - applications do not need call this.
      * The method is public so any part of ARQ can call it.
      */
-
-    static { JenaSystem.init(); }
-
     public static void init() {
         if ( initialized )
             return;
@@ -616,10 +627,15 @@ public class ARQ
                 return;
             initialized = true;
             JenaSystem.logLifecycle("ARQ.init - start");
+            // Should be unnecessary but it is harmless to call again.
+            RIOT.init();
             // Force constants to be set.  This should be independent of other initialization including jena core.
+            ARQConstants.init();
+            setARQSettings();
             ARQConstants.getGlobalPrefixMap();
             ResultSetLang.init();
-            globalContext = defaultSettings();
+            // Done as a class init.
+            //globalContext = defaultSettings();
             ARQMgt.init();         // After context and after PATH/NAME/VERSION/BUILD_DATE are set
             MappingRegistry.addPrefixMapping(ARQ.arqSymbolPrefix, ARQ.arqParamNS);
 
@@ -630,7 +646,6 @@ public class ARQ
             // Register RIOT details here, not earlier, to avoid
             // initialization loops with RIOT.init() called directly.
             RIOT.register();
-
             // Initialise the standard library.
             FunctionRegistry.init();
             ServiceExecutorRegistry.init();
@@ -641,26 +656,24 @@ public class ARQ
         }
     }
 
-    /* Side effects */
-    private static Context defaultSettings() {
+    private static void setARQSettings() {
         // This must be executable before initialization
         SystemARQ.StrictDateTimeFO      = false;
         SystemARQ.ValueExtensions       = true;
         SystemARQ.EnableRomanNumerals   = false;
 
-        Context context = new Context();
+        // The system context is allocated in RIOT because RIOT initializes before ARQ.
+        Context context = RIOT.getContext();
         context.unset(optimization);
         //context.set(hideNonDistiguishedVariables, true);
         context.set(strictSPARQL,                  false);
         context.set(constantBNodeLabels,           true);
         context.set(enablePropertyFunctions,       true);
         context.set(regexImpl,                     javaRegex);
-
-        return context;
     }
 
     public static Context getContext() {
-        return globalContext;
+        return RIOT.getContext();
     }
 
     // Convenience call-throughs

@@ -54,9 +54,11 @@ public class RIOT {
     /** Control of multiline literals */
     public static final Symbol multilineLiterals = Symbol.create("riot.multiline_literals") ;
 
-    /** The system-wide context */
+    /** The system-wide context, shared with ARQ and other modules. */
+    private static Context systemGlobalContext = new Context();
+
     public static Context getContext() {
-        return ARQ.getContext();
+        return systemGlobalContext;
     }
 
     public static void init() {
@@ -68,12 +70,21 @@ public class RIOT {
                 return ;
             }
             initialized = true ;
+
             JenaSystem.logLifecycle("RIOT.init - start") ;
+            // Protect against unexpected initialization ordering.
+            if ( systemGlobalContext == null ) {
+                JenaSystem.logLifecycle("RIOT.init - Warning: initializing systemGlobalContext in RIOT.init") ;
+                systemGlobalContext = new Context();
+            }
+            setRIOTSettings();
+
             RDFLanguages.init() ;
             RDFParserRegistry.init() ;
             RDFWriterRegistry.init() ;
             ResultSetLang.init();
 
+            MappingRegistry.addPrefixMapping("rdfxml", RDFXML_SYMBOL_BASE) ;
             MappingRegistry.addPrefixMapping("ttl", TURTLE_SYMBOL_BASE) ;
             MappingRegistry.addPrefixMapping("trig", TURTLE_SYMBOL_BASE) ;
 
@@ -84,6 +95,10 @@ public class RIOT {
             // This is done in ARQ.init at the proper moment.
             JenaSystem.logLifecycle("RIOT.init - finish") ;
         }
+    }
+
+    private static void setRIOTSettings() {
+        // RIOT has no global defaults in the context.
     }
 
     private static boolean registered = false ;
@@ -111,6 +126,14 @@ public class RIOT {
     // ---- Symbols
 
     private static String TURTLE_SYMBOL_BASE = "http://jena.apache.org/riot/turtle#";
+    private static String RDFXML_SYMBOL_BASE = "http://jena.apache.org/riot/rdfxml#";
+
+    /**
+     * Access to the legacy RDF/XML parser.
+     * @deprecated Do not use! This will be removed.
+     */
+    @Deprecated
+    public static Symbol symRDFXML0 = SystemARQ.allocSymbol(RDFXML_SYMBOL_BASE, "rdfxml0");
 
     /**
      * Printing style. One of "RDF11" or RDF10". Controls {@literal @prefix} vs PREFIX.

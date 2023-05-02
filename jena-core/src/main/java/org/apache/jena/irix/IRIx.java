@@ -90,7 +90,7 @@ public abstract class IRIx {
 
     /**
      * A <a href="https://tools.ietf.org/html/rfc3986#section-4.2"><em>relative
-     * URI</em></a> one without a scheme, and maybe without some of the other parts.
+     * URI</em></a> is one without a scheme, and maybe without some of the other parts.
      * <p>
      * Often it is just the path part.
      * <p>
@@ -194,8 +194,8 @@ public abstract class IRIx {
     public abstract boolean hasViolations();
 
     /**
-     * Handle violations by sending a boolean, indicating whether this is an error or
-     * a warning, and string message to a handler.
+     * Handle violations by sending a boolean, indicating whether this is an error (true) or
+     * a warning (false), and string message to a handler.
      */
     public abstract void handleViolations(BiConsumer<Boolean, String> violation);
 

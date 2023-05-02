@@ -170,9 +170,9 @@ void shapeAtom() : { int idx; }
 {
     { idx = startShapeAtom(); }
       // No literals-as-subjects.
-    ( nonLitNodeConstraint() (shapeOrRef())?
-    | litNodeConstraint()
-    | shapeOrRef() (nonLitNodeConstraint())?
+    ( nonLitOutlineNodeConstraint() (shapeOrRef())?
+    | litOutlineNodeConstraint()
+    | shapeOrRef() (nonLitOutlineNodeConstraint())?
     | <LPAREN> shapeExpression() <RPAREN>
     | <DOT> { shapeAtomDOT(); }
     )
@@ -224,9 +224,9 @@ void inlineShapeAtom() : { int idx; }
 {
   { idx = startInlineShapeAtom(); }
     // No literals-as-subjects.
-  ( nonLitNodeConstraint() (inlineShapeOrRef())?
-  | litNodeConstraint()
-  | inlineShapeOrRef() (nonLitNodeConstraint())?
+  ( nonLitInlineNodeConstraint() (inlineShapeOrRef())?
+  | litInlineNodeConstraint()
+  | inlineShapeOrRef() (nonLitInlineNodeConstraint())?
   | <LPAREN> shapeExpression() <RPAREN>
   | <DOT> { shapeAtomDOT(); }
   )
@@ -254,7 +254,20 @@ void shapeRef() : { Token t ; Node ref; }
     { shapeReference(ref); }
 }
 
-void litNodeConstraint() : { String str; Token t; int idx; List<SemAct> semActs; } {
+void litInlineNodeConstraint() : { String str; Token t; int idx; List<SemAct> semActs; } {
+  { idx = startLiteralNodeConstraint(token.beginLine, token.beginColumn); }
+  litNodeConstraint()
+  { finishLiteralNodeConstraint(null, idx, token.beginLine, token.beginColumn); }
+}
+
+void litOutlineNodeConstraint() : { int idx; List<SemAct> semActs; } {
+  { idx = startLiteralNodeConstraint(token.beginLine, token.beginColumn); }
+  litNodeConstraint()
+  semActs = semanticActions()
+  { finishLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn); }
+}
+
+void litNodeConstraint() : { int idx; String str; Token t; List<SemAct> semActs; } {
   { idx = startLiteralNodeConstraint(token.beginLine, token.beginColumn); }
   (
     t = <LITERAL>
@@ -272,6 +285,19 @@ void litNodeConstraint() : { String str; Token t; int idx; List<SemAct> semActs;
 }
 
 // Check precedence
+
+void nonLitInlineNodeConstraint() : { int idx; List<SemAct> semActs; } {
+  { idx = startNonLiteralNodeConstraint(token.beginLine, token.beginColumn); }
+  nonLitNodeConstraint()
+  { finishNonLiteralNodeConstraint(null, idx, token.beginLine, token.beginColumn); }
+}
+
+void nonLitOutlineNodeConstraint() : { int idx; List<SemAct> semActs; } {
+  { idx = startNonLiteralNodeConstraint(token.beginLine, token.beginColumn); }
+  nonLitNodeConstraint()
+  semActs = semanticActions()
+  { finishNonLiteralNodeConstraint(semActs, idx, token.beginLine, token.beginColumn); }
+}
 
 void nonLitNodeConstraint() : { int idx; List<SemAct> semActs; } {
   { idx = startNonLiteralNodeConstraint(token.beginLine, token.beginColumn); }

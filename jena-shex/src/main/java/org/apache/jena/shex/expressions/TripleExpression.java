@@ -46,10 +46,6 @@ public abstract class   TripleExpression implements ShexPrintable {
         this.semActs = semActs;
     }
 
-//    public void setSemActs(List<SemAct> semActs) {
-//        this.semActs = semActs;
-//    }
-
     public boolean testSemanticActions(ValidationContext v, Set<Triple> matchables) {
         if (this.semActs == null)
             return true;
