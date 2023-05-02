@@ -272,11 +272,6 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprDot shape) {
-            out.print(". ");
-        }
-
-        @Override
         public void visit(ShapeExprFalse shape) { out.print("FALSE"); }
 
         @Override
@@ -431,13 +426,16 @@ public class WriterShExC {
 
         @Override
         public void visit(ShapeNodeConstraint shape) {
-            if ( shape.getNodeConstraint() != null ) {
-                printList(out, shape.getNodeConstraint().components(), null, null, null,
+            NodeConstraint nodeConstraint = shape.getNodeConstraint();
+            if ( nodeConstraint != null && !nodeConstraint.components().isEmpty()) {
+                printList(out, nodeConstraint.components(), null, null, null,
                           nc->{
                               out.incIndent();
                               printNodeConstraint(nc);
                               out.decIndent();
                           });
+            } else {
+                out.print(". ");
             }
         }
     }

@@ -43,6 +43,7 @@ import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShexShape;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.sparql.graph.NodeConst;
 
 /** ShEx Compact syntax parser */
 public class ParserShExC extends LangParserBase {
@@ -354,7 +355,10 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void shapeAtomDOT() {
-        push(shapeExprStack, new ShapeExprDot());
+        push(shapeExprStack, new ShapeNodeConstraint(
+                new NodeConstraint(Collections.emptyList()),
+                Collections.emptyList())
+        );
     }
 
     protected void shapeReference(Node ref) {
