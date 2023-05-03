@@ -21,14 +21,13 @@ package org.apache.jena.shex.expressions;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
+import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class NodeConstraint
-//extends ShapeExpression
-implements Satisfies, ShexPrintable
-{
+public class NodeConstraint extends ShapeExpr {
 
     /*
     NodeConstraint  {
@@ -44,6 +43,11 @@ implements Satisfies, ShexPrintable
     private List<NodeConstraintComponent> constraints = new ArrayList<>();
 
     public NodeConstraint(List<NodeConstraintComponent> constraints) {
+        this(constraints, null);
+    }
+
+    public NodeConstraint(List<NodeConstraintComponent> constraints, List<SemAct> semActs) {
+        super(semActs);
         this.constraints = List.copyOf(constraints);
     }
 
@@ -54,6 +58,17 @@ implements Satisfies, ShexPrintable
         DatatypeConstraint datatype = null;
         List<NodeConstraint> facets = new ArrayList<>();
         ValueConstraint values;
+    }
+
+
+    @Override
+    public void print(IndentedWriter out, NodeFormatter nFmt) {
+        out.println(toString());
+    }
+
+    @Override
+    public void visit(ShapeExprVisitor visitor) {
+        visitor.visit(this);
     }
 
 

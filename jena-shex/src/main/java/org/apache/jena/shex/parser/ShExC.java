@@ -211,8 +211,7 @@ public class ShExC {
 
     private static class CheckFacets implements ShapeExprVisitor {
         @Override
-        public void visit(ShapeNodeConstraint shape) {
-            NodeConstraint nc = shape.getNodeConstraint();
+        public void visit(NodeConstraint nc) {
             if ( nc == null )
                 return;
             // XXX [NodeConstraint]
