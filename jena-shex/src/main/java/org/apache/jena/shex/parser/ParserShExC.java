@@ -40,10 +40,9 @@ import org.apache.jena.riot.lang.extra.LangParserLib;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShexShape;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
-import org.apache.jena.sparql.graph.NodeConst;
 
 /** ShEx Compact syntax parser */
 public class ParserShExC extends LangParserBase {
@@ -64,9 +63,9 @@ public class ParserShExC extends LangParserBase {
     }
 
     // -- All the top level shapes, as seen in order.
-    private List<ShexShape> shapes = new ArrayList<>();
+    private List<ShapeDecl> shapes = new ArrayList<>();
     // The distinguished start shape. This is also in the list of all shapes.
-    private ShexShape startShape = null;
+    private ShapeDecl startShape = null;
     private List<String> imports = null;
     private List<SemAct> semActs = new ArrayList<>();
     private String sourceURI = null;
@@ -198,8 +197,8 @@ public class ParserShExC extends LangParserBase {
         finish("StartClause");
     }
 
-    private ShexShape newShape(ShapeExpr sExpr) {
-        ShexShape newShexShape = new ShexShape(currentShexShapeLabel, sExpr);
+    private ShapeDecl newShape(ShapeExpr sExpr) {
+        ShapeDecl newShexShape = new ShapeDecl(currentShexShapeLabel, sExpr);
         shapes.add(newShexShape);
         currentShexShapeLabel = null;
         return newShexShape;

@@ -30,7 +30,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShexShape;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
 
@@ -70,7 +70,7 @@ public class WriterShExC {
         schema.getShapes().forEach( shape->print(out, formatter, shape, printNL) );
     }
 
-    private static void print(IndentedWriter out, NodeFormatter formatter, ShexShape shape, boolean printNL) {
+    private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl shape, boolean printNL) {
         if (printNL)
             out.println();
         if ( shape.getLabel() != null ) {

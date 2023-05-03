@@ -26,12 +26,12 @@ import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** A labelled ShEx shape. */
-public class ShexShape {
+public class ShapeDecl {
     private final Node label;
     private ShapeExpr shExpression;
 
     // [shex] Future : builder.
-    public ShexShape(Node label, ShapeExpr shExpression) {
+    public ShapeDecl(Node label, ShapeExpr shExpression) {
         this.label = label;
         this.shExpression = shExpression;
     }
@@ -85,7 +85,7 @@ public class ShexShape {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShexShape other = (ShexShape)obj;
+        ShapeDecl other = (ShapeDecl)obj;
         if ( label == null ) {
             if ( other.label != null )
                 return false;

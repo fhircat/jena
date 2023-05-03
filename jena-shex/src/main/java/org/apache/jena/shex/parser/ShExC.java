@@ -30,7 +30,7 @@ import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.irix.IRIxResolver;
 import org.apache.jena.riot.system.*;
-import org.apache.jena.shex.ShexShape;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
@@ -202,7 +202,7 @@ public class ShExC {
         shapes.getShapes().forEach(shape->validatePhase2(shapes, shape));
     }
 
-    private static void validatePhase2(ShexSchema shapes, ShexShape shape) {
+    private static void validatePhase2(ShexSchema shapes, ShapeDecl shape) {
         ShapeExpr shExpr = shape.getShapeExpression();
         ShapeExprVisitor checker = new CheckFacets();
         ShexLib.walk(shExpr, checker, null, null);

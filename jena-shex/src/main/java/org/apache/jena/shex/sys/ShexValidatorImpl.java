@@ -86,7 +86,7 @@ class ShexValidatorImpl implements ShexValidator{
 
     /** Validate a specific node (the focus), against a given shape. */
     @Override
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShexShape shape, Node focus) {
+    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeDecl shape, Node focus) {
         Objects.requireNonNull(shape);
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
@@ -151,7 +151,7 @@ class ShexValidatorImpl implements ShexValidator{
     private static boolean validationStep(ValidationContext vCxt, ShexRecord mapEntry, Node shapeRef, Node focus) {
         track(mapEntry.shapeExprLabel, focus);
         // Isolate.
-        ShexShape shape = vCxt.getShape(shapeRef);
+        ShapeDecl shape = vCxt.getShape(shapeRef);
         if ( shape == null ) {
             // No such shape.
             vCxt.getShape(shapeRef);
@@ -165,7 +165,7 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Worker.
-    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShexShape shape, Node shapeRef, Node focus) {
+    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape, Node shapeRef, Node focus) {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         vCxtInner.startValidate(shape, focus);
