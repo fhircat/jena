@@ -70,12 +70,12 @@ public class WriterShExC {
         schema.getShapes().forEach( shape->print(out, formatter, shape, printNL) );
     }
 
-    private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl shape, boolean printNL) {
+    private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl decl, boolean printNL) {
         if (printNL)
             out.println();
-        if ( shape.getLabel() != null ) {
+        if ( decl.getLabel() != null ) {
 
-            Node n = shape.getLabel();
+            Node n = decl.getLabel();
             if ( n.equals(SysShex.startNode) )
                 out.print("START=");
             else
@@ -84,8 +84,11 @@ public class WriterShExC {
         }
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
-        ShapeExpr shapeEx = shape.getShapeExpression();
-        shexPrinter.printShapeExpression(shapeEx);
+        ShapeExpr shapeEx = decl.getShapeExpression();
+        if (shapeEx != null)
+            shexPrinter.printShapeExpression(shapeEx);
+        else
+            out.print("{}");
     }
 
     static <X> void printList(IndentedWriter out, List<X> items, String start, String finish, String sep, Consumer<X> action) {
@@ -269,11 +272,6 @@ public class WriterShExC {
             if ( needParens ) {
                 out.print(" ) ");
             }
-        }
-
-        @Override
-        public void visit(ShapeExprNone shape) {
-            out.print("{ }");
         }
 
         @Override

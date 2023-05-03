@@ -47,7 +47,9 @@ public class ShapeDecl {
     public boolean satisfies(ValidationContext vCxt, Node data) {
         vCxt.startValidate(this, data);
         try {
-            return shExpression.satisfies(vCxt, data) &&
+            return shExpression == null
+                ? true
+                : shExpression.satisfies(vCxt, data) &&
                     shExpression.testShapeExprSemanticActions(vCxt, data);
         } finally {
             vCxt.finishValidate(this, data);
@@ -64,7 +66,9 @@ public class ShapeDecl {
         iOut.incIndent();
         // ShapeExpressionAND:
         // Consolidate adjacent TripleConstraints.
-        getShapeExpression().print(iOut, nFmt);
+        ShapeExpr shExpr = getShapeExpression();
+        if (shExpr != null)
+            shExpr.print(iOut, nFmt);
         iOut.decIndent();
     }
 

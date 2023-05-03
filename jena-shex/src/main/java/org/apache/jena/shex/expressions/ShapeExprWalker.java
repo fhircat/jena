@@ -79,12 +79,6 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
     @Override
-    public void visit(ShapeExprNone shape) {
-        before(shape);
-        after(shape);
-    }
-
-    @Override
     public void visit(ShapeExprExternal shape) {
         before(shape);
         after(shape);

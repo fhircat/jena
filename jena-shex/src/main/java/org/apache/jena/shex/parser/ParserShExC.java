@@ -217,7 +217,7 @@ public class ParserShExC extends LangParserBase {
 
     private ShapeExpr finishShapeExpressionTop() {
         if ( shapeExprStack.isEmpty() )
-            return ShapeExprNone.get();
+            return null;
 
         ShapeExpr sExpr = pop(shapeExprStack);
         if ( DEBUG_DEV ) {
