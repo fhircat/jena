@@ -79,13 +79,13 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
     @Override
-    public void visit(ShapeExprExternal shape) {
+    public void visit(ShapeExternal shape) {
         before(shape);
         after(shape);
     }
 
     @Override
-    public void visit(ShapeExprTripleExpr shape) {
+    public void visit(Shape shape) {
         before(shape);
         if ( tripleExprWalker != null && shape.getTripleExpr() != null )
             shape.getTripleExpr().visit(tripleExprWalker);

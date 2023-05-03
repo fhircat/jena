@@ -27,7 +27,7 @@ import org.apache.jena.shex.eval.ShapeEval;
 import org.apache.jena.shex.sys.ValidationContext;
 
 // Shape
-public class ShapeExprTripleExpr extends ShapeExpr {
+public class Shape extends ShapeExpr {
     // [shex] This is the inlineShapeDefinition
     // Can we combine with a top-level ShexShape?
 
@@ -50,7 +50,7 @@ public class ShapeExprTripleExpr extends ShapeExpr {
     //annotations:[Annotation+]?
     public static Builder newBuilder() { return new Builder(); }
 
-    private ShapeExprTripleExpr(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr, List<SemAct> semActs) {
+    private Shape(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr, List<SemAct> semActs) {
         super(semActs);
         this.label = label;
         if ( extras == null || extras.isEmpty() )
@@ -125,7 +125,7 @@ public class ShapeExprTripleExpr extends ShapeExpr {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeExprTripleExpr other = (ShapeExprTripleExpr)obj;
+        Shape other = (Shape)obj;
         return closed == other.closed && Objects.equals(label, other.label) && Objects.equals(tripleExpr, other.tripleExpr);
     }
 
@@ -162,9 +162,9 @@ public class ShapeExprTripleExpr extends ShapeExpr {
 
         public Builder shapeExpr(TripleExpression tripleExpr) { this.tripleExpr = tripleExpr; return this; }
 
-        public ShapeExprTripleExpr build() {
+        public Shape build() {
             boolean isClosed = (closed == null) ? false : closed.get();
-            return new ShapeExprTripleExpr(label, extras, isClosed, tripleExpr, semActs);
+            return new Shape(label, extras, isClosed, tripleExpr, semActs);
         }
     }
 }

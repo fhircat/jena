@@ -260,7 +260,7 @@ public class WriterShExC {
             ShapeExpr shExpr = shape.subShape();
             boolean needParens = true;
 
-            if ( shExpr instanceof ShapeExprTripleExpr )
+            if ( shExpr instanceof Shape)
                 needParens = false;
             else if ( shExpr instanceof NodeConstraint)
                 needParens = false;
@@ -281,12 +281,12 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprExternal shape) {
+        public void visit(ShapeExternal shape) {
             out.println("EXTERNAL");
         }
 
         @Override
-        public void visit(ShapeExprTripleExpr shape) {
+        public void visit(Shape shape) {
             TripleExpression tripleExpr = shape.getTripleExpr();
             if ( shape.isClosed() )
                 out.println("CLOSED ");

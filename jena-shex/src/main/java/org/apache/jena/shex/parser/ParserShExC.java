@@ -373,7 +373,7 @@ public class ParserShExC extends LangParserBase {
             return;
             // XXX [Print] Below causes "{ ; }"
             //tripleExpr = TripleExprNone.get();
-        ShapeExprTripleExpr shape = ShapeExprTripleExpr.newBuilder()
+        Shape shape = Shape.newBuilder()
                 //.label(???)
                 .closed(closed)
                 .extras(extras)
