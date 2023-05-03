@@ -101,8 +101,9 @@ public class DatatypeConstraint extends NodeConstraintComponent {
             return true;
         if ( obj == null )
             return false;
-        if ( !(obj instanceof DatatypeConstraint other) )
+        if ( !(obj instanceof DatatypeConstraint) )
             return false;
+        DatatypeConstraint other = (DatatypeConstraint)obj;
         return Objects.equals(datatype, other.datatype) && Objects.equals(dtURI, other.dtURI);
     }
 }

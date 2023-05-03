@@ -18,7 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.lib.Lib;
+import java.util.Locale;
+
 import org.apache.jena.shex.ShexException;
 
 public enum NodeKind {
@@ -29,7 +30,7 @@ public enum NodeKind {
 
     NodeKind(String string) {
         this.label = string;
-        this.ucLabel = Lib.uppercase(string);
+        this.ucLabel = string.toUpperCase(Locale.ROOT);
     }
 
     public static NodeKind create(String nodeKind) {
