@@ -262,7 +262,7 @@ public class WriterShExC {
 
             if ( shExpr instanceof ShapeExprTripleExpr )
                 needParens = false;
-            else if ( shExpr instanceof ShapeNodeConstraint )
+            else if ( shExpr instanceof NodeConstraint)
                 needParens = false;
 
             if ( needParens ) {
@@ -415,7 +415,7 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeNodeConstraint shape) {
+        public void visit(NodeConstraint shape) {
             NodeConstraintProxy nodeConstraintProxy = shape.getNodeConstraint();
             if ( nodeConstraintProxy != null && !nodeConstraintProxy.components().isEmpty()) {
                 printList(out, nodeConstraintProxy.components(), null, null, null,

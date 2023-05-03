@@ -36,15 +36,15 @@ ShapeAtom := ( nonLitNodeConstraint ( inlineShapeOrRef )?
              )
 </pre>
 */
-public class ShapeNodeConstraint extends ShapeExpr {
+public class NodeConstraint extends ShapeExpr {
 
     private final NodeConstraintProxy nodeConstraintProxy;
 
-    public ShapeNodeConstraint(NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
+    public NodeConstraint(NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
         this(null, Objects.requireNonNull(nodeConstraintProxy, "NodeConstraint"), semActs);
     }
 
-    private ShapeNodeConstraint(ShapeExpr shapeExpr, NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
+    private NodeConstraint(ShapeExpr shapeExpr, NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
         super(semActs);
         this.nodeConstraintProxy = nodeConstraintProxy;
 
@@ -82,7 +82,7 @@ public class ShapeNodeConstraint extends ShapeExpr {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeNodeConstraint other = (ShapeNodeConstraint)obj;
+        NodeConstraint other = (NodeConstraint)obj;
         return Objects.equals(nodeConstraintProxy, other.nodeConstraintProxy);
     }
 
