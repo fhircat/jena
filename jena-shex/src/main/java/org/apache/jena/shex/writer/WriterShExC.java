@@ -392,7 +392,7 @@ public class WriterShExC {
            out.println();
         }
 
-        @Override public void visit(TripleExprNone tripleExpr) { /* Nothing */ }
+        @Override public void visit(TripleExprEmpty tripleExpr) { /* Nothing */ }
 
         @Override public void visit(TripleExprRef tripleExpr) {
             out.print("&");
@@ -407,11 +407,11 @@ public class WriterShExC {
             printNode(predicate);
             out.print(" ");
             printShapeExpression(tripleExpr.getShapeExpression());
-            String x =  tripleExpr.cardinalityString();
+            /*String x =  tripleExpr.cardinalityString();
             if ( x != null && ! x.isEmpty() ) {
                 out.print(" ");
                 out.print(x);
-            }
+            }*/
         }
 
         @Override

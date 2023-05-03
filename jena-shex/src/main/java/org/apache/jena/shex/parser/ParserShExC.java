@@ -444,7 +444,9 @@ public class ParserShExC extends LangParserBase {
 
         ShapeExpr arg = args.get(0);
         // Cardinality as argument.
-        TripleExpression tripleExpr = new TripleConstraint(label, predicate, reverse, arg, cardinality, semActs);
+        TripleExpression tripleExpr = new TripleConstraint(label, predicate, reverse, arg, semActs);
+        if (cardinality != null)
+            tripleExpr = new TripleExprCardinality(tripleExpr, cardinality, null);
         push(tripleExprStack, tripleExpr);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr);

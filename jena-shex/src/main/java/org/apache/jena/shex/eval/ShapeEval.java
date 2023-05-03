@@ -101,7 +101,7 @@ public class ShapeEval {
         else if ( tripleExpr instanceof TripleConstraint ) {
             return ShapeEvalTripleConstraint.matchesCardinalityTC(vCxt, T, node, (TripleConstraint)tripleExpr, extras);
         }
-        else if ( tripleExpr instanceof TripleExprNone ) {
+        else if ( tripleExpr instanceof TripleExprEmpty) {
             return true;
         }
         throw new NotImplemented(tripleExpr.getClass().getSimpleName());
@@ -141,7 +141,7 @@ public class ShapeEval {
             }
 
             @Override
-            public void visit(TripleExprNone expr) {
+            public void visit(TripleExprEmpty expr) {
                 expr.visit(step);
             }
 

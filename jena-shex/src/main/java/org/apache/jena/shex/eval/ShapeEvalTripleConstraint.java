@@ -47,8 +47,8 @@ import org.apache.jena.shex.sys.ValidationContext;
         }
         // Find same predicate.
         Set<Triple> triples = StreamOps.toSet(matchables.stream().filter(t->predicate.equals(t.getPredicate())));
-        int min = tripleConstraint.min();
-        int max = tripleConstraint.max();
+        //int min = tripleConstraint.min();
+        //int max = tripleConstraint.max();
         ShapeExpr shExpr = tripleConstraint.getShapeExpression();
 
         Set<Triple> positive = triples.stream().filter(t->{
@@ -57,10 +57,15 @@ import org.apache.jena.shex.sys.ValidationContext;
         }).collect(Collectors.toSet());
 
         int N = positive.size();
+        if (N != 1) {
+            vCxt.reportEntry(new ReportItem("Too many triples passed to the triple constraint: " + N, null));
+            return false;
+        }
+        /*
         if ( min >= 0 && N < min ) {
             vCxt.reportEntry(new ReportItem("Cardinality violation (min="+min+"): "+N, null));
             return false;
-        }
+        }*/
         // Remove extras.
         if ( extras == null || ! extras.contains(predicate) ) {
             if ( positive.size() != triples.size() )
@@ -68,10 +73,11 @@ import org.apache.jena.shex.sys.ValidationContext;
                 return false;
         }
 
+        /*
         if ( max >= 0 && N > max ) {
             vCxt.reportEntry(new ReportItem("Cardinality violation (max="+max+"): "+N, null));
             return false;
-        }
+        }*/
 
         boolean b = tripleConstraint.testSemanticActions(vCxt, matchables);
         if ( ! b )

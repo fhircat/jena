@@ -50,9 +50,19 @@ public class TripleConstraint extends TripleExpression {
     // [shex] Move to a block of constraints object
     private final ShapeExpr shapeExpr;
     private final boolean reverse;
-    private final Cardinality cardinality;
-    private final int min;
-    private final int max;
+    // private final Cardinality cardinality;
+    //private final int min;
+    //private final int max;
+
+    public TripleConstraint(Node label, Node predicate, boolean reverse, ShapeExpr valueExpr,  List<SemAct> semActs) {
+        super(semActs);
+        this.label = label;
+        this.predicate = predicate;
+        this.reverse = reverse;
+        this.shapeExpr = valueExpr;
+        //this.min = (cardinality==null) ? 1 : cardinality.min;
+        //this.max = (cardinality==null) ? 1 : cardinality.max;
+    }
 
     public TripleConstraint(Node label, Node predicate, boolean reverse, ShapeExpr valueExpr, Cardinality cardinality, List<SemAct> semActs) {
         super(semActs);
@@ -60,20 +70,22 @@ public class TripleConstraint extends TripleExpression {
         this.predicate = predicate;
         this.reverse = reverse;
         this.shapeExpr = valueExpr;
-        this.cardinality = cardinality;
-        this.min = (cardinality==null) ? 1 : cardinality.min;
-        this.max = (cardinality==null) ? 1 : cardinality.max;
+        //this.cardinality = cardinality;
+        //this.min = (cardinality==null) ? 1 : cardinality.min;
+        //this.max = (cardinality==null) ? 1 : cardinality.max;
     }
 
+    /*
     public String cardinalityString() {
         if ( cardinality == null )
             return "";
         return cardinality.image;
-    }
+    }*/
 
     public Node label() {
         return label;
     }
+    /*
 
     public int min() {
         return min;
@@ -81,7 +93,7 @@ public class TripleConstraint extends TripleExpression {
 
     public int max() {
         return max;
-    }
+    }*/
 
     public Node getPredicate() {
         return predicate;
@@ -119,17 +131,18 @@ public class TripleConstraint extends TripleExpression {
         nFmt.format(iOut, predicate);
         iOut.println();
         shapeExpr.print(iOut, nFmt);
+        /*
         if ( cardinality != null ) {
             iOut.print(cardinality.toString());
             iOut.println();
-        }
+        }*/
         iOut.decIndent();
         iOut.println("}");
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(max, min, predicate, reverse, shapeExpr);
+        return Objects.hash(predicate, reverse, shapeExpr);
     }
 
     @Override
@@ -141,15 +154,16 @@ public class TripleConstraint extends TripleExpression {
         if ( getClass() != obj.getClass() )
             return false;
         TripleConstraint other = (TripleConstraint)obj;
-        return max == other.max && min == other.min && Objects.equals(predicate, other.predicate) && reverse == other.reverse
+        return /*max == other.max && min == other.min && */Objects.equals(predicate, other.predicate) && reverse == other.reverse
                && Objects.equals(shapeExpr, other.shapeExpr);
     }
 
     @Override
     public String toString() {
         String cardStr = "";
+        /*
         if ( ! cardinalityString().isEmpty() )
-            cardStr = "cardinality="+cardinalityString()+", ";
+            cardStr = "cardinality="+cardinalityString()+", "; */
         String s = "TripleConstraint";
         if ( label != null )
             s = s+"($"+label+")";

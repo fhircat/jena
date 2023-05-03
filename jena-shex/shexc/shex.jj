@@ -544,7 +544,7 @@ void valueExclusion() : { String iriStr = null; String lang = null; Node lit = n
 {
     <MINUS>
     { startValueExclusion(); }
-    ( iriStr = iri()
+        ( iriStr = iri()
     | lit = literal()
     | <LANGTAG> { lang = token.image; }
     )
