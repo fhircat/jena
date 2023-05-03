@@ -66,7 +66,7 @@ public class ShapeExprWalker implements ShapeExprVisitor {
         after(shape);
     }
 
-    @Override public void visit(ShapeExprNOT shape) {
+    @Override public void visit(ShapeNot shape) {
         before(shape);
         shape.subShape().visit(this);
         after(shape);

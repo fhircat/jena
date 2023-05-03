@@ -26,7 +26,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprNOT extends ShapeExpr {
+public class ShapeNot extends ShapeExpr {
 
 //    public static ShapeExpression create(List<ShapeExpression> args) {
 //        if ( args.size() == 0 )
@@ -38,7 +38,7 @@ public class ShapeExprNOT extends ShapeExpr {
 //    }
     private final ShapeExpr other;
 
-    public ShapeExprNOT(ShapeExpr shapeExpr) {
+    public ShapeNot(ShapeExpr shapeExpr) {
         super();
         this.other = shapeExpr;
     }
@@ -87,7 +87,7 @@ public class ShapeExprNOT extends ShapeExpr {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeExprNOT other = (ShapeExprNOT)obj;
+        ShapeNot other = (ShapeNot)obj;
         return Objects.equals(this.other, other.other);
     }
 }

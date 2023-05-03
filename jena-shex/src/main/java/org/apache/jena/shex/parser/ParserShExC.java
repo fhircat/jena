@@ -331,7 +331,7 @@ public class ParserShExC extends LangParserBase {
             throw new InternalErrorException("Shape NOT - multiple items on the stack");
         if ( negate && ! shapeExprStack.isEmpty() ) {
             ShapeExpr shExpr = pop(shapeExprStack);
-            ShapeExpr shExpr2 = new ShapeExprNOT(shExpr);
+            ShapeExpr shExpr2 = new ShapeNot(shExpr);
             push(shapeExprStack, shExpr2);
         }
         finish(inline, "ShapeNot");

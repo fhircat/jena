@@ -22,7 +22,7 @@ public interface ShapeExprVisitor //extends NodeConstraintVisitor
 {
     public default void visit(ShapeAnd shape) {}
     public default void visit(ShapeOr shape) {}
-    public default void visit(ShapeExprNOT shape) {}
+    public default void visit(ShapeNot shape) {}
     public default void visit(ShapeExprRef shape) {}
     public default void visit(ShapeExprExternal shape) {}
     public default void visit(ShapeExprTripleExpr shape) {}

@@ -255,7 +255,7 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprNOT shape) {
+        public void visit(ShapeNot shape) {
             out.print("NOT ");
             ShapeExpr shExpr = shape.subShape();
             boolean needParens = true;
