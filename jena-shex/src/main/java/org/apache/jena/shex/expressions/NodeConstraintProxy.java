@@ -25,7 +25,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class NodeConstraint
+public class NodeConstraintProxy
 //extends ShapeExpression
 implements Satisfies, ShexPrintable
 {
@@ -43,7 +43,7 @@ implements Satisfies, ShexPrintable
 
     private List<NodeConstraintComponent> constraints = new ArrayList<>();
 
-    public NodeConstraint(List<NodeConstraintComponent> constraints) {
+    public NodeConstraintProxy(List<NodeConstraintComponent> constraints) {
         this.constraints = List.copyOf(constraints);
     }
 
@@ -52,7 +52,7 @@ implements Satisfies, ShexPrintable
     static class NodeConstraintBuilder {
         NodeKindConstraint nodeKind;
         DatatypeConstraint datatype = null;
-        List<NodeConstraint> facets = new ArrayList<>();
+        List<NodeConstraintProxy> facets = new ArrayList<>();
         ValueConstraint values;
     }
 
@@ -85,7 +85,7 @@ implements Satisfies, ShexPrintable
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        NodeConstraint other = (NodeConstraint)obj;
+        NodeConstraintProxy other = (NodeConstraintProxy)obj;
         if ( constraints == null ) {
             if ( other.constraints != null )
                 return false;

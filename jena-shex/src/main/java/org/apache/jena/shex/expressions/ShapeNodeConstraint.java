@@ -38,20 +38,20 @@ ShapeAtom := ( nonLitNodeConstraint ( inlineShapeOrRef )?
 */
 public class ShapeNodeConstraint extends ShapeExpr {
 
-    private final NodeConstraint nodeConstraint;
+    private final NodeConstraintProxy nodeConstraintProxy;
 
-    public ShapeNodeConstraint(NodeConstraint nodeConstraint, List<SemAct> semActs) {
-        this(null, Objects.requireNonNull(nodeConstraint, "NodeConstraint"), semActs);
+    public ShapeNodeConstraint(NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
+        this(null, Objects.requireNonNull(nodeConstraintProxy, "NodeConstraint"), semActs);
     }
 
-    private ShapeNodeConstraint(ShapeExpr shapeExpr, NodeConstraint nodeConstraint, List<SemAct> semActs) {
+    private ShapeNodeConstraint(ShapeExpr shapeExpr, NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
         super(semActs);
-        this.nodeConstraint = nodeConstraint;
+        this.nodeConstraintProxy = nodeConstraintProxy;
 
     }
 
-    public NodeConstraint getNodeConstraint() {
-        return nodeConstraint;
+    public NodeConstraintProxy getNodeConstraint() {
+        return nodeConstraintProxy;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class ShapeNodeConstraint extends ShapeExpr {
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        return nodeConstraint.satisfies(vCxt, data);
+        return nodeConstraintProxy.satisfies(vCxt, data);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class ShapeNodeConstraint extends ShapeExpr {
 
     @Override
     public int hashCode() {
-        return 1+Objects.hash(nodeConstraint);
+        return 1+Objects.hash(nodeConstraintProxy);
     }
 
     @Override
@@ -83,13 +83,13 @@ public class ShapeNodeConstraint extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         ShapeNodeConstraint other = (ShapeNodeConstraint)obj;
-        return Objects.equals(nodeConstraint, other.nodeConstraint);
+        return Objects.equals(nodeConstraintProxy, other.nodeConstraintProxy);
     }
 
     @Override
     public String toString() {
-        if ( nodeConstraint != null )
-            return "ShapeNodeConstraint [ "+nodeConstraint+" ]";
+        if ( nodeConstraintProxy != null )
+            return "ShapeNodeConstraint [ "+ nodeConstraintProxy +" ]";
         return "ShapeNodeConstraint []";
     }
 }
