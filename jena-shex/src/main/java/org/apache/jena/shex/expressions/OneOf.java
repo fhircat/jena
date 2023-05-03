@@ -25,19 +25,19 @@ import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.riot.out.NodeFormatter;
 
-public class TripleExprOneOf extends TripleExpression {
+public class OneOf extends TripleExpression {
 
     public static TripleExpression create(List<TripleExpression> acc, List<SemAct> semActs) {
         if ( acc.size() == 0 )
             throw new InternalErrorException("Empty list");
         if ( acc.size() == 1 )
             return acc.get(0);
-        return new TripleExprOneOf(acc, semActs);
+        return new OneOf(acc, semActs);
     }
 
     private List<TripleExpression> tripleExpressions;
 
-    private TripleExprOneOf(List<TripleExpression> expressions, List<SemAct> semActs) {
+    private OneOf(List<TripleExpression> expressions, List<SemAct> semActs) {
         super(semActs);
         this.tripleExpressions = expressions;
     }
@@ -64,7 +64,7 @@ public class TripleExprOneOf extends TripleExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        TripleExprOneOf other = (TripleExprOneOf)obj;
+        OneOf other = (OneOf)obj;
         return Objects.equals(tripleExpressions, other.tripleExpressions);
     }
 

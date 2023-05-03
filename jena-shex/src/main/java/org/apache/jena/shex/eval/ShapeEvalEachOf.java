@@ -26,14 +26,14 @@ import org.apache.jena.ext.com.google.common.collect.ListMultimap;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.TripleExpression;
-import org.apache.jena.shex.expressions.TripleExprEachOf;
+import org.apache.jena.shex.expressions.EachOf;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /*package*/ class ShapeEvalEachOf {
     // Sufficiently large and complex so separated from ShapeEval.
 
     /*package*/ static boolean matchesEachOf(ValidationContext vCxt, Set<Triple> matchables, Node node,
-                                             TripleExprEachOf eachOf, Set<Node> extras) {
+                                             EachOf eachOf, Set<Node> extras) {
         /*
          * https://github.com/hsolbrig/PyShEx/blob/master/pyshex/utils/matchesEachOfEvaluator.py
          * Special cases:

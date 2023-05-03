@@ -43,14 +43,14 @@ public class TripleExprWalker implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(TripleExprEachOf object) {
+    public void visit(EachOf object) {
         before(object);
         object.expressions().forEach(tripleExpr->tripleExpr.visit(this));
         after(object);
     }
 
     @Override
-    public void visit(TripleExprOneOf object) {
+    public void visit(OneOf object) {
         before(object);
         object.expressions().forEach(tripleExpr->tripleExpr.visit(this));
         after(object);

@@ -389,7 +389,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected TripleExpression finishTripleExpression(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, TripleExprOneOf::create);
+        finishTripleOp(idx, semActs, OneOf::create);
         TripleExpression tripleExpr = pop(tripleExprStack);
         finish("TripleExpression");
         return tripleExpr;
@@ -403,7 +403,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishTripleExpressionClause(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, TripleExprEachOf::create);
+        finishTripleOp(idx, semActs, EachOf::create);
         finish("TripleExpressionClause");
     }
 

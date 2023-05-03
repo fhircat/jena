@@ -375,7 +375,7 @@ public class WriterShExC {
             out.decIndent();
         }
 
-        @Override public void visit(TripleExprEachOf tripleExpr) {
+        @Override public void visit(EachOf tripleExpr) {
             printList(out, tripleExpr.expressions(), "(", ")", null, tExpr->{
                 out.incIndent();
                 printTripleExpression(tExpr);
@@ -383,7 +383,7 @@ public class WriterShExC {
             });
             out.println();
         }
-        @Override public void visit(TripleExprOneOf tripleExpr) {
+        @Override public void visit(OneOf tripleExpr) {
             printList(out, tripleExpr.expressions(), "(", ")", "|", tExpr->{
                     out.incIndent();
                     printTripleExpression(tExpr);
