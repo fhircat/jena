@@ -18,60 +18,63 @@
 
 package org.apache.jena.shex.expressions;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
+import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-/** A node constraint (nonLitNodeConstraint or litNodeConstraint) in a shape atom.
-<pre>
-ShapeAtom := ( nonLitNodeConstraint ( inlineShapeOrRef )?
-             | litNodeConstraint
-             | inlineShapeOrRef ( nonLitNodeConstraint )?
-             | &lt;LPAREN&gt; shapeExpression &lt;RPAREN&gt;
-             | &lt;DOT&gt;
-             )
-</pre>
-*/
-public class NodeConstraint extends ShapeExpr {
+public class NodeConstraint
+//extends ShapeExpression
+implements Satisfies, ShexPrintable
+{
 
-    private final NodeConstraintProxy nodeConstraintProxy;
+    /*
+    NodeConstraint  {
+        id:shapeExprLabel?
+        nodeKind:("iri" | "bnode" | "nonliteral" | "literal")?
+        datatype:IRIREF?
+        xsFacet*
+        values:[valueSetValue+]?
+    }
+     */
 
-    public NodeConstraint(NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
-        this(null, Objects.requireNonNull(nodeConstraintProxy, "NodeConstraint"), semActs);
+
+    private List<NodeConstraintComponent> constraints = new ArrayList<>();
+
+    public NodeConstraint(List<NodeConstraintComponent> constraints) {
+        this.constraints = List.copyOf(constraints);
     }
 
-    private NodeConstraint(ShapeExpr shapeExpr, NodeConstraintProxy nodeConstraintProxy, List<SemAct> semActs) {
-        super(semActs);
-        this.nodeConstraintProxy = nodeConstraintProxy;
+    public List<NodeConstraintComponent> components() { return constraints; }
 
+    static class NodeConstraintBuilder {
+        NodeKindConstraint nodeKind;
+        DatatypeConstraint datatype = null;
+        List<NodeConstraint> facets = new ArrayList<>();
+        ValueConstraint values;
     }
 
-    public NodeConstraintProxy getNodeConstraint() {
-        return nodeConstraintProxy;
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        return nodeConstraintProxy.satisfies(vCxt, data);
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
-        visitor.visit(this);
+        for ( NodeConstraintComponent ncc : constraints ) {
+            ReportItem item = ncc.nodeSatisfies(vCxt, data);
+            if ( item != null ) {
+                vCxt.reportEntry(item);
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return 1+Objects.hash(nodeConstraintProxy);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((constraints == null) ? 0 : constraints.hashCode());
+        return result;
     }
 
     @Override
@@ -83,13 +86,16 @@ public class NodeConstraint extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         NodeConstraint other = (NodeConstraint)obj;
-        return Objects.equals(nodeConstraintProxy, other.nodeConstraintProxy);
+        if ( constraints == null ) {
+            if ( other.constraints != null )
+                return false;
+        } else if ( !constraints.equals(other.constraints) )
+            return false;
+        return true;
     }
 
     @Override
     public String toString() {
-        if ( nodeConstraintProxy != null )
-            return "ShapeNodeConstraint [ "+ nodeConstraintProxy +" ]";
-        return "ShapeNodeConstraint []";
+        return "NodeConstraint [constraints=" + constraints + "]";
     }
 }

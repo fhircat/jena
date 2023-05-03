@@ -93,7 +93,7 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
     @Override
-    public void visit(NodeConstraint shape) {
+    public void visit(ShapeNodeConstraint shape) {
         before(shape);
         if ( nodeConstraintVisitor != null && shape.getNodeConstraint() != null )
             shape.getNodeConstraint().components().forEach(ncc->ncc.visit(nodeConstraintVisitor));

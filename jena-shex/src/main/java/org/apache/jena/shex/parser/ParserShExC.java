@@ -354,8 +354,8 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void shapeAtomDOT() {
-        push(shapeExprStack, new NodeConstraint(
-                new NodeConstraintProxy(Collections.emptyList()),
+        push(shapeExprStack, new ShapeNodeConstraint(
+                new NodeConstraint(Collections.emptyList()),
                 Collections.emptyList())
         );
     }
@@ -486,9 +486,9 @@ public class ParserShExC extends LangParserBase {
     private void startNodeConstraint() { }
 
     private void finishNodeConstraint(List<SemAct> semActs) {
-        NodeConstraintProxy nodeConstraintProxy = new NodeConstraintProxy(accumulator);
+        NodeConstraint nodeConstraint = new NodeConstraint(accumulator);
         accumulator.clear();
-        ShapeExpr shExpr = new NodeConstraint(nodeConstraintProxy, semActs);
+        ShapeExpr shExpr = new ShapeNodeConstraint(nodeConstraint, semActs);
         push(shapeExprStack, shExpr);
     }
 
