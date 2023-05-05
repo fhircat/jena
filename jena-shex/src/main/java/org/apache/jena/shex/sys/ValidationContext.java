@@ -26,7 +26,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
@@ -41,15 +41,15 @@ public class ValidationContext {
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
 
-    private ShapeExpression shapeExpr;
+    private ShapeExpr shapeExpr;
     // <data node, shape>
-    private Deque<Pair<Node, ShexShape>> inProgress = new ArrayDeque<>();
+    private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
     /** @deprecated Use method {@link #create()} */
     @Deprecated
-    public static ValidationContext create(ValidationContext vCxt, ShapeExpression shape) {
+    public static ValidationContext create(ValidationContext vCxt, ShapeExpr shape) {
         return vCxt.create(shape);
     }
 
@@ -62,7 +62,7 @@ public class ValidationContext {
      *
      * @param vCxt
      */
-    private ValidationContext(ValidationContext vCxt, ShapeExpression shapeExpr) {
+    private ValidationContext(ValidationContext vCxt, ShapeExpr shapeExpr) {
         this(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex, shapeExpr);
     }
 
@@ -70,7 +70,7 @@ public class ValidationContext {
         this(null, data, shapes, null, semActPluginIndex, null);
     }
 
-    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShexShape>> progress, Map<String, SemanticActionPlugin> semActPluginIndex, ShapeExpression shapeExpr) {
+    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShapeDecl>> progress, Map<String, SemanticActionPlugin> semActPluginIndex, ShapeExpr shapeExpr) {
         this.parentCtx = parentCtx;
         this.data = data;
         this.shapes = shapes;
@@ -92,7 +92,7 @@ public class ValidationContext {
         return (parent != null) ? parent : this;
     }
 
-    public TripleExpression getTripleExpression(Node label) {
+    public TripleExpression getTripleExpr(Node label) {
         return shapes.getTripleExpression(label);
     }
 
@@ -100,11 +100,11 @@ public class ValidationContext {
         return shapes;
     }
 
-    public ShexShape getShape(Node label) {
+    public ShapeDecl getShape(Node label) {
         return shapes.get(label);
     }
 
-    public ShapeExpression getContextShape() {
+    public ShapeExpr getContextShape() {
         return shapeExpr;
     }
 
@@ -118,17 +118,17 @@ public class ValidationContext {
      *
      * @return new ValidationContext with this as parent.
      */
-    public ValidationContext create(ShapeExpression shapeExpr) {
+    public ValidationContext create(ShapeExpr shapeExpr) {
         // Fresh ShexReport.Builder
         return new ValidationContext(this, this.data, this.shapes, this.inProgress, this.semActPluginIndex, shapeExpr);
     }
 
-    public void startValidate(ShexShape shape, Node data) {
+    public void startValidate(ShapeDecl shape, Node data) {
         inProgress.push(Pair.create(data, shape));
     }
 
     // Return true if done or in-progress (i.e. don't walk further)
-    public boolean cycle(ShexShape shape, Node data) {
+    public boolean cycle(ShapeDecl shape, Node data) {
         return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
     }
 
@@ -146,7 +146,7 @@ public class ValidationContext {
         });
     }
 
-    public boolean dispatchShapeExprSemanticAction(ShapeExpression se, Node focus) {
+    public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
         return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
@@ -168,8 +168,8 @@ public class ValidationContext {
         });
     }
 
-    public void finishValidate(ShexShape shape, Node data) {
-        Pair<Node, ShexShape> x = inProgress.pop();
+    public void finishValidate(ShapeDecl shape, Node data) {
+        Pair<Node, ShapeDecl> x = inProgress.pop();
         if (x.equalElts(data, shape))
             return;
         throw new InternalErrorException("Eval stack error");

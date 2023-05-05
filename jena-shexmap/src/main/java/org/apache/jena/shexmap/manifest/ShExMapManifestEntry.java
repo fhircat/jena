@@ -41,9 +41,6 @@ public class ShExMapManifestEntry extends ManifestEntry {
 
     private Map<String,Object> staticVars;
 
-    public ShExMapManifestEntry() {
-    }
-
     public ShExMapManifestEntry(Map<String, SourcedString> nvps) {
         super(nvps);
     }

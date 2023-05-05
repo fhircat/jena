@@ -51,7 +51,7 @@ public class ShapeEval {
     // With help from the ideas (not code) of:
     // https://github.com/hsolbrig/PyShEx/blob/master/pyshex/shape_expressions_language/p5_5_shapes_and_triple_expressions.py
 
-    public static boolean matchesShapeExpr(ValidationContext vCxt, ShapeExpression shapeExpr, Node node) {
+    public static boolean matchesShapeExpr(ValidationContext vCxt, ShapeExpr shapeExpr, Node node) {
         return shapeExpr.satisfies(vCxt, node);
     }
 
@@ -86,11 +86,11 @@ public class ShapeEval {
   }
 
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> T, Node node, TripleExpression tripleExpr, Set<Node> extras) {
-        if ( tripleExpr instanceof TripleExprEachOf ) {
-            return ShapeEvalEachOf.matchesEachOf(vCxt, T, node, (TripleExprEachOf)tripleExpr, extras);
+        if ( tripleExpr instanceof EachOf) {
+            return ShapeEvalEachOf.matchesEachOf(vCxt, T, node, (EachOf)tripleExpr, extras);
         }
-        else if ( tripleExpr instanceof TripleExprOneOf ) {
-            return ShapeEvalOneOf.matchesOneOf(vCxt, T, node, (TripleExprOneOf)tripleExpr, extras);
+        else if ( tripleExpr instanceof OneOf) {
+            return ShapeEvalOneOf.matchesOneOf(vCxt, T, node, (OneOf)tripleExpr, extras);
         }
         else if ( tripleExpr instanceof TripleExprRef ) {
             return matchesTripleExprRef(vCxt, T, node, (TripleExprRef)tripleExpr, extras);
@@ -110,7 +110,7 @@ public class ShapeEval {
     private static boolean matchesTripleExprRef(ValidationContext vCxt, Set<Triple> matchables, Node node, TripleExprRef ref, Set<Node> extras) {
         Node label = ref.ref();
         if ( label == null ) {}
-        TripleExpression tripleExpr = vCxt.getTripleExpression(label);
+        TripleExpression tripleExpr = vCxt.getTripleExpr(label);
         if ( tripleExpr == null ) {
             ReportItem rItem = new ReportItem("Failed to get triple expression from reference", label);
             vCxt.reportEntry(rItem);
@@ -129,13 +129,13 @@ public class ShapeEval {
             }
 
             @Override
-            public void visit(TripleExprEachOf expr) {
+            public void visit(EachOf expr) {
                 expr.visit(step);
                 expr.expressions().forEach(ex -> ex.visit(this));
             }
 
             @Override
-            public void visit(TripleExprOneOf expr) {
+            public void visit(OneOf expr) {
                 expr.visit(step);
                 expr.expressions().forEach(ex -> ex.visit(this));
             }

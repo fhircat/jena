@@ -23,7 +23,6 @@ import java.io.InputStream ;
 import java.io.Reader ;
 import java.util.Map;
 
-import org.apache.jena.JenaRuntime;
 import org.apache.jena.atlas.lib.Pair ;
 import org.apache.jena.atlas.logging.Log;
 import org.apache.jena.atlas.web.ContentType;
@@ -33,7 +32,6 @@ import org.apache.jena.graph.Node ;
 import org.apache.jena.graph.NodeFactory ;
 import org.apache.jena.graph.Triple ;
 import org.apache.jena.irix.IRIs;
-import org.apache.jena.irix.SetupJenaIRI;
 import org.apache.jena.rdf.model.RDFErrorHandler ;
 import org.apache.jena.rdfxml.xmlinput.* ;
 import org.apache.jena.rdfxml.xmlinput.impl.ARPSaxErrorHandler ;
@@ -52,23 +50,13 @@ import org.xml.sax.SAXParseException ;
  */
 public class ReaderRIOTRDFXML implements ReaderRIOT
 {
-    public static ReaderRIOTFactory factory = (Lang language, ParserProfile parserProfile) ->
-            // Ignore the provided ParserProfile
-            // ARP predates RIOT and does many things internally already.
-            // This includes IRI resolution.
-            new ReaderRIOTRDFXML(parserProfile.getErrorHandler())
-            ;
+    public static ReaderRIOTFactory factory = (Lang language, ParserProfile parserProfile) -> {
+        // Ignore the provided ParserProfile
+        // ARP predates RIOT and does many things internally already.
+        return new ReaderRIOTRDFXML(parserProfile.getErrorHandler());
+    };
 
-    private ARP arp = new ARP() ;
-
-    private InputStream input = null ;
-    private Reader reader = null ;
-    private String xmlBase ;
-    private String filename ;
-    private StreamRDF sink ;
-    private ErrorHandler errorHandler;
-
-    private Context context;
+    private final ErrorHandler errorHandler;
 
     public ReaderRIOTRDFXML(ErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
@@ -76,29 +64,20 @@ public class ReaderRIOTRDFXML implements ReaderRIOT
 
     @Override
     public void read(InputStream in, String baseURI, ContentType ct, StreamRDF output, Context context) {
-        this.input = in ;
-        this.xmlBase = baseURI_RDFXML(baseURI) ;
-        this.filename = baseURI ;
-        this.sink = output ;
-        this.context = context;
-        parse();
+        parse(in, null, baseURI, ct, output, context);
     }
 
     @Override
     public void read(Reader reader, String baseURI, ContentType ct, StreamRDF output, Context context) {
-        this.reader = reader ;
-        this.xmlBase = baseURI_RDFXML(baseURI) ;
-        this.filename = baseURI ;
-        this.sink = output ;
-        this.context = context;
-        parse();
+        parse(null, reader, baseURI, ct, output, context);
     }
 
     // RDF 1.1 is based on URIs/IRIs, where space are not allowed.
     // RDF 1.0 (and RDF/XML) was based on "RDF URI References" which did allow spaces.
 
     // Use with TDB requires this to be "true" - it is set by InitTDB.
-    public static boolean RiotUniformCompatibility = false ;
+    public static final boolean RiotUniformCompatibility = true ;
+
     // Warnings in ARP that should be errors to be compatible with
     // non-XML-based languages.  e.g. language tags should be
     // syntactically valid.
@@ -145,11 +124,22 @@ public class ReaderRIOTRDFXML implements ReaderRIOT
         options.setErrorMode(cond, val);
     }
 
-    public void parse() {
+    @SuppressWarnings("deprecation")
+    private void parse(InputStream input, Reader reader, String xmlBase, ContentType ct, StreamRDF sink, Context context) {
+        // One of input and reader is null.
+        boolean legacySwitch = context.isTrue(RIOT.symRDFXML0);
+        if ( legacySwitch ) {
+            ReaderRIOTRDFXML0 other = new ReaderRIOTRDFXML0(errorHandler);
+            other.parse(input, reader, xmlBase, ct, sink, context);
+            return;
+        }
+
         // Hacked out of ARP because of all the "private" methods
         // JenaReader has reset the options since new ARP() was called.
         sink.start() ;
         HandlerSink rslt = new HandlerSink(sink, errorHandler) ;
+
+        ARP arp = new ARP();
         arp.getHandlers().setStatementHandler(rslt) ;
         arp.getHandlers().setErrorHandler(rslt) ;
         arp.getHandlers().setNamespaceHandler(rslt) ;
@@ -161,9 +151,6 @@ public class ReaderRIOTRDFXML implements ReaderRIOT
             for ( int code : additionalErrors )
                 arpOptions.setErrorMode(code, ARPErrorNumbers.EM_ERROR) ;
         }
-
-        if ( JenaRuntime.isRDF11 )
-            arp.getOptions().setIRIFactory(SetupJenaIRI.iriFactory_RDFXML());
 
         if ( context != null ) {
             Map<String, Object> properties = null;
@@ -178,6 +165,8 @@ public class ReaderRIOTRDFXML implements ReaderRIOT
                 properties.forEach((k,v) -> oneProperty(arpOptions, k, v)) ;
         }
         arp.setOptionsWith(arpOptions) ;
+
+        String filename = xmlBase;
 
         try {
             if ( reader != null )
@@ -201,8 +190,8 @@ public class ReaderRIOTRDFXML implements ReaderRIOT
     private static String baseURI_RDFXML(String baseIRI) {
         if ( baseIRI == null )
             return IRIs.getBaseStr();
-        else
-            return IRIs.toBase(baseIRI) ;
+        // RDFParserBuidler resolved the baseIRI
+        return baseIRI;
     }
 
     private static class HandlerSink extends ARPSaxErrorHandler implements StatementHandler, NamespaceHandler {

@@ -62,18 +62,18 @@ public class ShexLib {
 //        shExpr.visit(walker);
 //    }
 
-    public static void walk(ShapeExpression shExpr,
-                             ShapeExprVisitor shapeVisitor,
-                             TripleExprVisitor tripleExpressionVisitor,
-                             NodeConstraintVisitor nodeConstraintVisitor
+    public static void walk(ShapeExpr shExpr,
+                            ShapeExprVisitor shapeVisitor,
+                            TripleExprVisitor tripleExpressionVisitor,
+                            NodeConstraintVisitor nodeConstraintVisitor
                             ) {
         TripleExprVisitor tExprVisitor = new TripleExprVisitor() {
             @Override public void visit(TripleConstraint object) {
                 // One level call of visitor.
                 //object.getPredicate();
-                ShapeExpression theShapeExpression = object.getShapeExpression();
-                if ( theShapeExpression != null )
-                    theShapeExpression.visit(shapeVisitor);
+                ShapeExpr theShapeExpr = object.getShapeExpression();
+                if ( theShapeExpr != null )
+                    theShapeExpr.visit(shapeVisitor);
             }
         };
         ShapeExprWalker walker = new ShapeExprWalker(shapeVisitor, null,

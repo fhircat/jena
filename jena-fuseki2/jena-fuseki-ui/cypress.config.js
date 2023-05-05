@@ -16,31 +16,47 @@
  */
 
 const { defineConfig } = require('cypress')
+const vitePreprocessor = require('./tests/e2e/support/vite-preprocessor')
+const path = require('path')
 
 module.exports = defineConfig({
   video: false,
   defaultCommandTimeout: 20000,
-  execTimeout: 15000,
-  taskTimeout: 15000,
-  pageLoadTimeout: 15000,
-  requestTimeout: 7500,
-  responseTimeout: 7500,
-  fixturesFolder: 'tests/e2e/fixtures',
-  screenshotsFolder: 'tests/e2e/screenshots',
-  videosFolder: 'tests/e2e/videos',
+  execTimeout: 30000,
+  taskTimeout: 30000,
+  pageLoadTimeout: 30000,
+  requestTimeout: 10000,
+  responseTimeout: 10000,
 
   e2e: {
+    baseUrl: 'http://localhost:' + (process.env.PORT || 8080),
     setupNodeEvents (on, config) {
+      // For test coverage
+      require('@cypress/code-coverage/task')(on, config)
+
+      on(
+        'file:preprocessor',
+        vitePreprocessor(path.resolve(__dirname, 'vite.config.js'))
+      )
       return require('./tests/e2e/plugins/index.js')(on, config)
     },
     specPattern: 'tests/e2e/specs/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: 'tests/e2e/support/index.js'
+    fixturesFolder: 'tests/e2e/fixtures',
+    screenshotsFolder: 'tests/e2e/screenshots',
+    videosFolder: 'tests/e2e/videos',
+    supportFile: 'tests/e2e/support/index.js',
   },
-
-  component: {
-    devServer: {
-      framework: 'vue-cli',
-      bundler: 'webpack'
-    }
-  }
+  components: {
+    framework: 'vue',
+    bundler: 'vite'
+  },
+  env: {
+    codeCoverage: {
+      exclude: [
+        'src/services/mock/**/*.*',
+        'cypress/**/*.*',
+        'tests/**/*.*'
+      ],
+    },
+  },
 })

@@ -140,7 +140,7 @@ public class ShexValidationTest implements Runnable {
                     report = ShexValidator.getNew(semanticActionPlugins).validate(graph, shapes, shapeMap);
                     break;
                 case StartFocus : {
-                    ShexShape startShape = shapes.getStart();
+                    ShapeDecl startShape = shapes.getStart();
                     report = ShexValidator.getNew(semanticActionPlugins).validate(graph, shapes, startShape, focus);
                     break;
                 }

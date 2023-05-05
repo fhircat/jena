@@ -26,7 +26,7 @@ import org.apache.jena.datatypes.RDFDatatype ;
 import org.apache.jena.datatypes.xsd.XSDDatatype ;
 import org.apache.jena.graph.Node ;
 import org.apache.jena.graph.NodeFactory ;
-import org.apache.jena.iri.IRI ;
+import org.apache.jena.irix.IRIx;
 import org.apache.jena.rdf.model.impl.Util;
 import org.apache.jena.sparql.expr.ExprEvalException ;
 import org.apache.jena.sparql.expr.NodeValue ;
@@ -40,8 +40,12 @@ import org.apache.jena.util.iterator.WrappedIterator ;
  */
 public class NodeUtils
 {
-    /** IRI to Node */
-    public static Node asNode(IRI iri) {
+    /**
+     * IRI to Node
+     * @deprecated Do not use org.apache.jena.iri.IRI. Use {@link IRIx}.
+     */
+    @Deprecated
+    public static Node asNode(org.apache.jena.iri.IRI iri) {
         return NodeFactory.createURI(iri.toString()) ;
     }
 
@@ -146,7 +150,7 @@ public class NodeUtils
         // 2 literals.
         NodeValue nv1 = NodeValue.makeNode(n1);
         NodeValue nv2 = NodeValue.makeNode(n2);
-        try { return NodeValue.sameAs(nv1, nv2); }
+        try { return NodeValue.sameValueAs(nv1, nv2); }
         catch(ExprEvalException ex)
         {
             // Incomparable as values - must be different for our purposes.

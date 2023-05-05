@@ -24,7 +24,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShExPathCalculator;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.sys.ValidationContext;
 
@@ -51,9 +51,9 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     static Pattern ParsePatter1 = Pattern.compile("^ *(fail|print) *\\((\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])\\) *$");
 
 //    Map<Object, String> paths = new HashMap<>(); -- could be generic
-    Map<ShapeExpression, String> shapeExprs = new HashMap<>();
+    Map<ShapeExpr, String> shapeExprs = new HashMap<>();
     Map<TripleExpression, String> tripleExprs = new HashMap<>();
-    Stack<ShapeExpression> shapeExprStack = new Stack<>();
+    Stack<ShapeExpr> shapeExprStack = new Stack<>();
     BindingNode root = null;
     BindingNode cur = null;
     Stack<BindingNode> nodeStack = new Stack<>();
@@ -96,7 +96,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     @Override
-    public boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpression shapeExpression, Node focus) {
+    public boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpr shapeExpression, Node focus) {
         return parse(semAct, (str) -> resolveNodeVar(str, focus), vCxt, shapeExprs.get(shapeExpression));
     }
 
@@ -138,10 +138,10 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     private void updatePosition(ValidationContext vCxt) {
-        // Walk up the ValidationContexts to build a list of our nested ShapeExpressions.
-        List<ShapeExpression> newStack = new ArrayList<>();
+        // Walk up the ValidationContexts to build a list of our nested ShapeExprs.
+        List<ShapeExpr> newStack = new ArrayList<>();
         for (ValidationContext parent = vCxt; parent != null; parent = parent.getParent()) {
-            ShapeExpression s = parent.getContextShape();
+            ShapeExpr s = parent.getContextShape();
             if (s != null)
                 newStack.add(s);
         }
@@ -149,7 +149,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
 
         // Compare to shapeExprStack to newStack.
         for (int depth = 0; depth < newStack.size(); ++depth) {
-            ShapeExpression curShape = newStack.get(depth);
+            ShapeExpr curShape = newStack.get(depth);
             int curHash = System.identityHashCode(curShape);
             if (depth > shapeExprStack.size() - 1) {
                 // newStack is deeper than shapeExprStack
@@ -176,11 +176,11 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
         }
     }
 
-    private void trimStack(List<ShapeExpression> curStack, int depth) {
-        List<ShapeExpression> toTrim = shapeExprStack.subList(depth, shapeExprStack.size());
+    private void trimStack(List<ShapeExpr> curStack, int depth) {
+        List<ShapeExpr> toTrim = shapeExprStack.subList(depth, shapeExprStack.size());
 
         // Make a reversed copy and close each one.
-//        List<ShapeExpression> toWalk = new ArrayList<>(toTrim);
+//        List<ShapeExpr> toWalk = new ArrayList<>(toTrim);
 //        Collections.reverse(toWalk);
 //        toWalk.forEach(s -> System.out.printf("< %x ", System.identityHashCode(s)));
 

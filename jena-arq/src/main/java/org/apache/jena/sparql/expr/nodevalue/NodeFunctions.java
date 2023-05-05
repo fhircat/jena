@@ -436,8 +436,10 @@ public class NodeFunctions {
     private static String resolveCheckIRI(String baseIRI, String iriStr) {
         try {
             IRIx iri = IRIx.create(iriStr);
+            if ( ! iri.isRelative() )
+                    return iriStr;
             IRIx base = ( baseIRI != null ) ? IRIx.create(baseIRI) : IRIs.getSystemBase();
-            if ( base.isRelative() )
+            if ( base.isRelative() /*&& iri.isRelative()*/ )
                 throw new ExprEvalException("Relative IRI for base: " + iriStr) ;
             IRIx result = base.resolve(iri);
             if ( ! result.isReference() )
@@ -506,7 +508,7 @@ public class NodeFunctions {
         if ( seconds == 0 )
             return XSDFuncOp.zeroDuration;
         Duration dur = NodeValue.xmlDatatypeFactory.newDuration(1000*seconds);
-        // Neaten the duration. Not all the fields ar zero.
+        // Neaten the duration. Not all the fields are zero.
         dur = NodeValue.xmlDatatypeFactory.newDuration(dur.getSign()>=0,
                                                        field(dur, DatatypeConstants.YEARS),
                                                        field(dur, DatatypeConstants.MONTHS),

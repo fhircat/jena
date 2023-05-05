@@ -24,9 +24,7 @@ import org.apache.jena.sparql.expr.ExprEvalException;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.sse.SSE;
 import org.apache.jena.sparql.util.Context;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -42,6 +40,14 @@ public class TestScriptFunction {
     private String language;
     private String library;
     private String functions;
+
+    @BeforeClass public static void enableScripting() {
+        System.setProperty(ARQ.systemPropertyScripting, "true");
+    }
+
+    @AfterClass public static void disbleScripting() {
+        System.clearProperty(ARQ.systemPropertyScripting);
+    }
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
@@ -74,14 +80,14 @@ public class TestScriptFunction {
 
     @Before
     public void setup() {
-        ctx.set(LanguageSymbols.scriptLibrary(language), library);
-        ctx.set(LanguageSymbols.scriptFunctions(language), functions);
+        ctx.set(ScriptLangSymbols.scriptLibrary(language), library);
+        ctx.set(ScriptLangSymbols.scriptFunctions(language), functions);
     }
 
     @After
     public void teardown() {
-        ctx.unset(LanguageSymbols.scriptFunctions(language));
-        ctx.unset(LanguageSymbols.scriptLibrary(language));
+        ctx.unset(ScriptLangSymbols.scriptFunctions(language));
+        ctx.unset(ScriptLangSymbols.scriptLibrary(language));
 
         ScriptFunction.clearEngineCache();
     }
@@ -202,7 +208,7 @@ public class TestScriptFunction {
 
     @Test
     public void script_err_3() {
-        if (!language.equals("JS")) {
+        if (!language.equalsIgnoreCase("JS")) {
             return;
         }
         // Legal in JS.
@@ -212,7 +218,7 @@ public class TestScriptFunction {
 
     @Test
     public void script_err_4() {
-        if (!language.equals("JS")) {
+        if (!language.equalsIgnoreCase("JS")) {
             return;
         }
         // Legal in JS.

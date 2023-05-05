@@ -22,31 +22,41 @@
  * add new datasets. So we also cover parts of the Manage view.
  */
 describe('datasets', () => {
-  it('Visits datasets page, also the application landing-page', () => {
-    cy.visit('/')
-    cy
-      .contains('Loading')
-      .should('not.exist')
-    cy
-      .get('h2.text-center')
-      .contains('Apache Jena Fuseki')
-    cy
-      .get('tr.jena-table-empty')
-      .contains('No datasets created')
+  describe('without any datasets', () => {
+    before(() => {
+      // Special endpoint that clears the datasets data.
+      cy.request('/tests/reset')
+    })
+    after(() => {
+      // Special endpoint that clears the datasets data.
+      cy.request('/tests/reset')
+    })
+    it('Visits datasets page, also the application landing-page', () => {
+      cy.visit('/')
+      cy
+        .contains('Loading')
+        .should('not.exist')
+      cy
+        .get('h2.text-center')
+        .contains('Apache Jena Fuseki')
+      cy
+        .get('tr.jena-table-empty')
+        .contains('No datasets created')
+    })
+    it('Filters without any data', () => {
+      cy.visit('/')
+      cy
+        .contains('Loading')
+        .should('not.exist')
+      cy
+        .get('#filterInput')
+        .type('pumpkin')
+      cy
+        .get('tr.jena-table-empty-filtered')
+        .contains('No datasets found')
+    })
   })
-  it('Filters without any data', () => {
-    cy.visit('/')
-    cy
-      .contains('Loading')
-      .should('not.exist')
-    cy
-      .get('#filterInput')
-      .type('pumpkin')
-    cy
-      .get('tr.jena-table-empty-filtered')
-      .contains('No datasets found')
-  })
-  describe('After creating new datasets', () => {
+  describe('after creating new datasets', () => {
     before(() => {
       // Special endpoint that clears the datasets data.
       cy.request('/tests/reset')
@@ -78,8 +88,10 @@ describe('datasets', () => {
     })
     it('Edits the graph', () => {
       cy.visit('/#/dataset/a/edit')
-      cy.server()
-      cy.intercept('/a*').as('getGraph')
+      cy.intercept({
+        method: 'GET',
+        url: '/a/data*'
+      }).as('getGraph')
       cy
         .contains('Loading')
         .should('not.exist')
@@ -118,11 +130,11 @@ describe('datasets', () => {
         .eq(0)
         .find('a')
         .first()
-        .click()
+        .click({ force: true })
       cy.wait('@getGraph')
       cy
         .get('.CodeMirror-code')
-        .should('contain', 'Harry Potter and the Goblet of Fire')
+        .should('contain.text', 'Harry Potter and the Goblet of Fire')
     })
     it('Visits datasets page', () => {
       cy.visit('/')
@@ -253,8 +265,10 @@ describe('datasets', () => {
       cy
         .contains('Loading')
         .should('not.exist')
-      cy.server()
-      cy.route('POST', '/$/datasets').as('post')
+      cy.intercept({
+        method: 'POST',
+        url: '/$/datasets'
+      }).as('post')
       cy
         .visit('/#/manage/new')
         .then(() => {
@@ -271,7 +285,8 @@ describe('datasets', () => {
           // from Jena, due to the duplicate dataset name.
           cy
             .get('@post')
-            .should('have.property', 'status', 409)
+            .its('response')
+            .should('have.property', 'statusCode', 409)
         })
     })
     it('Visualizes the dataset information (Info View, tab)', () => {

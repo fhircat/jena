@@ -179,11 +179,11 @@
 </template>
 
 <script>
-import Menu from '@/components/dataset/Menu'
+import Menu from '@/components/dataset/Menu.vue'
 import Yasqe from '@triply/yasqe'
 import Yasr from '@triply/yasr'
-import queryString from 'query-string'
-import Vue from 'vue'
+import { createShareableLink } from '@/utils/query'
+import { nextTick } from 'vue'
 import currentDatasetMixin from '@/mixins/current-dataset'
 import currentDatasetMixinNavigationGuards from '@/mixins/current-dataset-navigation-guards'
 
@@ -283,37 +283,22 @@ export default {
             persistenceId: null
           }
         )
+        // Curried function to create shareable links. YASQE expects a function
+        // that accepts only an instance of YASQE.
+        const curriedCreateShareableLink = yasqe => {
+          return createShareableLink(yasqe.getValue(), vm.$route.path)
+        }
         // query editor
         // NOTE: the full screen functionality was removed from YASQE: https://github.com/Triply-Dev/YASGUI.YASQE-deprecated/issues/139#issuecomment-573656137
         vm.yasqe = new Yasqe(
           document.getElementById('yasqe'),
           {
             showQueryButton: true,
-            resizeable: false,
+            resizeable: true,
             requestConfig: {
               endpoint: this.$fusekiService.getFusekiUrl(this.currentDatasetUrl)
             },
-            /**
-             * Based on YASGUI code, but modified to avoid parsing the Vue Route query
-             * hash. Note that we cannot use `document.location.hash` since it could
-             * contain the ?query=... too. Instead, we must use Vue Route path value.
-             *
-             * @param {Yasqe} yasqe
-             */
-            createShareableLink: function (yasqe) {
-              return (
-                document.location.protocol +
-                '//' +
-                document.location.host +
-                document.location.pathname +
-                document.location.search +
-                '#' +
-                vm.$route.path +
-                '?query=' +
-                // Same as YASGUI does, good idea to avoid security problems...
-                queryString.stringify(queryString.parse(yasqe.getValue()))
-              )
-            }
+            createShareableLink: curriedCreateShareableLink
           }
         )
         vm.yasqe.on('queryResponse', (yasqe, response, duration) => {
@@ -330,7 +315,7 @@ export default {
   },
 
   beforeRouteUpdate (from, to, next) {
-    Vue.nextTick(() => {
+    nextTick(() => {
       if (this.$route.query.query !== undefined) {
         // N.B: a blank value, like query=, will clear the query editor. Not sure if
         //      desirable, but this can be easily modified later if necessary.

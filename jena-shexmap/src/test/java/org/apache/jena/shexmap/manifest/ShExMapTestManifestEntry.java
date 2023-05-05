@@ -30,9 +30,6 @@ public class ShExMapTestManifestEntry extends ShExMapManifestEntry {
     public static final String KEY_OUTPUT_DATA_URL = "outputDataUrl";
     private URI outputDataUrl;
 
-    public ShExMapTestManifestEntry() {
-    }
-
     public ShExMapTestManifestEntry(Map<String, SourcedString> nvps) {
         super(nvps);
     }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai'
+import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ServerStatus from '@/components/ServerStatus.vue'
 import ServerStatusModel from '@/model/server.status'
@@ -33,7 +33,6 @@ describe('ServerStatus', () => {
         mocks: {
           $fusekiService: {
             async getServerStatus () {
-              console.log('Hola!')
               count += 1
               return new ServerStatusModel(true, `OK ${count}`)
             }

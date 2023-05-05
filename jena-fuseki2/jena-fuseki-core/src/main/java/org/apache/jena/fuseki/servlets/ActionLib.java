@@ -273,7 +273,7 @@ public class ActionLib {
             // "Content-type:" header - absent or no value. Guess!
             lang = defaultLang;
         } else if ( ct.equals(WebContent.ctHTMLForm)) {
-            ServletOps.errorBadRequest("HTML Form data sent to SHACL valdiation server");
+            ServletOps.errorBadRequest("HTML Form data sent to SHACL validation server");
             return null;
         } else {
             lang = RDFLanguages.contentTypeToLang(ct.getContentTypeStr());
@@ -387,7 +387,8 @@ public class ActionLib {
         return values[0];
     }
 
-    /** Get the content type of an action or return the default.
+    /**
+     * Get the content type of an action.
      * @param  action
      * @return ContentType
      */

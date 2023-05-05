@@ -25,7 +25,7 @@ import org.apache.jena.atlas.lib.StreamOps;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleConstraint;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
@@ -49,7 +49,7 @@ import org.apache.jena.shex.sys.ValidationContext;
         Set<Triple> triples = StreamOps.toSet(matchables.stream().filter(t->predicate.equals(t.getPredicate())));
         int min = tripleConstraint.min();
         int max = tripleConstraint.max();
-        ShapeExpression shExpr = tripleConstraint.getShapeExpression();
+        ShapeExpr shExpr = tripleConstraint.getShapeExpression();
 
         Set<Triple> positive = triples.stream().filter(t->{
             Node v = tripleConstraint.reverse() ? t.getSubject() : t.getObject();

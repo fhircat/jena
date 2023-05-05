@@ -23,7 +23,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.Plugin;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
@@ -47,5 +47,5 @@ public interface SemanticActionPlugin extends Plugin {
 
     boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpression tripleExpression, Collection<Triple> triples);
 
-    boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpression shapeExpression, Node focus);
+    boolean evaluateShapeExpr(SemAct semAct, ValidationContext vCxt, ShapeExpr shapeExpr, Node focus);
 }
