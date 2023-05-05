@@ -21,17 +21,17 @@ package org.apache.jena.shex;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** A labelled ShEx shape. */
-public class ShexShape {
+public class ShapeDecl {
     private final Node label;
-    private ShapeExpression shExpression;
+    private ShapeExpr shExpression;
 
     // [shex] Future : builder.
-    public ShexShape(Node label, ShapeExpression shExpression) {
+    public ShapeDecl(Node label, ShapeExpr shExpression) {
         this.label = label;
         this.shExpression = shExpression;
     }
@@ -40,14 +40,16 @@ public class ShexShape {
         return label;
     }
 
-    public ShapeExpression getShapeExpression() {
+    public ShapeExpr getShapeExpression() {
         return shExpression;
     }
 
     public boolean satisfies(ValidationContext vCxt, Node data) {
         vCxt.startValidate(this, data);
         try {
-            return shExpression.satisfies(vCxt, data) &&
+            return shExpression == null
+                ? true
+                : shExpression.satisfies(vCxt, data) &&
                     shExpression.testShapeExprSemanticActions(vCxt, data);
         } finally {
             vCxt.finishValidate(this, data);
@@ -64,7 +66,9 @@ public class ShexShape {
         iOut.incIndent();
         // ShapeExpressionAND:
         // Consolidate adjacent TripleConstraints.
-        getShapeExpression().print(iOut, nFmt);
+        ShapeExpr shExpr = getShapeExpression();
+        if (shExpr != null)
+            shExpr.print(iOut, nFmt);
         iOut.decIndent();
     }
 
@@ -85,7 +89,7 @@ public class ShexShape {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShexShape other = (ShexShape)obj;
+        ShapeDecl other = (ShapeDecl)obj;
         if ( label == null ) {
             if ( other.label != null )
                 return false;

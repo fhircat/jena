@@ -22,46 +22,45 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
-/** A node constraint (nonLitNodeConstraint or litNodeConstraint) in a shape atom.
-<pre>
-ShapeAtom := ( nonLitNodeConstraint ( inlineShapeOrRef )?
-             | litNodeConstraint
-             | inlineShapeOrRef ( nonLitNodeConstraint )?
-             | &lt;LPAREN&gt; shapeExpression &lt;RPAREN&gt;
-             | &lt;DOT&gt;
-             )
-</pre>
-*/
-public class ShapeNodeConstraint extends ShapeExpression {
+public class ShapeAnd extends ShapeExpr {
 
-    private final NodeConstraint nodeConstraint;
+    // Could pull out ShapeExpressionN
+    // [ ] print
+    // [ ] Most of equals.
 
-    public ShapeNodeConstraint(NodeConstraint nodeConstraint, List<SemAct> semActs) {
-        this(null, Objects.requireNonNull(nodeConstraint, "NodeConstraint"), semActs);
+    public static ShapeExpr create(List<ShapeExpr> acc) {
+        if ( acc.size() == 0 )
+            throw new InternalErrorException("Empty list");
+        if ( acc.size() == 1 )
+            return acc.get(0);
+        return new ShapeAnd(acc);
     }
 
-    private ShapeNodeConstraint(ShapeExpression shapeExpression, NodeConstraint nodeConstraint, List<SemAct> semActs) {
-        super(semActs);
-        this.nodeConstraint = nodeConstraint;
+    List<ShapeExpr> shapeExprs;
 
+    private ShapeAnd(List<ShapeExpr> expressions) {
+        super(null);
+        this.shapeExprs = expressions;
     }
 
-    public NodeConstraint getNodeConstraint() {
-        return nodeConstraint;
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
+    public List<ShapeExpr> expressions() {
+        return shapeExprs;
     }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        return nodeConstraint.satisfies(vCxt, data);
+        // Record all reports?
+        for ( ShapeExpr shExpr : shapeExprs) {
+            boolean innerSatisfies = shExpr.satisfies(vCxt, data);
+            if ( !innerSatisfies )
+                return false;
+        }
+        return true;
     }
 
     @Override
@@ -70,8 +69,28 @@ public class ShapeNodeConstraint extends ShapeExpression {
     }
 
     @Override
+    public void print(IndentedWriter out, NodeFormatter nFmt) {
+        //out.printf("AND(%d)\n", shapeExpressions.size());
+        out.println("AND");
+        int idx = 0;
+        for ( ShapeExpr shExpr : shapeExprs) {
+            idx++;
+            out.printf("%d -", idx);
+            out.incIndent(4);
+            shExpr.print(out, nFmt);
+            out.decIndent(4);
+        }
+        out.println("/AND");
+    }
+
+    @Override
+    public String toString() {
+        return "ShapeExprAnd "+expressions();
+    }
+
+    @Override
     public int hashCode() {
-        return 1+Objects.hash(nodeConstraint);
+        return Objects.hash(1, shapeExprs);
     }
 
     @Override
@@ -82,14 +101,7 @@ public class ShapeNodeConstraint extends ShapeExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeNodeConstraint other = (ShapeNodeConstraint)obj;
-        return Objects.equals(nodeConstraint, other.nodeConstraint);
-    }
-
-    @Override
-    public String toString() {
-        if ( nodeConstraint != null )
-            return "ShapeNodeConstraint [ "+nodeConstraint+" ]";
-        return "ShapeNodeConstraint []";
+        ShapeAnd other = (ShapeAnd)obj;
+        return Objects.equals(shapeExprs, other.shapeExprs);
     }
 }

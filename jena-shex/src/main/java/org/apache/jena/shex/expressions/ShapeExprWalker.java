@@ -44,29 +44,29 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
 
-    private void before(ShapeExpression shape) {
+    private void before(ShapeExpr shape) {
         if ( beforeVisitor != null )
             shape.visit(beforeVisitor);
     }
 
-    private void after(ShapeExpression shape) {
+    private void after(ShapeExpr shape) {
         if ( afterVisitor != null )
             shape.visit(afterVisitor);
     }
 
-    @Override public void visit(ShapeExprAND shape) {
+    @Override public void visit(ShapeAnd shape) {
         before(shape);
         shape.expressions().forEach(sh->sh.visit(this));
         after(shape);
     }
 
-    @Override public void visit(ShapeExprOR shape) {
+    @Override public void visit(ShapeOr shape) {
         before(shape);
         shape.expressions().forEach(sh->sh.visit(this));
         after(shape);
     }
 
-    @Override public void visit(ShapeExprNOT shape) {
+    @Override public void visit(ShapeNot shape) {
         before(shape);
         shape.subShape().visit(this);
         after(shape);
@@ -79,31 +79,13 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
     @Override
-    public void visit(ShapeExprFalse shape) {
+    public void visit(ShapeExternal shape) {
         before(shape);
         after(shape);
     }
 
     @Override
-    public void visit(ShapeExprNone shape) {
-        before(shape);
-        after(shape);
-    }
-
-    @Override
-    public void visit(ShapeExprTrue shape) {
-        before(shape);
-        after(shape);
-    }
-
-    @Override
-    public void visit(ShapeExprExternal shape) {
-        before(shape);
-        after(shape);
-    }
-
-    @Override
-    public void visit(ShapeExprTripleExpr shape) {
+    public void visit(Shape shape) {
         before(shape);
         if ( tripleExprWalker != null && shape.getTripleExpr() != null )
             shape.getTripleExpr().visit(tripleExprWalker);
@@ -111,10 +93,10 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     }
 
     @Override
-    public void visit(ShapeNodeConstraint shape) {
-        before(shape);
-        if ( nodeConstraintVisitor != null && shape.getNodeConstraint() != null )
-            shape.getNodeConstraint().components().forEach(ncc->ncc.visit(nodeConstraintVisitor));
-        after(shape);
+    public void visit(NodeConstraint nodeConstraint) {
+        before(nodeConstraint);
+        if ( nodeConstraintVisitor != null)
+            nodeConstraint.components().forEach(ncc->ncc.visit(nodeConstraintVisitor));
+        after(nodeConstraint);
     }
 }

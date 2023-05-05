@@ -31,9 +31,9 @@ import org.apache.jena.shex.sys.SysShex;
  */
 public class ShexSchema {
 
-    private final ShexShape startShape;
-    private final List<ShexShape> shapes;
-    private final Map<Node, ShexShape> shapeMap;
+    private final ShapeDecl startShape;
+    private final List<ShapeDecl> shapes;
+    private final Map<Node, ShapeDecl> shapeMap;
     private final Map<Node, TripleExpression> tripleRefs;
 
     private ShexSchema shapesWithImports = null;
@@ -44,12 +44,12 @@ public class ShexSchema {
     private final List<String> imports;
     private final List<SemAct> semActs;
 
-    public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShexShape startShape,
-                                    List<ShexShape> shapes, List<String> imports, List<SemAct> semActs,
+    public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,
+                                    List<ShapeDecl> shapes, List<String> imports, List<SemAct> semActs,
                                     Map<Node, TripleExpression> tripleRefs) {
         shapes = new ArrayList<>(shapes);
-        Map<Node, ShexShape> shapeMap = new LinkedHashMap<>();
-        for ( ShexShape shape:  shapes) {
+        Map<Node, ShapeDecl> shapeMap = new LinkedHashMap<>();
+        for ( ShapeDecl shape:  shapes) {
             if ( shape.getLabel() == null )
                 System.err.println("No shape label");
             else
@@ -62,7 +62,7 @@ public class ShexSchema {
     }
 
     /*package*/ ShexSchema(String source, String baseURI, PrefixMap prefixes,
-                           ShexShape startShape, List<ShexShape> shapes, Map<Node, ShexShape> shapeMap,
+                           ShapeDecl startShape, List<ShapeDecl> shapes, Map<Node, ShapeDecl> shapeMap,
                            List<String> imports, List<SemAct> semActs, Map<Node, TripleExpression> tripleRefMap) {
         this.sourceURI = source;
         this.baseURI = baseURI;
@@ -80,12 +80,12 @@ public class ShexSchema {
      * <p>
      * Returns null when there is no START shape.
      */
-    public ShexShape getStart() {
+    public ShapeDecl getStart() {
         return startShape;
     }
 
     /** Get all the shapes. This includes the start shape, which has label {@link SysShex#startNode}. */
-    public List<ShexShape> getShapes() {
+    public List<ShapeDecl> getShapes() {
         return shapes;
     }
 
@@ -136,8 +136,8 @@ public class ShexSchema {
             closure(imports, importsVisited, others);
 
             // Calculate the merge
-            List<ShexShape> mergedShapes = new ArrayList<>();
-            Map<Node, ShexShape> mergedShapeMap = new LinkedHashMap<>();
+            List<ShapeDecl> mergedShapes = new ArrayList<>();
+            Map<Node, ShapeDecl> mergedShapeMap = new LinkedHashMap<>();
             Map<Node, TripleExpression> mergedTripleRefs = new LinkedHashMap<>();
 
             mergeOne(this, mergedShapes, mergedShapeMap, mergedTripleRefs);
@@ -160,8 +160,8 @@ public class ShexSchema {
      * Any start node is skipped.
      */
     private static void mergeOne(ShexSchema schema,
-                                 List<ShexShape> mergedShapes,
-                                 Map<Node, ShexShape> mergedShapeMap,
+                                 List<ShapeDecl> mergedShapes,
+                                 Map<Node, ShapeDecl> mergedShapeMap,
                                  Map<Node, TripleExpression> mergedTripleRefs
                                  ) {
         // Without start shape.
@@ -185,7 +185,7 @@ public class ShexSchema {
         }
     }
 
-    public ShexShape get(Node n) {
+    public ShapeDecl get(Node n) {
         if ( SysShex.startNode.equals(n) )
             return startShape;
         return shapeMap.get(n);

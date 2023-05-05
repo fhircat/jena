@@ -26,7 +26,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.expressions.ShapeExpression;
+import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpression;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
@@ -41,7 +41,7 @@ public class ValidationContext {
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
     // <data node, shape>
-    private Deque<Pair<Node, ShexShape>> inProgress = new ArrayDeque<>();
+    private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
@@ -75,7 +75,7 @@ public class ValidationContext {
         this(null, data, shapes, null, semActPluginIndex);
     }
 
-    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShexShape>> progress, Map<String, SemanticActionPlugin> semActPluginIndex) {
+    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShapeDecl>> progress, Map<String, SemanticActionPlugin> semActPluginIndex) {
         this.parentCtx = parentCtx;
         this.data = data;
         this.shapes = shapes;
@@ -104,7 +104,7 @@ public class ValidationContext {
         return shapes;
     }
 
-    public ShexShape getShape(Node label) {
+    public ShapeDecl getShape(Node label) {
         return shapes.get(label);
     }
 
@@ -112,12 +112,12 @@ public class ValidationContext {
         return data;
     }
 
-    public void startValidate(ShexShape shape, Node data) {
+    public void startValidate(ShapeDecl shape, Node data) {
         inProgress.push(Pair.create(data, shape));
     }
 
     // Return true if done or in-progress (i.e. don't walk further)
-    public boolean cycle(ShexShape shape, Node data) {
+    public boolean cycle(ShapeDecl shape, Node data) {
         return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
     }
 
@@ -135,7 +135,7 @@ public class ValidationContext {
         });
     }
 
-    public boolean dispatchShapeExprSemanticAction(ShapeExpression se, Node focus) {
+    public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
         return !se.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
@@ -157,8 +157,8 @@ public class ValidationContext {
         });
     }
 
-    public void finishValidate(ShexShape shape, Node data) {
-        Pair<Node, ShexShape> x = inProgress.pop();
+    public void finishValidate(ShapeDecl shape, Node data) {
+        Pair<Node, ShapeDecl> x = inProgress.pop();
         if (x.equalElts(data, shape))
             return;
         throw new InternalErrorException("Eval stack error");

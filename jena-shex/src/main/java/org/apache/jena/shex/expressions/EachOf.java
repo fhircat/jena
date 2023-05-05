@@ -25,19 +25,19 @@ import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.riot.out.NodeFormatter;
 
-public class TripleExprEachOf extends TripleExpression {
+public class EachOf extends TripleExpression {
 
     public static TripleExpression create(List<TripleExpression> acc, List<SemAct> semActs) {
         if ( acc.size() == 0 )
             throw new InternalErrorException("Empty list");
         if ( acc.size() == 1 )
             return acc.get(0);
-        return new TripleExprEachOf(acc, semActs);
+        return new EachOf(acc, semActs);
     }
 
     private List<TripleExpression> tripleExpressions;
 
-    private TripleExprEachOf(List<TripleExpression> expressions, List<SemAct> semActs) {
+    private EachOf(List<TripleExpression> expressions, List<SemAct> semActs) {
         super(semActs);
         this.tripleExpressions = expressions;
     }
@@ -64,7 +64,7 @@ public class TripleExprEachOf extends TripleExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        TripleExprEachOf other = (TripleExprEachOf)obj;
+        EachOf other = (EachOf)obj;
         return Objects.equals(tripleExpressions, other.tripleExpressions);
     }
 

@@ -20,48 +20,46 @@ package org.apache.jena.shex.expressions;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprExternal extends ShapeExpression {
+import java.util.List;
 
-    public ShapeExprExternal() {
-        super(null);
+public abstract class ShapeExpr implements ShapeElement {
+
+    private List<SemAct> semActs;
+
+    public ShapeExpr(List<SemAct> semActs) {
+        this.semActs = semActs;
+    }
+
+    protected ShapeExpr() { this(null); }
+
+    public List<SemAct> getSemActs() {
+        return semActs;
     }
 
     @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        return false;
-    }
+    public abstract boolean satisfies(ValidationContext vCxt, Node data);
 
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println("EXTERNAL");
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprExternal []";
-    }
-
-    @Override
-    public int hashCode() {
-        return ShexConst.hashShExprExternal;
-    }
-
-    @Override
-    public  boolean equals(Object obj) {
-        if ( this == obj )
+    public boolean testShapeExprSemanticActions(ValidationContext v, Node focus) {
+        if (this.semActs == null)
             return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        return true;
+        return v.dispatchShapeExprSemanticAction(this, focus);
     }
+
+    @Override
+    public abstract void print(IndentedWriter out, NodeFormatter nFmt);
+
+    public abstract void visit(ShapeExprVisitor visitor);
+
+    @Override
+    public abstract String toString();
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract boolean equals(Object obj);
 }

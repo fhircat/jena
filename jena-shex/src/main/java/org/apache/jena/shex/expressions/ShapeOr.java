@@ -18,44 +18,50 @@
 
 package org.apache.jena.shex.expressions;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-public class ShapeExprNOT extends ShapeExpression {
+public class ShapeOr extends ShapeExpr {
 
-//    public static ShapeExpression create(List<ShapeExpression> args) {
-//        if ( args.size() == 0 )
-//            return null;
-//        if ( args.size() != 1 )
-//            throw new InternalErrorException("ShapeExprNOT.create");
-//        ShapeExpression shapeExpr = args.get(0);
-//        return new ShapeExpressionNOT(shapeExpr);
-//    }
-    private final ShapeExpression other;
-
-    public ShapeExprNOT(ShapeExpression shapeExpression) {
-        super(null);
-        this.other = shapeExpression;
+    public static ShapeExpr create(List<ShapeExpr> acc) {
+        if ( acc.size() == 0 )
+            throw new InternalErrorException("Empty list");
+        if ( acc.size() == 1 )
+            return acc.get(0);
+        return new ShapeOr(acc);
     }
+
+    private List<ShapeExpr> shapeExprs;
+
+    private ShapeOr(List<ShapeExpr> expressions) {
+        super(null);
+        this.shapeExprs = expressions;
+    }
+
+    public List<ShapeExpr> expressions() {
+        return shapeExprs;
+    }
+
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        ValidationContext vCxt2 = vCxt.create();
-        boolean innerSatisfies = other.satisfies(vCxt2, data);
-        if ( ! innerSatisfies )
-            return true;
-        ReportItem item = new ReportItem("NOT: Term reject because it conforms", data);
+        // We need to ignore validation failures from expressions - we need to find one success.
+        for ( ShapeExpr shExpr : shapeExprs) {
+            ValidationContext vCxt2 = vCxt.create();
+            boolean innerSatisfies = shExpr.satisfies(vCxt2, data);
+            if ( innerSatisfies )
+                return true;
+        }
+        ReportItem item = new ReportItem("OR expression not satisfied:", data);
         vCxt.reportEntry(item);
         return false;
-    }
-
-    public ShapeExpression subShape() {
-        return other;
     }
 
     @Override
@@ -65,18 +71,27 @@ public class ShapeExprNOT extends ShapeExpression {
 
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("NOT ");
-        other.print(out, nFmt);
+        out.println("OR");
+        //out.printf("OR(%d)\n", shapeExpressions.size());
+        int idx = 0;
+        for ( ShapeExpr shExpr : shapeExprs) {
+            idx++;
+            out.printf("%d -", idx);
+            out.incIndent(4);
+            shExpr.print(out, nFmt);
+            out.decIndent(4);
+        }
+        out.println("/OR");
     }
 
     @Override
     public String toString() {
-        return "ShapeExprNOT["+other+"]";
+        return "ShapeExprOr "+expressions();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(other);
+        return Objects.hash(2, shapeExprs);
     }
 
     @Override
@@ -87,7 +102,7 @@ public class ShapeExprNOT extends ShapeExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        ShapeExprNOT other = (ShapeExprNOT)obj;
-        return Objects.equals(this.other, other.other);
+        ShapeOr other = (ShapeOr)obj;
+        return Objects.equals(shapeExprs, other.shapeExprs);
     }
 }

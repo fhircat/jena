@@ -141,7 +141,7 @@ public class Shex {
             if ( ! shexSchema.getShapes().isEmpty() ) {
                 boolean shapePrinted = false;
                 NodeFormatter nFmt = new NodeFormatterTTL(null, shexSchema.getPrefixMap());
-                for ( ShexShape shape : shexSchema.getShapes() ) {
+                for ( ShapeDecl shape : shexSchema.getShapes() ) {
                     if ( havePrinted )
                         iOut.println();
                     shape.print(iOut, nFmt);

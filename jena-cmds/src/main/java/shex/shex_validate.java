@@ -149,7 +149,7 @@ public class shex_validate extends CmdGeneral {
         }
 
         // Or --shapeURI
-        ShexShape startShape = shapes.getStart();
+        ShapeDecl startShape = shapes.getStart();
         if ( startShape == null )
             throw new CmdException("Start node required for URI-validation");
 

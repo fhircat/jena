@@ -40,7 +40,7 @@ public interface ShexValidator {
     public ShexReport validate(Graph graphData, ShexSchema shapes, Node shapeRef, Node focus);
 
     /** Validate a specific node (the focus), against a shape. */
-    public ShexReport validate(Graph graphData, ShexSchema shapes, ShexShape shape, Node focus);
+    public ShexReport validate(Graph graphData, ShexSchema shapes, ShapeDecl shape, Node focus);
 
     /** Validate a specific node using the shape map to determine which shapes to use. */
     public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node dataNode);

@@ -23,12 +23,12 @@ import java.util.Objects;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.ShexShape;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** Shape expression that redirects. */
-public class ShapeExprRef extends ShapeExpression {
+public class ShapeExprRef extends ShapeExpr {
     private final Node ref;
 
     public ShapeExprRef(Node ref) {
@@ -40,7 +40,7 @@ public class ShapeExprRef extends ShapeExpression {
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        ShexShape shape = vCxt.getShape(ref);
+        ShapeDecl shape = vCxt.getShape(ref);
         if ( shape == null )
             return false;
         if ( vCxt.cycle(shape, data) )

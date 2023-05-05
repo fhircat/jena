@@ -30,7 +30,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShexShape;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
 
@@ -70,12 +70,12 @@ public class WriterShExC {
         schema.getShapes().forEach( shape->print(out, formatter, shape, printNL) );
     }
 
-    private static void print(IndentedWriter out, NodeFormatter formatter, ShexShape shape, boolean printNL) {
+    private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl decl, boolean printNL) {
         if (printNL)
             out.println();
-        if ( shape.getLabel() != null ) {
+        if ( decl.getLabel() != null ) {
 
-            Node n = shape.getLabel();
+            Node n = decl.getLabel();
             if ( n.equals(SysShex.startNode) )
                 out.print("START=");
             else
@@ -84,8 +84,11 @@ public class WriterShExC {
         }
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
-        ShapeExpression shapeEx = shape.getShapeExpression();
-        shexPrinter.printShapeExpression(shapeEx);
+        ShapeExpr shapeEx = decl.getShapeExpression();
+        if (shapeEx != null)
+            shexPrinter.printShapeExpression(shapeEx);
+        else
+            out.print("{}");
     }
 
     static <X> void printList(IndentedWriter out, List<X> items, String start, String finish, String sep, Consumer<X> action) {
@@ -156,8 +159,8 @@ public class WriterShExC {
             this.formatter = formatter;
         }
 
-        private void printShapeExpression(ShapeExpression shapeExpression) {
-            shapeExpression.visit(this);
+        private void printShapeExpression(ShapeExpr shapeExpr) {
+            shapeExpr.visit(this);
         }
 
         private void printTripleExpression(TripleExpression tripleExpr) {
@@ -222,12 +225,12 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprAND shape) {
-            List<ShapeExpression> shapes = shape.expressions();
+        public void visit(ShapeAnd shape) {
+            List<ShapeExpr> shapes = shape.expressions();
             printList(out, shape.expressions(), null, null, " AND",
                       x->{
                           // Avoid flattening S1 AND ( S2 AND S3 )
-                          boolean needParens = ( x instanceof ShapeExprAND || x instanceof ShapeExprOR );
+                          boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
                           if ( needParens )
                               out.print("( ");
                           printShapeExpression(x);
@@ -237,12 +240,12 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprOR shape) {
-            List<ShapeExpression> shapes = shape.expressions();
+        public void visit(ShapeOr shape) {
+            List<ShapeExpr> shapes = shape.expressions();
             printList(out, shape.expressions(), null, null, " OR",
                       x->{
                           // Avoid flattening S1 OR ( S2 OR S3 )
-                          boolean needParens = ( x instanceof ShapeExprAND || x instanceof ShapeExprOR );
+                          boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
                           if ( needParens )
                               out.print("( ");
                           printShapeExpression(x);
@@ -252,16 +255,14 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprNOT shape) {
+        public void visit(ShapeNot shape) {
             out.print("NOT ");
-            ShapeExpression shExpr = shape.subShape();
+            ShapeExpr shExpr = shape.subShape();
             boolean needParens = true;
 
-            if ( shExpr instanceof ShapeExprTripleExpr )
+            if ( shExpr instanceof Shape)
                 needParens = false;
-            else if ( shExpr instanceof ShapeNodeConstraint )
-                needParens = false;
-            else if ( shExpr instanceof ShapeExprAtom )
+            else if ( shExpr instanceof NodeConstraint)
                 needParens = false;
 
             if ( needParens ) {
@@ -274,56 +275,18 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeExprDot shape) {
-            out.print(". ");
-        }
-
-        @Override
-        public void visit(ShapeExprAtom shape) {
-            final boolean multiLine = false;
-            if ( shape.getShape() == null )
-                return;
-            if ( multiLine ) {
-                out.println("(");
-                out.incIndent();
-                printShapeExpression(shape.getShape());
-                out.decIndent();
-                out.println(")");
-            } else {
-                out.print("( ");
-                out.incIndent();
-                printShapeExpression(shape.getShape());
-                out.decIndent();
-                out.print(" ) ");
-            }
-        }
-
-        @Override
-        public void visit(ShapeExprFalse shape) { out.print("FALSE"); }
-
-        @Override
-        public void visit(ShapeExprNone shape) {
-            out.print("{ }");
-        }
-
-        @Override
         public void visit(ShapeExprRef shape) {
             out.print("@");
             printNode(shape.getRef());
         }
 
         @Override
-        public void visit(ShapeExprTrue shape) {
-            out.print(" . ");
-        }
-
-        @Override
-        public void visit(ShapeExprExternal shape) {
+        public void visit(ShapeExternal shape) {
             out.println("EXTERNAL");
         }
 
         @Override
-        public void visit(ShapeExprTripleExpr shape) {
+        public void visit(Shape shape) {
             TripleExpression tripleExpr = shape.getTripleExpr();
             if ( shape.isClosed() )
                 out.println("CLOSED ");
@@ -412,7 +375,7 @@ public class WriterShExC {
             out.decIndent();
         }
 
-        @Override public void visit(TripleExprEachOf tripleExpr) {
+        @Override public void visit(EachOf tripleExpr) {
             printList(out, tripleExpr.expressions(), "(", ")", null, tExpr->{
                 out.incIndent();
                 printTripleExpression(tExpr);
@@ -420,7 +383,7 @@ public class WriterShExC {
             });
             out.println();
         }
-        @Override public void visit(TripleExprOneOf tripleExpr) {
+        @Override public void visit(OneOf tripleExpr) {
             printList(out, tripleExpr.expressions(), "(", ")", "|", tExpr->{
                     out.incIndent();
                     printTripleExpression(tExpr);
@@ -452,14 +415,16 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeNodeConstraint shape) {
-            if ( shape.getNodeConstraint() != null ) {
-                printList(out, shape.getNodeConstraint().components(), null, null, null,
+        public void visit(NodeConstraint nodeConstraint) {
+            if (!nodeConstraint.components().isEmpty()) {
+                printList(out, nodeConstraint.components(), null, null, null,
                           nc->{
                               out.incIndent();
                               printNodeConstraint(nc);
                               out.decIndent();
                           });
+            } else {
+                out.print(". ");
             }
         }
     }

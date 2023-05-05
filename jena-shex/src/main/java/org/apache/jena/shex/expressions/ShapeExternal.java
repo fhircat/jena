@@ -23,24 +23,20 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
-/** Absence of a shape expression. For example, the outcome of "{}" */
-public class ShapeExprNone extends ShapeExpression {
+public class ShapeExternal extends ShapeExpr {
 
-    private static ShapeExpression instance = new ShapeExprNone();
-    public static ShapeExpression get() { return instance ; }
-
-    private ShapeExprNone() {
+    public ShapeExternal() {
         super(null);
     }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        return true;
+        return false;
     }
 
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
+        out.println("EXTERNAL");
     }
 
     @Override
@@ -49,15 +45,17 @@ public class ShapeExprNone extends ShapeExpression {
     }
 
     @Override
-    public String toString() { return "ShapeExprNone"; }
-
-    @Override
-    public int hashCode() {
-        return ShexConst.hashShExprNone;
+    public String toString() {
+        return "ShapeExprExternal []";
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public int hashCode() {
+        return ShexConst.hashShExprExternal;
+    }
+
+    @Override
+    public  boolean equals(Object obj) {
         if ( this == obj )
             return true;
         if ( obj == null )

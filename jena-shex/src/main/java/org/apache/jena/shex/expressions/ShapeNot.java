@@ -18,29 +18,44 @@
 
 package org.apache.jena.shex.expressions;
 
+import java.util.Objects;
+
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
+import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
-/**
- *  A shape expression that is always true.
- *  This is not a syntax element (see ShapeExprDOT).
- */
-public class ShapeExprTrue extends ShapeExpression {
+public class ShapeNot extends ShapeExpr {
 
-    public ShapeExprTrue(int x) {
+//    public static ShapeExpression create(List<ShapeExpression> args) {
+//        if ( args.size() == 0 )
+//            return null;
+//        if ( args.size() != 1 )
+//            throw new InternalErrorException("ShapeExprNOT.create");
+//        ShapeExpression shapeExpr = args.get(0);
+//        return new ShapeExpressionNOT(shapeExpr);
+//    }
+    private final ShapeExpr other;
+
+    public ShapeNot(ShapeExpr shapeExpr) {
         super(null);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
+        this.other = shapeExpr;
     }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        return true;
+        ValidationContext vCxt2 = vCxt.create();
+        boolean innerSatisfies = other.satisfies(vCxt2, data);
+        if ( ! innerSatisfies )
+            return true;
+        ReportItem item = new ReportItem("NOT: Term reject because it conforms", data);
+        vCxt.reportEntry(item);
+        return false;
+    }
+
+    public ShapeExpr subShape() {
+        return other;
     }
 
     @Override
@@ -49,11 +64,19 @@ public class ShapeExprTrue extends ShapeExpression {
     }
 
     @Override
-    public String toString() { return "ShapeExprTrue"; }
+    public void print(IndentedWriter out, NodeFormatter nFmt) {
+        out.print("NOT ");
+        other.print(out, nFmt);
+    }
+
+    @Override
+    public String toString() {
+        return "ShapeExprNOT["+other+"]";
+    }
 
     @Override
     public int hashCode() {
-        return ShexConst.hashShExprTrue;
+        return Objects.hash(other);
     }
 
     @Override
@@ -64,6 +87,7 @@ public class ShapeExprTrue extends ShapeExpression {
             return false;
         if ( getClass() != obj.getClass() )
             return false;
-        return true;
+        ShapeNot other = (ShapeNot)obj;
+        return Objects.equals(this.other, other.other);
     }
 }
