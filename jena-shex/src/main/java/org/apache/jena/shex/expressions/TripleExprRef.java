@@ -21,6 +21,7 @@ package org.apache.jena.shex.expressions;
 import java.util.Objects;
 
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ShexLib;
@@ -28,6 +29,7 @@ import org.apache.jena.shex.sys.ShexLib;
 public class TripleExprRef extends TripleExpression {
 
     private Node ref;
+    private TripleExpression target;
 
     public TripleExprRef(Node node) {
         super(null);
@@ -36,6 +38,14 @@ public class TripleExprRef extends TripleExpression {
 
     public Node ref() {
         return ref;
+    }
+
+    public void setTarget (TripleExpression target) {
+        throw new NotImplemented("TODO");
+    }
+
+    public TripleExpression getTarget() {
+        return target;
     }
 
     @Override

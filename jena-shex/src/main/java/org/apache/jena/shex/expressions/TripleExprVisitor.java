@@ -25,5 +25,4 @@ public interface TripleExprVisitor {
     public default void visit(TripleExprEmpty tripleExpr) {}
     public default void visit(TripleExprRef tripleExpr) {}
     public default void visit(TripleConstraint tripleExpr) {}
-
 }
