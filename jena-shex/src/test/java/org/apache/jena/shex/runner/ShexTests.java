@@ -52,7 +52,7 @@ public class ShexTests {
         //Sx.TRACE : true if there are inclusions
         //includes.add("#1val1IRIREFExtra1_pass-iri2");
         //includes.add("#start2RefS1-IstartS2");
-        includes.add("#1dot_pass-noOthers");
+        //includes.add("#1dot_pass-noOthers");
 
         VERBOSE = ! includes.isEmpty();
 

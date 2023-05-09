@@ -39,11 +39,8 @@ public class Interval {
         int imin, imax;
 
         imin = i1.min + i2.min;
-        if (i1.max == Interval.UNBOUND || i2.max == Interval.UNBOUND) {
-            imax = Interval.UNBOUND;
-        } else {
-            imax = i1.max + i2.max;
-        }
+        imax = (i1.max == Interval.UNBOUND || i2.max == Interval.UNBOUND) ? Interval.UNBOUND : i1.max + i2.max;
+
         return new Interval(imin, imax);
     }
 
@@ -65,38 +62,25 @@ public class Interval {
      */
     /*package*/ static Interval div(int nbOcc, Interval card) {
 
-        if (card.equals(Interval.ZERO)) {
-            if (nbOcc == 0) return Interval.STAR;
-            else return Interval.EMPTY;
-        }
+        if (card.equals(Interval.ZERO))
+            return nbOcc == 0 ? Interval.STAR : Interval.EMPTY;
 
-        int min, max;
+        int imin, imax;
 
-        // min = nbOcc / card.max();   uppper bound
+        // imin = nbOcc / card.imax();   uppper bound
         // with upper bound of (0 / UNBOUND) = 0
         // and  upper bound of (n / UNBOUND) = 1 for n != 0
-        if (card.max == Interval.UNBOUND) {
-            if (nbOcc == 0)
-                min = 0;
-            else
-                min = 1;
-
-        } else {
-            if (nbOcc % card.max == 0)
-                min = nbOcc / card.max;
-            else
-                min = (nbOcc / card.max) + 1;
-        }
-
-        // max = nbOcc / card.min();  lower bound
-        // with lower bound of (0 / 0) =
-        // and  lower bound of (n / 0) = UNBOUND for n != 0
-        if (card.min == 0)
-            max = Interval.UNBOUND;
+        if (card.max == Interval.UNBOUND)
+            imin = nbOcc == 0 ? 0 : 1;
         else
-            max = nbOcc / card.min;
+            imin = nbOcc % card.max == 0 ? nbOcc / card.max : (nbOcc / card.max) + 1;
 
-        return new Interval(min,max);
+        // imax = nbOcc / card.imin();  lower bound
+        // with lower bound of (0 / 0)
+        // and  lower bound of (n / 0) = UNBOUND for n != 0
+        imax = card.min == 0 ? Interval.UNBOUND : nbOcc / card.min;
+
+        return new Interval(imin,imax);
     }
 
 

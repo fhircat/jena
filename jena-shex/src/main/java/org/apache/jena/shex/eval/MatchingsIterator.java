@@ -25,7 +25,7 @@ public class MatchingsIterator implements Iterator<Map<Triple, TripleConstraint>
         neighbourhood = new ArrayList<>(domain.size());
         allMatching = new ArrayList<>(domain.size());
 
-        // TODO : iterate over the map entry set
+        // TODO : iterate over the map entry set / does the domain play a role ?
         for (Triple e : domain) {
             neighbourhood.add(e);
             allMatching.add(preMatching.get(e));
