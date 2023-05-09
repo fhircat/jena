@@ -123,7 +123,7 @@ public class ShapeEval {
                 if (! extras.contains(e.getKey().getPredicate()))
                     // should satisfy extra
                     return false;
-                // remove the triple as it does not participate in the satisfaction of the triple expression
+                // remove the triple as it should not participate in the satisfaction of the triple expression
                 it.remove();
             }
         }
@@ -160,31 +160,6 @@ public class ShapeEval {
         for (TripleConstraint tc : matching.values())
             bag.computeIfPresent(tc, (k, old) -> old+1);
         return bag;
-    }
-
-
-    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> T, Node node,
-                                       TripleExpression tripleExpr, Set<Node> extras) {
-
-        if ( tripleExpr instanceof EachOf) {
-            return ShapeEvalEachOf.matchesEachOf(vCxt, T, node, (EachOf)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof OneOf) {
-            return ShapeEvalOneOf.matchesOneOf(vCxt, T, node, (OneOf)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprRef ) {
-            return matchesTripleExprRef(vCxt, T, node, (TripleExprRef)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprCardinality ) {
-            return ShapeEvalCardinality.matchesCardinality(vCxt, T, node, (TripleExprCardinality)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleConstraint ) {
-            return ShapeEvalTripleConstraint.matchesCardinalityTC(vCxt, T, node, (TripleConstraint)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprEmpty) {
-            return true;
-        }
-        throw new NotImplemented(tripleExpr.getClass().getSimpleName());
     }
 
     private static boolean matchesTripleExprRef(ValidationContext vCxt, Set<Triple> matchables, Node node, TripleExprRef ref, Set<Node> extras) {
