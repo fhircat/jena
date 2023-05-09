@@ -87,7 +87,7 @@ public class ShapeEval {
 
     static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node,
                            TripleExpression tripleExpr, Set<Node> extras) {
-        // TODO extras chould never be null, modify this in Shape
+        // TODO extras should never be null, modify this in Shape
         return matchesExpr2(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
     }
 
@@ -114,19 +114,21 @@ public class ShapeEval {
             }
         }
 
-        // 3. Check whether all extra triples are allowed
-        if (preMatching.entrySet().stream().filter(e -> e.getValue().isEmpty()) // triples satisfying no triple constraint
-                .anyMatch(e -> ! extras.contains(e.getKey().getPredicate())))
-            return false;
-
-        // 4. The remaining triples should match TODO should be merged with the previous condition
+        // 3. Check whether all non matching triples are allowed by extra
         Iterator<Map.Entry<Triple, List<TripleConstraint>>> it = preMatching.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Triple, List<TripleConstraint>> e = it.next();
-            if (e.getValue().isEmpty())
+            if (e.getValue().isEmpty()) {
+                // the triple satisfies none of the triple constraints
+                if (! extras.contains(e.getKey().getPredicate()))
+                    // should satisfy extra
+                    return false;
+                // remove the triple as it does not participate in the satisfaction of the triple expression
                 it.remove();
+            }
         }
 
+        // 4. SORBE based validation algorithm on the matching triples
         Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
