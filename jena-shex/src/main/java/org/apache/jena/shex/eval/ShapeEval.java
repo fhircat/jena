@@ -187,7 +187,7 @@ public class ShapeEval {
     }
 
     private static boolean matchesTripleExprRef(ValidationContext vCxt, Set<Triple> matchables, Node node, TripleExprRef ref, Set<Node> extras) {
-        Node label = ref.ref();
+        Node label = ref.getRef();
         if ( label == null ) {}
         TripleExpression tripleExpr = vCxt.getTripleExpression(label);
         if ( tripleExpr == null ) {
@@ -227,9 +227,9 @@ public class ShapeEval {
             @Override
             public void visit(TripleExprRef expr) {
                 expr.visit(step);
-                if ( expr.ref() == null )
-                    throw new ShexException("Failed to dereference : "+expr.ref());
-                shapes.getTripleExpression(expr.ref()).visit(this);
+                if ( expr.getRef() == null )
+                    throw new ShexException("Failed to dereference : "+expr.getRef());
+                shapes.getTripleExpression(expr.getRef()).visit(this);
             }
 
             @Override
@@ -389,7 +389,7 @@ public class ShapeEval {
 
         @Override
         public void visit(TripleExprRef expr) {
-            expr.getTarget().visit(this);
+            vCxt.getShapes().getTripleExpression(expr.getRef()).visit(this);
         }
 
         private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression,

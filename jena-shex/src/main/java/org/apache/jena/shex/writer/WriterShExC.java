@@ -396,7 +396,7 @@ public class WriterShExC {
 
         @Override public void visit(TripleExprRef tripleExpr) {
             out.print("&");
-            printNode(tripleExpr.ref());
+            printNode(tripleExpr.getRef());
         }
 
         @Override public void visit(TripleConstraint tripleExpr) {

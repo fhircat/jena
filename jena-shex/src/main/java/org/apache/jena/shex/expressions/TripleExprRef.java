@@ -36,7 +36,7 @@ public class TripleExprRef extends TripleExpression {
         this.ref = node;
     }
 
-    public Node ref() {
+    public Node getRef() {
         return ref;
     }
 
