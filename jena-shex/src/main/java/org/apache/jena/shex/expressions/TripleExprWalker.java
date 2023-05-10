@@ -59,7 +59,7 @@ public class TripleExprWalker implements TripleExprVisitor {
     @Override
     public void visit(TripleExprCardinality object) {
         before(object);
-        object.target().visit(this);
+        object.getSubExpr().visit(this);
         after(object);
 
     }

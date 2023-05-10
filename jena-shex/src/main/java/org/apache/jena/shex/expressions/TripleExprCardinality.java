@@ -40,7 +40,8 @@ public class TripleExprCardinality extends TripleExpression {
         this.cardinality = cardinality;
     }
 
-    public TripleExpression target() { return subExpr; }
+    public TripleExpression getSubExpr() { return subExpr; }
+    public Cardinality getCardinality() { return cardinality; }
 
     public String cardinalityString() {
         return cardinality.getParsedFrom();

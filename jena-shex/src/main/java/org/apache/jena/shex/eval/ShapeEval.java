@@ -88,8 +88,8 @@ public class ShapeEval {
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples, Node node,
                                        TripleExpression tripleExpr, Set<Node> extras) {
 
-        TripleExpression sorbeTripleExpr = getSorbe(tripleExpr);
-        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, sorbeTripleExpr);
+        SorbeTripleExpr sorbeTripleExpr = getSorbe(tripleExpr, vCxt);
+        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, sorbeTripleExpr.sorbe);
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = computePredicateBasedPreMatching(triples, tripleConstraints);
@@ -127,7 +127,7 @@ public class ShapeEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
 
-            Cardinality interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints), vCxt);
+            Cardinality interval = computeInterval(sorbeTripleExpr.sorbe, matchingToBag(matching, tripleConstraints), vCxt);
             if (1 >= interval.min && 1 <= interval.max) {
                 return true;
             }
@@ -136,9 +136,8 @@ public class ShapeEval {
 
     }
 
-    private static TripleExpression getSorbe(TripleExpression tripleExpr) {
-        // FIXME compute the real sorbe
-        return tripleExpr;
+    private static SorbeTripleExpr getSorbe(TripleExpression tripleExpr, ValidationContext vCxt) {
+        return SorbeTripleExpr.create(tripleExpr, vCxt.getShapes());
     }
 
     private static Map<Triple, List<TripleConstraint>> computePredicateBasedPreMatching(Collection<Triple> triples,
@@ -176,7 +175,7 @@ public class ShapeEval {
             @Override
             public void visit(TripleExprCardinality expr) {
                 expr.visit(step);
-                expr.target().visit(this);
+                expr.getSubExpr().visit(this);
             }
 
             @Override

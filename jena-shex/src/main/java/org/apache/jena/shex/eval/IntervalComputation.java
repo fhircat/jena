@@ -8,8 +8,8 @@ import java.util.Map;
 
 class IntervalComputation implements TripleExprVisitor {
 
-    private static Cardinality ZERO = new Cardinality(0, 0);
-    private static Cardinality EMPTY = new Cardinality(2, 1);
+    /*package*/ static Cardinality ZERO_INTERVAL = new Cardinality(0, 0);
+    /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
     private final Map<TripleConstraint, Integer> bag;
     private final ValidationContext vCxt;
@@ -43,7 +43,7 @@ class IntervalComputation implements TripleExprVisitor {
 
     @Override
     public void visit(OneOf expr) {
-        Cardinality res = ZERO; // the neutral element for addition
+        Cardinality res = ZERO_INTERVAL; // the neutral element for addition
 
         for (TripleExpression subExpr : expr.expressions()) {
             subExpr.visit(this);
@@ -67,7 +67,7 @@ class IntervalComputation implements TripleExprVisitor {
     public void visit(TripleExprCardinality expression) {
 
         Cardinality card = new Cardinality(expression.min(), expression.max());
-        TripleExpression subExpr = expression.target();
+        TripleExpression subExpr = expression.getSubExpr();
         boolean isEmptySubbag = isEmptySubbag(bag, expression, vCxt);
 
         if (card.equals(Cardinality.STAR)) {
@@ -75,19 +75,19 @@ class IntervalComputation implements TripleExprVisitor {
                 setResult(Cardinality.STAR);
             } else {
                 subExpr.visit(this);
-                if (!this.getResult().equals(EMPTY)) {
+                if (!this.getResult().equals(EMPTY_INTERVAL)) {
                     setResult(Cardinality.PLUS);
                 }
             }
         } else if (card.equals(Cardinality.PLUS)) {
             if (isEmptySubbag) {
-                setResult(ZERO);
+                setResult(ZERO_INTERVAL);
             } else {
                 subExpr.visit(this);
-                if (!this.getResult().equals(EMPTY)) {
+                if (!this.getResult().equals(EMPTY_INTERVAL)) {
                     setResult(new Cardinality(1, getResult().max));
                 } else {
-                    setResult(EMPTY);
+                    setResult(EMPTY_INTERVAL);
                 }
             }
         } else if (card.equals(Cardinality.OPT)) {
@@ -96,11 +96,11 @@ class IntervalComputation implements TripleExprVisitor {
         } else if (subExpr instanceof TripleConstraint) {
             int nbOcc = bag.get((TripleConstraint) subExpr);
             setResult(div(nbOcc, card));
-        } else if (card.equals(ZERO)) {
+        } else if (card.equals(ZERO_INTERVAL)) {
             if (isEmptySubbag) {
                 setResult(Cardinality.STAR);
             } else {
-                setResult(EMPTY);
+                setResult(EMPTY_INTERVAL);
             }
         } else {
             throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
@@ -150,8 +150,8 @@ class IntervalComputation implements TripleExprVisitor {
      */
     private static Cardinality div(int nbOcc, Cardinality card) {
 
-        if (card.equals(ZERO))
-            return nbOcc == 0 ? Cardinality.STAR : EMPTY;
+        if (card.equals(ZERO_INTERVAL))
+            return nbOcc == 0 ? Cardinality.STAR : EMPTY_INTERVAL;
 
         int imin, imax;
 

@@ -368,7 +368,7 @@ public class WriterShExC {
         @Override public void visit(TripleExprCardinality tripleExpr) {
             out.incIndent();
             out.print("( ");
-            printTripleExpressionNoSep(tripleExpr.target());
+            printTripleExpressionNoSep(tripleExpr.getSubExpr());
             out.print(" )");
             String x = tripleExpr.cardinalityString();
             out.print(x);
