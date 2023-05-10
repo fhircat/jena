@@ -26,7 +26,7 @@ import org.apache.jena.atlas.lib.InternalErrorException;
 
 public class Cardinality {
     public static final int UNSET = -3;
-    public static final int UNBOUNDED = -2;
+    public static final int UNBOUNDED = Integer.MAX_VALUE;
 
     public final String image;
     public final int min;
@@ -63,6 +63,9 @@ public class Cardinality {
                 max = integerRange(matcher.group(3), UNBOUNDED);
             }
         }
+        // TODO parsing of cardinality should go in the parser, and UNSET should be removed. Remove these exceptions as well
+        if (min == UNSET) throw new IllegalStateException("min unset");
+        if (max == UNSET) throw new IllegalStateException("max unset");
         return new Cardinality(image, min, max);
 
     }
@@ -83,9 +86,6 @@ public class Cardinality {
     static String cardStr(int min, int max) {
         // min is never UNBOUNDED
         // "{,number}" is not legal syntax
-
-        if ( min == UNSET && max == UNSET )
-            return "";
 
         // Special syntax
         if ( min == 0 && max == UNBOUNDED )

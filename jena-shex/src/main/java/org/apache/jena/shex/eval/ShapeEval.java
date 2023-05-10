@@ -25,7 +25,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.jena.atlas.lib.NotImplemented;
-import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -133,7 +132,7 @@ public class ShapeEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
 
-            Interval interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints));
+            Interval interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints), vCxt);
             if (interval.contains(1)) {
                 return true;
             }
@@ -273,18 +272,21 @@ public class ShapeEval {
         x.forEach(neigh::add);
     }
 
-    private static Interval computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag) {
-        IntervalComputation computation = new IntervalComputation(bag);
+    private static Interval computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag,
+                                             ValidationContext vCxt) {
+        IntervalComputation computation = new IntervalComputation(bag, vCxt);
         tripleExpr.visit(computation);
         return computation.getResult();
     }
 
     private static class IntervalComputation implements TripleExprVisitor {
         private final Map<TripleConstraint, Integer> bag;
+        private final ValidationContext vCxt;
         Interval result;
 
-        public IntervalComputation(Map<TripleConstraint, Integer> bag) {
+        public IntervalComputation(Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
             this.bag = bag;
+            this.vCxt = vCxt;
             result = null;
         }
 
@@ -335,7 +337,7 @@ public class ShapeEval {
 
             Interval card = new Interval(expression.min(), expression.max());
             TripleExpression subExpr = expression.target();
-            boolean isEmptySubbag = isEmptySubbag(bag, expression);
+            boolean isEmptySubbag = isEmptySubbag(bag, expression, vCxt);
 
             if (card.equals(Interval.STAR)) {
                 if (isEmptySubbag) {
@@ -390,8 +392,9 @@ public class ShapeEval {
             expr.getTarget().visit(this);
         }
 
-        private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression){
-            List<TripleConstraint> list = findTripleConstraints(null, expression);
+        private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression,
+                                      ValidationContext vCxt){
+            List<TripleConstraint> list = findTripleConstraints(vCxt, expression);
             for(TripleConstraint tripleConstraint : list){
                 if(bag.get(tripleConstraint) != 0)
                     return false;
