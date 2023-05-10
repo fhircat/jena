@@ -33,32 +33,25 @@ public class TripleExprCardinality extends TripleExpression {
 
     private final TripleExpression subExpr;
     private final Cardinality cardinality;
-    private final int min;
-    private final int max;
 
-    // TODO: Cardinality should never be null
     public TripleExprCardinality(TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
         super(semActs);
         this.subExpr = tripleExpr;
         this.cardinality = cardinality;
-        this.min = (cardinality==null) ? 1 : cardinality.min;
-        this.max = (cardinality==null) ? 1 : cardinality.max;
     }
 
     public TripleExpression target() { return subExpr; }
 
     public String cardinalityString() {
-        if ( cardinality == null )
-            return "";
-        return cardinality.image;
+        return cardinality.getParsedFrom();
     }
 
     public int min() {
-        return min;
+        return cardinality.min;
     }
 
     public int max() {
-        return max;
+        return cardinality.max;
     }
 
 

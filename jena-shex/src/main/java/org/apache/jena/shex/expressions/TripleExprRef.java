@@ -29,7 +29,6 @@ import org.apache.jena.shex.sys.ShexLib;
 public class TripleExprRef extends TripleExpression {
 
     private Node ref;
-    private TripleExpression target;
 
     public TripleExprRef(Node node) {
         super(null);
@@ -38,14 +37,6 @@ public class TripleExprRef extends TripleExpression {
 
     public Node getRef() {
         return ref;
-    }
-
-    public void setTarget (TripleExpression target) {
-        throw new NotImplemented("TODO");
-    }
-
-    public TripleExpression getTarget() {
-        return target;
     }
 
     @Override

@@ -60,20 +60,8 @@ public class TripleConstraint extends TripleExpression {
         this.predicate = predicate;
         this.reverse = reverse;
         this.shapeExpr = valueExpr;
-        //this.min = (cardinality==null) ? 1 : cardinality.min;
-        //this.max = (cardinality==null) ? 1 : cardinality.max;
     }
 
-    public TripleConstraint(Node label, Node predicate, boolean reverse, ShapeExpr valueExpr, Cardinality cardinality, List<SemAct> semActs) {
-        super(semActs);
-        this.label = label;
-        this.predicate = predicate;
-        this.reverse = reverse;
-        this.shapeExpr = valueExpr;
-        //this.cardinality = cardinality;
-        //this.min = (cardinality==null) ? 1 : cardinality.min;
-        //this.max = (cardinality==null) ? 1 : cardinality.max;
-    }
 
     /*
     public String cardinalityString() {

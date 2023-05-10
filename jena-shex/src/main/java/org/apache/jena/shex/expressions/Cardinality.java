@@ -25,22 +25,35 @@ import java.util.regex.Pattern;
 import org.apache.jena.atlas.lib.InternalErrorException;
 
 public class Cardinality {
-    public static final int UNSET = -3;
     public static final int UNBOUNDED = Integer.MAX_VALUE;
 
-    public final String image;
+    public static final Cardinality PLUS = new Cardinality(1, UNBOUNDED);
+    public static final Cardinality STAR = new Cardinality(0, UNBOUNDED);
+    public static final Cardinality OPT = new Cardinality(0, 1);
+    public static final Cardinality ONE = new Cardinality(1,1);
+
+    // TODO EMPTY and ZERO useful ?
+    // public static Cardinality EMPTY = new Interval(2, 1);
+    // public static Interval ZERO = new Interval(0,0);
+
+
     public final int min;
     public final int max;
 
-    public Cardinality(String image, int min, int max) {
-        this.image = image;
+    public Cardinality (int min, int max) {
+        if (min < 0 || max < 0)
+            throw new InternalErrorException("Negative bounds not allowed for a cardinality");
         this.min = min;
         this.max = max;
     }
 
     private static Pattern repeatRange = Pattern.compile(".(\\d+)(,(\\d+|\\*)?)?.");
+    private String parsedFrom;
+    public String getParsedFrom () {
+        return parsedFrom;
+    }
 
-    public static Cardinality create(String image) {
+    public static Cardinality parse(String image) {
         int min = -1;
         int max = -1;
         switch(image) {
@@ -51,7 +64,7 @@ public class Cardinality {
                 Matcher matcher = repeatRange.matcher(image);
                 if ( !matcher.matches() )
                     throw new InternalErrorException("ShExC: Unexpected cardinality: '"+image+"'");
-                min = integerRange(matcher.group(1), UNSET);
+                min = parseIntOrStar(matcher.group(1));
                 if ( matcher.groupCount() != 3 )
                     throw new InternalErrorException("ShExC: Unexpected cardinality: '"+image+"'");
                 String comma = matcher.group(2);
@@ -60,28 +73,24 @@ public class Cardinality {
                     break;
                 }
                 // Has a comma, may have something after it.
-                max = integerRange(matcher.group(3), UNBOUNDED);
+                max = matcher.group(3) != null ? parseIntOrStar(matcher.group(3)) : UNBOUNDED;
             }
         }
-        // TODO parsing of cardinality should go in the parser, and UNSET should be removed. Remove these exceptions as well
-        if (min == UNSET) throw new IllegalStateException("min unset");
-        if (max == UNSET) throw new IllegalStateException("max unset");
-        return new Cardinality(image, min, max);
-
+        Cardinality result = new Cardinality(min, max);
+        result.parsedFrom = image;
+        return result;
     }
 
-    private static int integerRange(String str, int dftValue) {
-        if ( str == null )
-            return dftValue;
-        if ( str.equals("*") )
-            return UNBOUNDED;
+    private static int parseIntOrStar(String str) {
         try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException ex) {
+            if (str.equals("*"))
+                return UNBOUNDED;
+            else
+                return Integer.parseInt(str);
+        } catch (NumberFormatException|NullPointerException ex) {
             throw new InternalErrorException("Number format exception");
         }
     }
-
 
     static String cardStr(int min, int max) {
         // min is never UNBOUNDED
@@ -111,7 +120,11 @@ public class Cardinality {
 
     @Override
     public int hashCode() {
-        return Objects.hash(image, max, min);
+        if (min > max)
+            // empty interval
+            return Objects.hash(2, 1);
+        else
+            return Objects.hash(max, min);
     }
 
     @Override
@@ -123,6 +136,6 @@ public class Cardinality {
         if ( getClass() != obj.getClass() )
             return false;
         Cardinality other = (Cardinality)obj;
-        return Objects.equals(image, other.image) && max == other.max && min == other.min;
+        return max == other.max && min == other.min || min > max && other.min > other.max;
     }
 }

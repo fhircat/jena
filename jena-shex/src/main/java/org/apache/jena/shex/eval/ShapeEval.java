@@ -127,8 +127,8 @@ public class ShapeEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
 
-            Interval interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints), vCxt);
-            if (interval.contains(1)) {
+            Cardinality interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints), vCxt);
+            if (1 >= interval.min && 1 <= interval.max) {
                 return true;
             }
         }
@@ -244,135 +244,11 @@ public class ShapeEval {
         x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
     }
 
-    private static Interval computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag,
-                                             ValidationContext vCxt) {
+    private static Cardinality computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag,
+                                                ValidationContext vCxt) {
         IntervalComputation computation = new IntervalComputation(bag, vCxt);
         tripleExpr.visit(computation);
         return computation.getResult();
     }
 
-    private static class IntervalComputation implements TripleExprVisitor {
-        private final Map<TripleConstraint, Integer> bag;
-        private final ValidationContext vCxt;
-        Interval result;
-
-        public IntervalComputation(Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
-            this.bag = bag;
-            this.vCxt = vCxt;
-            result = null;
-        }
-
-        private void setResult (Interval result) {
-            this.result = result;
-        }
-
-        private Interval getResult() {
-            return this.result;
-        }
-
-        @Override
-        public void visit(TripleConstraint tc) {
-
-            int nbOcc = bag.get(tc);
-            setResult(new Interval(nbOcc, nbOcc));
-        }
-
-        @Override
-        public void visit(TripleExprEmpty emptyTripleExpression) {
-            setResult(Interval.STAR);
-        }
-
-        @Override
-        public void visit(OneOf expr) {
-            Interval res = Interval.ZERO; // the neutral element for addition
-
-            for (TripleExpression subExpr : expr.expressions()) {
-                subExpr.visit(this);
-                res = Interval.add(res, getResult());
-            }
-            setResult(res);
-        }
-
-        @Override
-        public void visit(EachOf expr) {
-            Interval res = Interval.STAR; // the neutral element for intersection
-
-            for (TripleExpression subExpr : expr.expressions()) {
-                subExpr.visit(this);
-                res = Interval.inter(res, getResult());
-            }
-            setResult(res);
-        }
-
-        @Override
-        public void visit(TripleExprCardinality expression) {
-
-            Interval card = new Interval(expression.min(), expression.max());
-            TripleExpression subExpr = expression.target();
-            boolean isEmptySubbag = isEmptySubbag(bag, expression, vCxt);
-
-            if (card.equals(Interval.STAR)) {
-                if (isEmptySubbag) {
-                    setResult(Interval.STAR);
-                } else {
-                    subExpr.visit(this);
-                    if (! this.getResult().equals(Interval.EMPTY)) {
-                        setResult(Interval.PLUS);
-                    }
-                }
-            }
-
-            else if (card.equals(Interval.PLUS)) {
-                if (isEmptySubbag) {
-                    setResult(Interval.ZERO);
-                } else {
-                    subExpr.visit(this);
-                    if (! this.getResult().equals(Interval.EMPTY)) {
-                        setResult(new Interval(1, getResult().max));
-                    } else {
-                        setResult(Interval.EMPTY);
-                    }
-                }
-            }
-
-            else if (card.equals(Interval.OPT)) {
-                subExpr.visit(this);
-                setResult(Interval.add(getResult(), Interval.STAR));
-            }
-
-            else if (subExpr instanceof TripleConstraint) {
-                int nbOcc = bag.get((TripleConstraint)  subExpr);
-                setResult(Interval.div(nbOcc, card));
-            }
-
-            else if (card.equals(Interval.ZERO)) {
-                if (isEmptySubbag) {
-                    setResult(Interval.STAR);
-                } else {
-                    setResult(Interval.EMPTY);
-                }
-            }
-
-            else {
-                throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
-            }
-
-        }
-
-        @Override
-        public void visit(TripleExprRef expr) {
-            vCxt.getShapes().getTripleExpression(expr.getRef()).visit(this);
-        }
-
-        private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression,
-                                      ValidationContext vCxt){
-            List<TripleConstraint> list = findTripleConstraints(vCxt, expression);
-            for(TripleConstraint tripleConstraint : list){
-                if(bag.get(tripleConstraint) != 0)
-                    return false;
-            }
-            return true;
-        }
-
-    }
 }
