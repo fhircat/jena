@@ -18,13 +18,10 @@
 
 package org.apache.jena.shex.eval;
 
-import static org.apache.jena.atlas.lib.StreamOps.toSet;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -65,32 +62,30 @@ public class ShapeEval {
 //        neigh.addAll(arcsOut);
 //        neigh.addAll(arcsIn);
 
-        Set<Triple> arcsOut = new HashSet<>();
-        arcsOut(arcsOut, vCxt.getData(), node);
-        Set<Node> predicates = new HashSet<>(findPredicates(vCxt, tripleExpr));
-        // TODO: pre-matching that computes matchables and non_matchables in one pass
-        // TODO: arcs in and inverse properties ?
-        Set<Triple> matchables = toSet(arcsOut.stream().filter(t->predicates.contains(t.getPredicate())));
+        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, tripleExpr);
+        Set<Node> forwardPredicates  = tripleConstraints.stream()
+                .filter(tc -> ! tc.reverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
+        Set<Node> backwardPredicates = tripleConstraints.stream()
+                .filter(tc -> tc.reverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
 
-        boolean b = matches(vCxt, matchables, node, tripleExpr, extras);
-        if ( ! b )
+        Set<Triple> matchables = new HashSet<>();
+        Set<Triple> non_matchables = new HashSet<>();
+        arcsOut(matchables, non_matchables, vCxt.getData(), node, forwardPredicates);
+        arcsIn(matchables, vCxt.getData(), node, backwardPredicates);
+        // TODO: pre-matching that computes matchables and non_matchables in one pass
+
+        if (closed && ! non_matchables.isEmpty())
             return false;
-        if ( closed ) { // TODO moved the closed condition before, as it could return avoid unnecessary and costly calculation
-            // CLOSED : no other triples.
-            Set<Triple> non_matchables = toSet(arcsOut.stream().filter(t->!matchables.contains(t)));
-            if ( ! non_matchables.isEmpty() )
-                return false;
-        }
-        return true;
+        return  matches(vCxt, matchables, node, tripleExpr, extras);
     }
 
     static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node,
                            TripleExpression tripleExpr, Set<Node> extras) {
         // TODO extras should never be null, modify this in Shape
-        return matchesExpr2(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
+        return matchesExpr(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
     }
 
-    private static boolean matchesExpr2(ValidationContext vCxt, Set<Triple> triples, Node node,
+    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples, Node node,
                                        TripleExpression tripleExpr, Set<Node> extras) {
 
         TripleExpression sorbeTripleExpr = getSorbe(tripleExpr);
@@ -150,7 +145,8 @@ public class ShapeEval {
                                                                               List<TripleConstraint> tripleConstraints) {
         Map<Node, List<TripleConstraint>> tcsByPredicate = tripleConstraints.stream()
                 .collect(Collectors.groupingBy(TripleConstraint::getPredicate)); // TODO EFFICIENCY can be pre-computed for every sorbe expression
-        return triples.stream().collect(Collectors.toMap(Function.identity(), t -> tcsByPredicate.get(t.getPredicate())));
+        return triples.stream().collect(Collectors.toMap(Function.identity(),
+                t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
     }
 
     public static Map<TripleConstraint, Integer> matchingToBag (Map<Triple, TripleConstraint> matching,
@@ -161,30 +157,6 @@ public class ShapeEval {
         return bag;
     }
 
-
-    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> T, Node node,
-                                       TripleExpression tripleExpr, Set<Node> extras) {
-
-        if ( tripleExpr instanceof EachOf) {
-            return ShapeEvalEachOf.matchesEachOf(vCxt, T, node, (EachOf)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof OneOf) {
-            return ShapeEvalOneOf.matchesOneOf(vCxt, T, node, (OneOf)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprRef ) {
-            return matchesTripleExprRef(vCxt, T, node, (TripleExprRef)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprCardinality ) {
-            return ShapeEvalCardinality.matchesCardinality(vCxt, T, node, (TripleExprCardinality)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleConstraint ) {
-            return ShapeEvalTripleConstraint.matchesCardinalityTC(vCxt, T, node, (TripleConstraint)tripleExpr, extras);
-        }
-        else if ( tripleExpr instanceof TripleExprEmpty) {
-            return true;
-        }
-        throw new NotImplemented(tripleExpr.getClass().getSimpleName());
-    }
 
     private static boolean matchesTripleExprRef(ValidationContext vCxt, Set<Triple> matchables, Node node, TripleExprRef ref, Set<Node> extras) {
         Node label = ref.getRef();
@@ -239,16 +211,11 @@ public class ShapeEval {
         };
     }
 
-    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt, TripleExpression tripleExpr) {
+    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt,
+                                                                    TripleExpression tripleExpr) {
         List<TripleConstraint> constraints = new ArrayList<>();
         tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
         return constraints;
-    }
-
-    /*package*/ static List<Node> findPredicates(ValidationContext vCxt, TripleExpression tripleExpr) {
-        List<Node> predicates = new ArrayList<>();
-        tripleExpr.visit(accumulator(vCxt.getShapes(), predicates, TripleConstraint::getPredicate));
-        return predicates;
     }
 
     private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Collection<X> acc,
@@ -256,20 +223,25 @@ public class ShapeEval {
         TripleExprVisitor step = new TripleExprVisitor() {
             @Override
             public void visit(TripleConstraint tripleConstraint) {
-                acc.add(mapper.apply(tripleConstraint));
+                    acc.add(mapper.apply(tripleConstraint));
             }
         };
         return walk(shapes, step);
     }
 
-    private static void arcsOut(Set<Triple> neigh, Graph graph, Node node) {
+    private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {
         ExtendedIterator<Triple> x = G.find(graph, node, null, null);
-        x.forEach(neigh::add);
+        x.forEach(t -> {
+            if (predicates.contains(t.getPredicate()))
+                matchables.add(t);
+            else
+                non_matchables.add(t);
+        });
     }
 
-    private static void arcsIn(Set<Triple> neigh, Graph graph, Node node) {
+    private static void arcsIn(Set<Triple> neigh, Graph graph, Node node, Set<Node> predicates) {
         ExtendedIterator<Triple> x = G.find(graph, null, null, node);
-        x.forEach(neigh::add);
+        x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
     }
 
     private static Interval computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag,
