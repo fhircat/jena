@@ -52,35 +52,12 @@ public class ShexTests {
         //Sx.TRACE : true if there are inclusions
         //includes.add("#1val1IRIREFExtra1_pass-iri2");
         //includes.add("#start2RefS1-IstartS2");
-<<<<<<< HEAD
         //includes.add("#1dot_pass-noOthers");
-=======
-        includes.add("#1dot_pass-noOthers");
->>>>>>> 02af54be2d (first version sorbe validation)
 
         VERBOSE = ! includes.isEmpty();
 
         // --- Exclusions - development
 
-<<<<<<< HEAD
-=======
-        // # External
-        excludes.add("#shapeExtern_pass");
-        excludes.add("#shapeExtern_fail");
-        excludes.add("#shapeExternRef_pass");
-        excludes.add("#shapeExternRef_fail");
-
-        // ## semantic actions
-        // SemanticAction trait supported
-        // OrderedSemanticActions trait supported
-        excludeTraits.add(ShexT.tExternalSemanticAction); // add external parser
-        excludeTraits.add(ShexT.tSemanticAction);
-
-        // ## annotations + semantic actions
-        excludes.add("#open3Eachdotclosecard23Annot3Code2-p1p2p3X3");
-
-        // ---- Exclusions
->>>>>>> 7b488f5013 (validation on non sorbe expressions ok)
         // BNodes tests we don't support (testing labels, cross file references)
         // excludeTraits.add(ShexT.tExtends);
         excludeTraits.add(ShexT.tCrossFileBNodeShapeLabel);
