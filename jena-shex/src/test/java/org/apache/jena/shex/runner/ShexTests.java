@@ -62,6 +62,25 @@ public class ShexTests {
 
         // --- Exclusions - development
 
+<<<<<<< HEAD
+=======
+        // # External
+        excludes.add("#shapeExtern_pass");
+        excludes.add("#shapeExtern_fail");
+        excludes.add("#shapeExternRef_pass");
+        excludes.add("#shapeExternRef_fail");
+
+        // ## semantic actions
+        // SemanticAction trait supported
+        // OrderedSemanticActions trait supported
+        excludeTraits.add(ShexT.tExternalSemanticAction); // add external parser
+        excludeTraits.add(ShexT.tSemanticAction);
+
+        // ## annotations + semantic actions
+        excludes.add("#open3Eachdotclosecard23Annot3Code2-p1p2p3X3");
+
+        // ---- Exclusions
+>>>>>>> 7b488f5013 (validation on non sorbe expressions ok)
         // BNodes tests we don't support (testing labels, cross file references)
         // excludeTraits.add(ShexT.tExtends);
         excludeTraits.add(ShexT.tCrossFileBNodeShapeLabel);
