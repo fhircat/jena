@@ -25,9 +25,7 @@ import java.util.Objects;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
-// ----
+
 import org.apache.jena.vocabulary.XSD;
 
 public class DatatypeConstraint extends NodeConstraintComponent {
@@ -61,25 +59,6 @@ public class DatatypeConstraint extends NodeConstraintComponent {
 
     public RDFDatatype getRDFDatatype() {
         return rdfDatatype;
-    }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( n.isLiteral() && dtURI.equals(n.getLiteralDatatypeURI()) ) {
-            // Must be valid for the type
-            if ( ! rdfDatatype.isValid(n.getLiteralLexicalForm()) ) {
-                String errMsg = toString()+" : Not valid value : Node "+displayStr(n);
-                return new ReportItem(errMsg, n);
-            }
-            return null;
-        }
-
-        if ( ! n.isLiteral() )
-            return new ReportItem(toString()+" : Not a literal", n);
-        //String dtStr = vCxt.getShapesGraph().getPrefixMapping().qnameFor(dtURI);
-        Node dt = NodeFactory.createURI(n.getLiteralDatatypeURI());
-        String errMsg = toString()+" -- Wrong datatype: "+strDatatype(n)+" for focus node: "+displayStr(n);
-        return new ReportItem(errMsg, n);
     }
 
     @Override

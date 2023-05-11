@@ -18,22 +18,10 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ValidationContext;
-
-import java.util.StringJoiner;
-
 public class ShapeExternal extends ShapeExpr {
 
     public ShapeExternal() {
         super();
-    }
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        return false;
     }
 
     @Override

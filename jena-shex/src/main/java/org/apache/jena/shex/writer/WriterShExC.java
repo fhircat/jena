@@ -84,7 +84,7 @@ public class WriterShExC {
         }
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
-        ShapeExpr shapeEx = decl.getShapeExpression();
+        ShapeExpr shapeEx = decl.getShapeExpr();
         if (shapeEx != null)
             shexPrinter.printShapeExpression(shapeEx);
         else
@@ -307,7 +307,7 @@ public class WriterShExC {
         public void visit(StrRegexConstraint strRegexCstr) {
             out.print("/");
             //[LAYOUT] Escapes
-            String pattern = strRegexCstr.getPattern();
+            String pattern = strRegexCstr.getPatternString();
             regexStringEsc(out, pattern);
             out.print("/");
             if ( strRegexCstr.getFlagsStr() != null ) {

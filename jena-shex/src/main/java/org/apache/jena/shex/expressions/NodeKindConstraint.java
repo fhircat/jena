@@ -18,14 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
-import static org.apache.jena.shex.sys.ShexLib.displayStr;
-
 import java.util.Objects;
 import java.util.StringJoiner;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class NodeKindConstraint extends NodeConstraintComponent {
     private NodeKind nodeKind;
@@ -35,34 +29,6 @@ public class NodeKindConstraint extends NodeConstraintComponent {
     }
 
     public NodeKind getNodeKind() { return nodeKind; }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        switch (nodeKind) {
-            case BNODE :
-                if ( n.isBlank() )
-                    return null;
-                break;
-            case IRI :
-                if ( n.isURI() )
-                    return null;
-                break;
-            case LITERAL :
-                if ( n.isLiteral() )
-                    return null;
-                break;
-            case NONLITERAL :
-                if ( ! n.isLiteral() )
-                    return null;
-                break;
-            default :
-                break;
-        }
-        // TODO Bad.
-        String msg = toString()+" : Expected "+nodeKind.toString()+" for "+displayStr(n);
-        return new ReportItem(msg, n);
-    }
-
 
     @Override
     public void visit(NodeConstraintComponentVisitor visitor) {

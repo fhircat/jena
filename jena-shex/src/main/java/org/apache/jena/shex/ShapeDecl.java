@@ -18,42 +18,27 @@
 
 package org.apache.jena.shex;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
 
 /** A labelled shape expression. */
 public class ShapeDecl {
     private final Node label;
-    private ShapeExpr shExpression;
+    private ShapeExpr shapeExpr;
 
     // [shex] Future : builder.
-    public ShapeDecl(Node label, ShapeExpr shExpression) {
+    public ShapeDecl(Node label, ShapeExpr shapeExpr) {
         this.label = label;
-        this.shExpression = shExpression;
+        this.shapeExpr = shapeExpr;
     }
 
     public Node getLabel() {
         return label;
     }
 
-    public ShapeExpr getShapeExpression() {
-        return shExpression;
-    }
-
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        vCxt.startValidate(this, data);
-        try {
-            return shExpression == null
-                ? true
-                : shExpression.satisfies(vCxt, data) &&
-                    shExpression.testShapeExprSemanticActions(vCxt, data);
-        } finally {
-            vCxt.finishValidate(this, data);
-        }
+    public ShapeExpr getShapeExpr() {
+        return shapeExpr;
     }
 
     @Override
@@ -61,7 +46,7 @@ public class ShapeDecl {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((label == null) ? 0 : label.hashCode());
-        result = prime * result + ((shExpression == null) ? 0 : shExpression.hashCode());
+        result = prime * result + ((shapeExpr == null) ? 0 : shapeExpr.hashCode());
         return result;
     }
 
@@ -79,16 +64,16 @@ public class ShapeDecl {
                 return false;
         } else if ( !label.equals(other.label) )
             return false;
-        if ( shExpression == null ) {
-            if ( other.shExpression != null )
+        if ( shapeExpr == null ) {
+            if ( other.shapeExpr != null )
                 return false;
-        } else if ( !shExpression.equals(other.shExpression) )
+        } else if ( !shapeExpr.equals(other.shapeExpr) )
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "ShexShape [label="+label+" expr="+shExpression+"]";
+        return "ShexShape [label="+label+" expr="+ shapeExpr +"]";
     }
 }

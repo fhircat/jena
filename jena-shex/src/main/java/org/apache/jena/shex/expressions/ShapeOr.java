@@ -20,14 +20,8 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.StringJoiner;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeOr extends ShapeExpr {
 
@@ -48,21 +42,6 @@ public class ShapeOr extends ShapeExpr {
 
     public List<ShapeExpr> getShapeExprs() {
         return shapeExprs;
-    }
-
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        // We need to ignore validation failures from expressions - we need to find one success.
-        for ( ShapeExpr shExpr : shapeExprs) {
-            ValidationContext vCxt2 = vCxt.create();
-            boolean innerSatisfies = shExpr.satisfies(vCxt2, data);
-            if ( innerSatisfies )
-                return true;
-        }
-        ReportItem item = new ReportItem("OR expression not satisfied:", data);
-        vCxt.reportEntry(item);
-        return false;
     }
 
     @Override

@@ -203,7 +203,7 @@ public class ShExC {
     }
 
     private static void validatePhase2(ShexSchema shapes, ShapeDecl shape) {
-        ShapeExpr shExpr = shape.getShapeExpression();
+        ShapeExpr shExpr = shape.getShapeExpr();
         ShapeExprVisitor checker = new CheckFacets();
         if (shExpr != null)
             ShexLib.walk(shExpr, checker, null, null);

@@ -18,16 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
-import static java.lang.String.format;
-
 import java.util.Objects;
 import java.util.StringJoiner;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
-import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
 public class StrLengthConstraint extends NodeConstraintComponent {
 
@@ -50,35 +42,6 @@ public class StrLengthConstraint extends NodeConstraintComponent {
 
     public int getLength() {
         return length;
-    }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( ! n.isLiteral() && ! n.isURI() ) {
-            String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(n));
-            return new ReportItem(msg, n);
-        }
-        String str = NodeFunctions.str(n);
-        switch (lengthType) {
-            case LENGTH :
-                if ( str.length() == length )
-                    return null;
-                break;
-            case MAXLENGTH :
-                if ( str.length() <= length )
-                    return null;
-                break;
-            case MINLENGTH :
-                if ( str.length() >= length )
-                    return null;
-                break;
-            default :
-                break;
-
-        }
-
-        String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-        return new ReportItem(msg, n);
     }
 
     @Override

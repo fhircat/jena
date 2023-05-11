@@ -19,14 +19,8 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
 
 /** Shape expression that redirects. */
 public class ShapeExprRef extends ShapeExpr {
@@ -42,17 +36,6 @@ public class ShapeExprRef extends ShapeExpr {
     }
 
     public Node getLabel() { return label; }
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ShapeDecl shape = vCxt.getShape(label);
-        if ( shape == null )
-            return false;
-        if ( vCxt.cycle(shape, data) )
-            return true;
-        return shape.satisfies(vCxt, data);
-    }
-
 
     @Override
     public void visit(ShapeExprVisitor visitor) {
