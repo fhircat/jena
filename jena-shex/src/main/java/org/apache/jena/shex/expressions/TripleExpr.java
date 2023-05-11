@@ -24,7 +24,7 @@ import org.apache.jena.shex.sys.ValidationContext;
 import java.util.List;
 import java.util.Set;
 
-public abstract class   TripleExpression implements ShexPrintable {
+public abstract class TripleExpr implements ShexPrintable {
 
     // tripleExpr = EachOf | OneOf | TripleConstraint | tripleExprRef
 
@@ -34,7 +34,7 @@ public abstract class   TripleExpression implements ShexPrintable {
     // [shex] semanticActions
     private List<SemAct> semActs;
 
-    protected TripleExpression(List<SemAct> semActs) {
+    protected TripleExpr(List<SemAct> semActs) {
         this.semActs = semActs;
     }
 

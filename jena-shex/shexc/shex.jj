@@ -356,7 +356,7 @@ String numericLength() : { Token t; }
 
 // "{ ... }"
 void shapeDefinition() :
-{ boolean closed = false; TripleExpression tripleExpr = null;
+{ boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
   List<SemAct> semActs;
 }
@@ -371,7 +371,7 @@ void shapeDefinition() :
 
 void inlineShapeDefinition() :
 { boolean closed = false ;
-  TripleExpression tripleExpr = null;
+  TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
 }
 {

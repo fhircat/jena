@@ -56,19 +56,19 @@ public class ShapeExprWalker implements ShapeExprVisitor {
 
     @Override public void visit(ShapeAnd shape) {
         before(shape);
-        shape.expressions().forEach(sh->sh.visit(this));
+        shape.getShapeExprs().forEach(sh->sh.visit(this));
         after(shape);
     }
 
     @Override public void visit(ShapeOr shape) {
         before(shape);
-        shape.expressions().forEach(sh->sh.visit(this));
+        shape.getShapeExprs().forEach(sh->sh.visit(this));
         after(shape);
     }
 
     @Override public void visit(ShapeNot shape) {
         before(shape);
-        shape.subShape().visit(this);
+        shape.getShapeExpr().visit(this);
         after(shape);
     }
 
@@ -96,7 +96,7 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     public void visit(NodeConstraint nodeConstraint) {
         before(nodeConstraint);
         if ( nodeConstraintVisitor != null)
-            nodeConstraint.components().forEach(ncc->ncc.visit(nodeConstraintVisitor));
+            nodeConstraint.getComponents().forEach(ncc->ncc.visit(nodeConstraintVisitor));
         after(nodeConstraint);
     }
 }

@@ -24,23 +24,19 @@ import java.util.Objects;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.riot.out.NodeFormatter;
 
-/**
- * Class to add cardinality to a bracketed {@link TripleExpression}.
- * <p>
- * {@link TripleConstraint TripleConstraints} have their own cardinality handling.
- */
-public class TripleExprCardinality extends TripleExpression {
+public class TripleExprCardinality extends TripleExpr {
 
-    private final TripleExpression subExpr;
+    private final TripleExpr subExpr;
     private final Cardinality cardinality;
 
-    public TripleExprCardinality(TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
+    // TODO can this have semantic actions ?
+    public TripleExprCardinality(TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
         super(semActs);
-        this.subExpr = tripleExpr;
+        this.subExpr = subExpr;
         this.cardinality = cardinality;
     }
 
-    public TripleExpression getSubExpr() { return subExpr; }
+    public TripleExpr getSubExpr() { return subExpr; }
     public Cardinality getCardinality() { return cardinality; }
 
     public String cardinalityString() {

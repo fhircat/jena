@@ -25,25 +25,25 @@ import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.riot.out.NodeFormatter;
 
-public class OneOf extends TripleExpression {
+public class OneOf extends TripleExpr {
 
-    public static TripleExpression create(List<TripleExpression> acc, List<SemAct> semActs) {
-        if ( acc.size() == 0 )
+    public static TripleExpr create(List<TripleExpr> subExprs, List<SemAct> semActs) {
+        if ( subExprs.size() == 0 )
             throw new InternalErrorException("Empty list");
-        if ( acc.size() == 1 )
-            return acc.get(0);
-        return new OneOf(acc, semActs);
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return new OneOf(subExprs, semActs);
     }
 
-    private List<TripleExpression> tripleExpressions;
+    private List<TripleExpr> tripleExprs;
 
-    private OneOf(List<TripleExpression> expressions, List<SemAct> semActs) {
+    private OneOf(List<TripleExpr> subExprs, List<SemAct> semActs) {
         super(semActs);
-        this.tripleExpressions = expressions;
+        this.tripleExprs = subExprs;
     }
 
-    public List<TripleExpression> expressions() {
-        return tripleExpressions;
+    public List<TripleExpr> getTripleExprs() {
+        return tripleExprs;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class OneOf extends TripleExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(4, tripleExpressions);
+        return Objects.hash(4, tripleExprs);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class OneOf extends TripleExpression {
         if ( getClass() != obj.getClass() )
             return false;
         OneOf other = (OneOf)obj;
-        return Objects.equals(tripleExpressions, other.tripleExpressions);
+        return Objects.equals(tripleExprs, other.tripleExprs);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class OneOf extends TripleExpression {
         iOut.println("OneOf");
         iOut.incIndent();
         int idx = 0;
-        for ( TripleExpression tExpr : tripleExpressions ) {
+        for ( TripleExpr tExpr : tripleExprs) {
             idx++;
             iOut.printf("%d - ", idx);
             tExpr.print(iOut, nFmt);
@@ -90,6 +90,6 @@ public class OneOf extends TripleExpression {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()+"["+tripleExpressions+"]";
+        return this.getClass().getSimpleName()+"["+ tripleExprs +"]";
     }
 }

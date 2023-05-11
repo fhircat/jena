@@ -29,18 +29,22 @@ import org.apache.jena.shex.sys.ValidationContext;
 
 /** Shape expression that redirects. */
 public class ShapeExprRef extends ShapeExpr {
-    private final Node ref;
+    private final Node label;
 
-    public ShapeExprRef(Node ref) {
-        super();
-        this.ref = ref;
+    public static ShapeExprRef create(Node label) {
+        return new ShapeExprRef(label);
     }
 
-    public Node getRef() { return ref; }
+    private ShapeExprRef(Node ref) {
+        super();
+        this.label = ref;
+    }
+
+    public Node getLabel() { return label; }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        ShapeDecl shape = vCxt.getShape(ref);
+        ShapeDecl shape = vCxt.getShape(label);
         if ( shape == null )
             return false;
         if ( vCxt.cycle(shape, data) )
@@ -51,7 +55,7 @@ public class ShapeExprRef extends ShapeExpr {
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {
         out.print("ShapeRef: ");
-        out.print(ShexLib.displayStr(ref));
+        out.print(ShexLib.displayStr(label));
         out.println();
     }
 
@@ -62,12 +66,12 @@ public class ShapeExprRef extends ShapeExpr {
 
     @Override
     public String toString() {
-        return "ShapeExprRef [ref="+ref+"]";
+        return "ShapeExprRef [ref="+ label +"]";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ref);
+        return Objects.hash(label);
     }
 
     @Override
@@ -79,6 +83,6 @@ public class ShapeExprRef extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         ShapeExprRef other = (ShapeExprRef)obj;
-        return Objects.equals(ref, other.ref);
+        return Objects.equals(label, other.label);
     }
 }

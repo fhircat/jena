@@ -30,12 +30,6 @@ public class Cardinality {
     public static final Cardinality PLUS = new Cardinality(1, UNBOUNDED);
     public static final Cardinality STAR = new Cardinality(0, UNBOUNDED);
     public static final Cardinality OPT = new Cardinality(0, 1);
-    public static final Cardinality ONE = new Cardinality(1,1);
-
-    // TODO EMPTY and ZERO useful ?
-    // public static Cardinality EMPTY = new Interval(2, 1);
-    // public static Interval ZERO = new Interval(0,0);
-
 
     public final int min;
     public final int max;

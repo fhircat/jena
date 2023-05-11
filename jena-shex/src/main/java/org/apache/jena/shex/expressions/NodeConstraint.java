@@ -39,27 +39,20 @@ public class NodeConstraint extends ShapeExpr {
     }
      */
 
+    private final List<NodeConstraintComponent> components;
 
-    private List<NodeConstraintComponent> constraints = new ArrayList<>();
-
-    public NodeConstraint(List<NodeConstraintComponent> constraints) {
-        this(constraints, null);
+    public static NodeConstraint create (List<NodeConstraintComponent> components, List<SemAct> semActs) {
+        return new NodeConstraint(components, semActs);
     }
 
-    public NodeConstraint(List<NodeConstraintComponent> constraints, List<SemAct> semActs) {
+    // TODO can node constraints have semantic actions ?
+    // TODO why is the list of components copied, while no other lists are copied elsewhere in expressions (eg sub-expressions of a ShapeAnd are not copied)
+    private NodeConstraint(List<NodeConstraintComponent> components, List<SemAct> semActs) {
         super(semActs);
-        this.constraints = List.copyOf(constraints);
+        this.components = List.copyOf(components);
     }
 
-    public List<NodeConstraintComponent> components() { return constraints; }
-
-    static class NodeConstraintBuilder {
-        NodeKindConstraint nodeKind;
-        DatatypeConstraint datatype = null;
-        List<NodeConstraint> facets = new ArrayList<>();
-        ValueConstraint values;
-    }
-
+    public List<NodeConstraintComponent> getComponents() { return components; }
 
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {
@@ -74,7 +67,7 @@ public class NodeConstraint extends ShapeExpr {
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
-        for ( NodeConstraintComponent ncc : constraints ) {
+        for ( NodeConstraintComponent ncc : components) {
             ReportItem item = ncc.nodeSatisfies(vCxt, data);
             if ( item != null ) {
                 vCxt.reportEntry(item);
@@ -88,7 +81,7 @@ public class NodeConstraint extends ShapeExpr {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((constraints == null) ? 0 : constraints.hashCode());
+        result = prime * result + ((components == null) ? 0 : components.hashCode());
         return result;
     }
 
@@ -101,16 +94,16 @@ public class NodeConstraint extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         NodeConstraint other = (NodeConstraint)obj;
-        if ( constraints == null ) {
-            if ( other.constraints != null )
+        if ( components == null ) {
+            if ( other.components != null )
                 return false;
-        } else if ( !constraints.equals(other.constraints) )
+        } else if ( !components.equals(other.components) )
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "NodeConstraint [constraints=" + constraints + "]";
+        return "NodeConstraint [constraints=" + components + "]";
     }
 }

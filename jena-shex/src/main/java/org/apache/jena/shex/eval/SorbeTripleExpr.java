@@ -8,10 +8,10 @@ import java.util.List;
 
 public class SorbeTripleExpr {
 
-    private final TripleExpression original;
-    /*package*/ final TripleExpression sorbe;
+    private final TripleExpr original;
+    /*package*/ final TripleExpr sorbe;
 
-    private SorbeTripleExpr(TripleExpression original, TripleExpression sorbe) {
+    private SorbeTripleExpr(TripleExpr original, TripleExpr sorbe) {
         this.original = original;
         this.sorbe = sorbe;
     }
@@ -20,23 +20,23 @@ public class SorbeTripleExpr {
         sorbe.visit(visitor);
     }
 
-    public static SorbeTripleExpr create (TripleExpression tripleExpr, ShexSchema schema) {
+    public static SorbeTripleExpr create (TripleExpr tripleExpr, ShexSchema schema) {
 
         class SorbeConstructor implements TripleExprVisitor {
 
-            TripleExpression result;
+            TripleExpr result;
 
-            public TripleExpression getResult() {
+            public TripleExpr getResult() {
                 return result;
             }
-            public void setResult(TripleExpression result) {
+            public void setResult(TripleExpr result) {
                 this.result = result;
             }
 
             @Override
             public void visit(EachOf tripleExpr) {
-                List<TripleExpression> subExpressions = new ArrayList<>(tripleExpr.expressions().size());
-                for (TripleExpression te : tripleExpr.expressions()) {
+                List<TripleExpr> subExpressions = new ArrayList<>(tripleExpr.getTripleExprs().size());
+                for (TripleExpr te : tripleExpr.getTripleExprs()) {
                     te.visit(this);
                     subExpressions.add(getResult());
                 }
@@ -45,8 +45,8 @@ public class SorbeTripleExpr {
 
             @Override
             public void visit(OneOf tripleExpr) {
-                List<TripleExpression> subExpressions = new ArrayList<>(tripleExpr.expressions().size());
-                for (TripleExpression te : tripleExpr.expressions()) {
+                List<TripleExpr> subExpressions = new ArrayList<>(tripleExpr.getTripleExprs().size());
+                for (TripleExpr te : tripleExpr.getTripleExprs()) {
                     te.visit(this);
                     subExpressions.add(getResult());
                 }
@@ -60,20 +60,20 @@ public class SorbeTripleExpr {
 
             @Override
             public void visit(TripleExprRef tripleExpr) {
-                schema.getTripleExpression(tripleExpr.getRef()).visit(this);
+                schema.getTripleExpression(tripleExpr.getLabel()).visit(this);
             }
 
             @Override
             public void visit(TripleConstraint tripleExpr) {
-                setResult(new TripleConstraint(tripleExpr.label(), tripleExpr.getPredicate(), tripleExpr.reverse(),
-                        tripleExpr.getShapeExpression(), null));
+                setResult(TripleConstraint.create(tripleExpr.getLabel(), tripleExpr.getPredicate(), tripleExpr.isInverse(),
+                        tripleExpr.getValueExpr(), null));
             }
 
             @Override
             public void visit(TripleExprCardinality expr) {
                 TripleExprVisitor.super.visit(expr);
 
-                TripleExpression subExpr = expr.getSubExpr();
+                TripleExpr subExpr = expr.getSubExpr();
                 subExpr.visit(this);
                 Cardinality card = expr.getCardinality();
                 if (card.equals(Cardinality.PLUS) && containsEmpty(expr, schema))
@@ -96,7 +96,7 @@ public class SorbeTripleExpr {
                         unboundedQuotient = null;
                     }
 
-                    List<TripleExpression> newSubExprs = new ArrayList<>(nbClones + nbOptClones + 1);
+                    List<TripleExpr> newSubExprs = new ArrayList<>(nbClones + nbOptClones + 1);
                     for (int i = 0; i < nbClones; i++) {
                         subExpr.visit(this);
                         newSubExprs.add(getResult());
@@ -118,7 +118,7 @@ public class SorbeTripleExpr {
         return new SorbeTripleExpr(tripleExpr, constructor.getResult());
     }
 
-    private static boolean containsEmpty (TripleExpression tripleExpr, ShexSchema schema) {
+    private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
 
         class CheckContainsEmpty implements TripleExprVisitor {
 
@@ -140,7 +140,7 @@ public class SorbeTripleExpr {
 
             @Override
             public void visit(EachOf expr) {
-                for (TripleExpression subExpr : expr.expressions()) {
+                for (TripleExpr subExpr : expr.getTripleExprs()) {
                     subExpr.visit(this);
                     if (!result)
                         return;
@@ -149,7 +149,7 @@ public class SorbeTripleExpr {
 
             @Override
             public void visit(OneOf expr) {
-                for (TripleExpression subExpr : expr.expressions()) {
+                for (TripleExpr subExpr : expr.getTripleExprs()) {
                     subExpr.visit(this);
                     if (result)
                         return;
@@ -167,7 +167,7 @@ public class SorbeTripleExpr {
 
             @Override
             public void visit(TripleExprRef expr) {
-                schema.getTripleExpression(expr.getRef()).visit(this);
+                schema.getTripleExpression(expr.getLabel()).visit(this);
             }
         }
 

@@ -45,12 +45,12 @@ public class Shape extends ShapeExpr {
     private Set<Node> extras;
     private boolean closed;
     //extra:[IRIREF]?
-    private TripleExpression tripleExpr;
+    private TripleExpr tripleExpr;
     //semActs:[SemAct+]?
     //annotations:[Annotation+]?
     public static Builder newBuilder() { return new Builder(); }
 
-    private Shape(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr, List<SemAct> semActs) {
+    private Shape(Node label, Set<Node> extras, boolean closed, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
         this.label = label;
         if ( extras == null || extras.isEmpty() )
@@ -61,7 +61,7 @@ public class Shape extends ShapeExpr {
         this.tripleExpr = tripleExpr;
     }
 
-    public TripleExpression getTripleExpr() { return tripleExpr; }
+    public TripleExpr getTripleExpr() { return tripleExpr; }
 
     public Node getLabel() {
         return label;
@@ -135,7 +135,7 @@ public class Shape extends ShapeExpr {
         private List<SemAct> semActs;
         private Optional<Boolean> closed = null;
         //extra:[IRIREF]?
-        private TripleExpression tripleExpr = null;
+        private TripleExpr tripleExpr = null;
         //semActs:[SemAct+]?
         //annotations:[Annotation+]?
 
@@ -160,7 +160,7 @@ public class Shape extends ShapeExpr {
 
         public Builder closed(boolean value) { this.closed = Optional.of(value); return this; }
 
-        public Builder shapeExpr(TripleExpression tripleExpr) { this.tripleExpr = tripleExpr; return this; }
+        public Builder shapeExpr(TripleExpr tripleExpr) { this.tripleExpr = tripleExpr; return this; }
 
         public Shape build() {
             boolean isClosed = (closed == null) ? false : closed.get();

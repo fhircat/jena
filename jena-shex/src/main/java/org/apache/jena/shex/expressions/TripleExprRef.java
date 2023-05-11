@@ -21,22 +21,25 @@ package org.apache.jena.shex.expressions;
 import java.util.Objects;
 
 import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ShexLib;
 
-public class TripleExprRef extends TripleExpression {
+public class TripleExprRef extends TripleExpr {
 
-    private Node ref;
+    private Node label;
 
-    public TripleExprRef(Node node) {
-        super(null);
-        this.ref = node;
+    public static TripleExprRef create (Node label) {
+        return new TripleExprRef(label);
     }
 
-    public Node getRef() {
-        return ref;
+    private TripleExprRef(Node label) {
+        super(null);
+        this.label = label;
+    }
+
+    public Node getLabel() {
+        return label;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class TripleExprRef extends TripleExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(ref);
+        return Objects.hash(label);
     }
 
     @Override
@@ -58,18 +61,18 @@ public class TripleExprRef extends TripleExpression {
         if ( getClass() != obj.getClass() )
             return false;
         TripleExprRef other = (TripleExprRef)obj;
-        return Objects.equals(ref, other.ref);
+        return Objects.equals(label, other.label);
     }
 
     @Override
     public void print(IndentedWriter iOut, NodeFormatter nFmt) {
         iOut.print("tripleExprRef: ");
-        nFmt.format(iOut, ref);
+        nFmt.format(iOut, label);
         iOut.println();
     }
 
     @Override
     public String toString() {
-        return "TripleExpressionRef["+ShexLib.displayStr(ref)+"]";
+        return "TripleExpressionRef["+ShexLib.displayStr(label)+"]";
     }
 }

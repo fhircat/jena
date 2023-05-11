@@ -36,17 +36,22 @@ public class ShapeNot extends ShapeExpr {
 //        ShapeExpression shapeExpr = args.get(0);
 //        return new ShapeExpressionNOT(shapeExpr);
 //    }
-    private final ShapeExpr other;
 
-    public ShapeNot(ShapeExpr shapeExpr) {
+    public static ShapeExpr create (ShapeExpr subExpr) {
+        return new ShapeNot(subExpr);
+    }
+
+    private final ShapeExpr shapeExpr;
+
+    private ShapeNot(ShapeExpr shapeExpr) {
         super();
-        this.other = shapeExpr;
+        this.shapeExpr = shapeExpr;
     }
 
     @Override
     public boolean satisfies(ValidationContext vCxt, Node data) {
         ValidationContext vCxt2 = vCxt.create();
-        boolean innerSatisfies = other.satisfies(vCxt2, data);
+        boolean innerSatisfies = shapeExpr.satisfies(vCxt2, data);
         if ( ! innerSatisfies )
             return true;
         ReportItem item = new ReportItem("NOT: Term reject because it conforms", data);
@@ -54,8 +59,8 @@ public class ShapeNot extends ShapeExpr {
         return false;
     }
 
-    public ShapeExpr subShape() {
-        return other;
+    public ShapeExpr getShapeExpr() {
+        return shapeExpr;
     }
 
     @Override
@@ -66,17 +71,17 @@ public class ShapeNot extends ShapeExpr {
     @Override
     public void print(IndentedWriter out, NodeFormatter nFmt) {
         out.print("NOT ");
-        other.print(out, nFmt);
+        shapeExpr.print(out, nFmt);
     }
 
     @Override
     public String toString() {
-        return "ShapeExprNOT["+other+"]";
+        return "ShapeExprNOT["+ shapeExpr +"]";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(other);
+        return Objects.hash(shapeExpr);
     }
 
     @Override
@@ -88,6 +93,6 @@ public class ShapeNot extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         ShapeNot other = (ShapeNot)obj;
-        return Objects.equals(this.other, other.other);
+        return Objects.equals(this.shapeExpr, other.shapeExpr);
     }
 }

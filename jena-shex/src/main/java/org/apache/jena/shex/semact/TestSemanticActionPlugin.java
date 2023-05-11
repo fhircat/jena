@@ -23,7 +23,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.expressions.TripleExpr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,7 +71,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     @Override
-    public boolean evaluateTripleExpr(SemAct semAct, TripleExpression tripleExpression, Collection<Triple> triples) {
+    public boolean evaluateTripleExpr(SemAct semAct, TripleExpr tripleExpression, Collection<Triple> triples) {
         Iterator<Triple> tripleIterator = triples.iterator();
         Triple triple = tripleIterator.hasNext() ? tripleIterator.next() : null; // should be one triple, as currently defined.
         return parse(semAct, (str) -> resolveTripleVar(str, triple));

@@ -217,7 +217,7 @@ public class ShExC {
             // XXX [NodeConstraint]
             DatatypeConstraint dtConstraint = null;
             Set<StrLengthKind> x = new HashSet<>(3);
-            for ( NodeConstraintComponent expr: nc.components() ) {
+            for ( NodeConstraintComponent expr: nc.getComponents() ) {
                 // Visitor!
                 if ( expr instanceof StrLengthConstraint ) {
                     StrLengthConstraint constraint = (StrLengthConstraint)expr;

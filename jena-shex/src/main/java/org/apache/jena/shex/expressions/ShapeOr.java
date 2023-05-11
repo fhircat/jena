@@ -30,22 +30,22 @@ import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeOr extends ShapeExpr {
 
-    public static ShapeExpr create(List<ShapeExpr> acc) {
-        if ( acc.size() == 0 )
+    public static ShapeExpr create(List<ShapeExpr> subExprs) {
+        if ( subExprs.size() == 0 )
             throw new InternalErrorException("Empty list");
-        if ( acc.size() == 1 )
-            return acc.get(0);
-        return new ShapeOr(acc);
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return new ShapeOr(subExprs);
     }
 
-    private List<ShapeExpr> shapeExprs;
+    private final List<ShapeExpr> shapeExprs;
 
-    private ShapeOr(List<ShapeExpr> expressions) {
+    private ShapeOr(List<ShapeExpr> subExprs) {
         super();
-        this.shapeExprs = expressions;
+        this.shapeExprs = subExprs;
     }
 
-    public List<ShapeExpr> expressions() {
+    public List<ShapeExpr> getShapeExprs() {
         return shapeExprs;
     }
 
@@ -86,7 +86,7 @@ public class ShapeOr extends ShapeExpr {
 
     @Override
     public String toString() {
-        return "ShapeExprOr "+expressions();
+        return "ShapeExprOr "+ getShapeExprs();
     }
 
     @Override

@@ -32,12 +32,12 @@ public class TripleExprWalker implements TripleExprVisitor {
         this.shapeVisitor = shapeVisitor;
     }
 
-    private void before(TripleExpression tripleExpr) {
+    private void before(TripleExpr tripleExpr) {
         if ( beforeVisitor != null )
             tripleExpr.visit(beforeVisitor);
     }
 
-    private void after(TripleExpression tripleExpr) {
+    private void after(TripleExpr tripleExpr) {
         if ( afterVisitor != null )
             tripleExpr.visit(afterVisitor);
     }
@@ -45,14 +45,14 @@ public class TripleExprWalker implements TripleExprVisitor {
     @Override
     public void visit(EachOf object) {
         before(object);
-        object.expressions().forEach(tripleExpr->tripleExpr.visit(this));
+        object.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
         after(object);
     }
 
     @Override
     public void visit(OneOf object) {
         before(object);
-        object.expressions().forEach(tripleExpr->tripleExpr.visit(this));
+        object.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
         after(object);
     }
 
@@ -77,7 +77,7 @@ public class TripleExprWalker implements TripleExprVisitor {
     @Override public void visit(TripleConstraint object) {
         before(object);
         if ( shapeVisitor != null )
-            object.getShapeExpression().visit(shapeVisitor);
+            object.getValueExpr().visit(shapeVisitor);
         after(object);
     }
 }

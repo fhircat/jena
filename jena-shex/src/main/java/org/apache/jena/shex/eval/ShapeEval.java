@@ -29,7 +29,6 @@ import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
@@ -52,7 +51,7 @@ public class ShapeEval {
         return shapeExpr.satisfies(vCxt, node);
     }
 
-    /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpression tripleExpr,
+    /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
 //        Set<Triple> neigh = new HashSet<>();
 //        Set<Triple> arcsOut = new HashSet<>();
@@ -64,9 +63,9 @@ public class ShapeEval {
 
         List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, tripleExpr);
         Set<Node> forwardPredicates  = tripleConstraints.stream()
-                .filter(tc -> ! tc.reverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
+                .filter(tc -> ! tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
         Set<Node> backwardPredicates = tripleConstraints.stream()
-                .filter(tc -> tc.reverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
+                .filter(tc -> tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
 
         Set<Triple> matchables = new HashSet<>();
         Set<Triple> non_matchables = new HashSet<>();
@@ -80,13 +79,13 @@ public class ShapeEval {
     }
 
     static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node,
-                           TripleExpression tripleExpr, Set<Node> extras) {
+                           TripleExpr tripleExpr, Set<Node> extras) {
         // TODO extras should never be null, modify this in Shape
         return matchesExpr(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
     }
 
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples, Node node,
-                                       TripleExpression tripleExpr, Set<Node> extras) {
+                                       TripleExpr tripleExpr, Set<Node> extras) {
 
         SorbeTripleExpr sorbeTripleExpr = getSorbe(tripleExpr, vCxt);
         List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, sorbeTripleExpr.sorbe);
@@ -101,8 +100,8 @@ public class ShapeEval {
             Iterator<TripleConstraint> it = tcs.iterator();
             while (it.hasNext()) {
                 TripleConstraint tc = it.next();
-                ShapeExpr valueExpr = tc.getShapeExpression();
-                Node opposite = tc.reverse() ? triple.getSubject() : triple.getObject();
+                ShapeExpr valueExpr = tc.getValueExpr();
+                Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
                 if (! valueExpr.satisfies(vCxt, opposite))
                     it.remove();
             }
@@ -136,7 +135,7 @@ public class ShapeEval {
 
     }
 
-    private static SorbeTripleExpr getSorbe(TripleExpression tripleExpr, ValidationContext vCxt) {
+    private static SorbeTripleExpr getSorbe(TripleExpr tripleExpr, ValidationContext vCxt) {
         return SorbeTripleExpr.create(tripleExpr, vCxt.getShapes());
     }
 
@@ -169,13 +168,13 @@ public class ShapeEval {
             @Override
             public void visit(EachOf expr) {
                 expr.visit(step);
-                expr.expressions().forEach(ex -> ex.visit(this));
+                expr.getTripleExprs().forEach(ex -> ex.visit(this));
             }
 
             @Override
             public void visit(OneOf expr) {
                 expr.visit(step);
-                expr.expressions().forEach(ex -> ex.visit(this));
+                expr.getTripleExprs().forEach(ex -> ex.visit(this));
             }
 
             @Override
@@ -186,9 +185,9 @@ public class ShapeEval {
             @Override
             public void visit(TripleExprRef expr) {
                 expr.visit(step);
-                if ( expr.getRef() == null )
-                    throw new ShexException("Failed to dereference : "+expr.getRef());
-                shapes.getTripleExpression(expr.getRef()).visit(this);
+                if ( expr.getLabel() == null )
+                    throw new ShexException("Failed to dereference : "+expr.getLabel());
+                shapes.getTripleExpression(expr.getLabel()).visit(this);
             }
 
             @Override
@@ -199,7 +198,7 @@ public class ShapeEval {
     }
 
     /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt,
-                                                                    TripleExpression tripleExpr) {
+                                                                    TripleExpr tripleExpr) {
         List<TripleConstraint> constraints = new ArrayList<>();
         tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
         return constraints;
@@ -231,7 +230,7 @@ public class ShapeEval {
         x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
     }
 
-    private static Cardinality computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag,
+    private static Cardinality computeInterval (TripleExpr tripleExpr, Map<TripleConstraint, Integer> bag,
                                                 ValidationContext vCxt) {
         IntervalComputation computation = new IntervalComputation(bag, vCxt);
         tripleExpr.visit(computation);

@@ -45,7 +45,7 @@ class IntervalComputation implements TripleExprVisitor {
     public void visit(OneOf expr) {
         Cardinality res = ZERO_INTERVAL; // the neutral element for addition
 
-        for (TripleExpression subExpr : expr.expressions()) {
+        for (TripleExpr subExpr : expr.getTripleExprs()) {
             subExpr.visit(this);
             res = add(res, getResult());
         }
@@ -56,7 +56,7 @@ class IntervalComputation implements TripleExprVisitor {
     public void visit(EachOf expr) {
         Cardinality res = Cardinality.STAR; // the neutral element for intersection
 
-        for (TripleExpression subExpr : expr.expressions()) {
+        for (TripleExpr subExpr : expr.getTripleExprs()) {
             subExpr.visit(this);
             res = inter(res, getResult());
         }
@@ -67,7 +67,7 @@ class IntervalComputation implements TripleExprVisitor {
     public void visit(TripleExprCardinality expression) {
 
         Cardinality card = new Cardinality(expression.min(), expression.max());
-        TripleExpression subExpr = expression.getSubExpr();
+        TripleExpr subExpr = expression.getSubExpr();
         boolean isEmptySubbag = isEmptySubbag(bag, expression, vCxt);
 
         if (card.equals(Cardinality.STAR)) {
@@ -110,10 +110,10 @@ class IntervalComputation implements TripleExprVisitor {
 
     @Override
     public void visit(TripleExprRef expr) {
-        vCxt.getShapes().getTripleExpression(expr.getRef()).visit(this);
+        vCxt.getShapes().getTripleExpression(expr.getLabel()).visit(this);
     }
 
-    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression,
+    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression,
                                   ValidationContext vCxt) {
         List<TripleConstraint> list = ShapeEval.findTripleConstraints(vCxt, expression);
         for (TripleConstraint tripleConstraint : list) {

@@ -21,9 +21,9 @@ package org.apache.jena.shex.expressions;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.riot.out.NodeFormatter;
 
-public class TripleExprEmpty extends TripleExpression {
-    private static TripleExpression instance = new TripleExprEmpty();
-    public static TripleExpression get() { return instance ; }
+public class TripleExprEmpty extends TripleExpr {
+    private static TripleExpr instance = new TripleExprEmpty();
+    public static TripleExpr get() { return instance ; }
 
     private TripleExprEmpty() { super(null); }
 

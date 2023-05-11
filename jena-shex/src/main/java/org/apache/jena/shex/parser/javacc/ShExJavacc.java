@@ -1014,7 +1014,7 @@ int num = integer(t.image, t.beginLine, t.beginColumn);
 }
 
 // "{ ... }"
-  final public void shapeDefinition() throws ParseException {boolean closed = false; TripleExpression tripleExpr = null;
+  final public void shapeDefinition() throws ParseException {boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
   List<SemAct> semActs;
 startShapeDefinition();
@@ -1082,7 +1082,7 @@ finishShapeDefinition(tripleExpr, extras, closed, semActs);
 }
 
   final public void inlineShapeDefinition() throws ParseException {boolean closed = false ;
-  TripleExpression tripleExpr = null;
+  TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
 startShapeDefinition();
     label_16:
@@ -1195,7 +1195,7 @@ extras.add(p);
 // }
 
 // ---- Improvement for LL(1)
-  final public TripleExpression tripleExpression() throws ParseException {int idx;
+  final public TripleExpr tripleExpression() throws ParseException {int idx;
 idx = startTripleExpression();
     tripleExpressionClause();
     label_18:
@@ -1306,7 +1306,8 @@ startUnaryTripleExpr();
 finishUnaryTripleExpr();
 }
 
-  final public void bracketedTripleExpr(Node label) throws ParseException {TripleExpression tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs;
+  final public void bracketedTripleExpr(Node label) throws ParseException {
+      TripleExpr tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs;
 startBracketedTripleExpr();
     jj_consume_token(LPAREN);
     tripleExpr = tripleExpression();

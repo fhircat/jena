@@ -27,7 +27,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 /**
@@ -89,7 +89,7 @@ public class ValidationContext {
         return (parent != null) ? parent : this;
     }
 
-    public TripleExpression getTripleExpression(Node label) {
+    public TripleExpr getTripleExpression(Node label) {
         return shapes.getTripleExpression(label);
     }
 
@@ -150,7 +150,7 @@ public class ValidationContext {
         });
     }
 
-    public boolean dispatchTripleExprSemanticAction(TripleExpression te, Set<Triple> matchables) {
+    public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
         return !te.getSemActs().stream().anyMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
