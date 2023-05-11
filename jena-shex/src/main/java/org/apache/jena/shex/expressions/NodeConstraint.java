@@ -18,26 +18,13 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
 public class NodeConstraint extends ShapeExpr {
-
-    /*
-    NodeConstraint  {
-        id:shapeExprLabel?
-        nodeKind:("iri" | "bnode" | "nonliteral" | "literal")?
-        datatype:IRIREF?
-        xsFacet*
-        values:[valueSetValue+]?
-    }
-     */
 
     private final List<NodeConstraintComponent> components;
 
@@ -53,11 +40,6 @@ public class NodeConstraint extends ShapeExpr {
     }
 
     public List<NodeConstraintComponent> getComponents() { return components; }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
 
     @Override
     public void visit(ShapeExprVisitor visitor) {
@@ -102,8 +84,4 @@ public class NodeConstraint extends ShapeExpr {
         return true;
     }
 
-    @Override
-    public String toString() {
-        return "NodeConstraint [constraints=" + components + "]";
-    }
 }

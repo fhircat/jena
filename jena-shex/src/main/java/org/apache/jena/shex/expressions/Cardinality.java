@@ -86,30 +86,9 @@ public class Cardinality {
         }
     }
 
-    static String cardStr(int min, int max) {
-        // min is never UNBOUNDED
-        // "{,number}" is not legal syntax
-
-        // Special syntax
-        if ( min == 0 && max == UNBOUNDED )
-            return "*";
-        if ( min == 1 && max == UNBOUNDED )
-            return "+";
-        if ( min == 0 && max == 1 )
-            return "?";
-        // max == min => no comma.
-        if ( max == min )
-            return "{"+min+"}";
-        // Max UNBOUNDED
-        if ( max == UNBOUNDED )
-            return "{"+min+",}";
-        // General
-        return "{"+min+","+max+"}";
-    }
-
     @Override
     public String toString() {
-        return cardStr(min, max);
+        return PrettyPrinter.asPrettyString(this);
     }
 
     @Override

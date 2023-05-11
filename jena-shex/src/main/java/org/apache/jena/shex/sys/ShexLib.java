@@ -33,6 +33,7 @@ import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.expressions.NodeConstraintComponentVisitor;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -65,7 +66,7 @@ public class ShexLib {
     public static void walk(ShapeExpr shExpr,
                             ShapeExprVisitor shapeVisitor,
                             TripleExprVisitor tripleExpressionVisitor,
-                            NodeConstraintVisitor nodeConstraintVisitor
+                            NodeConstraintComponentVisitor nodeConstraintVisitor
                             ) {
         ShapeExprWalker walker = new ShapeExprWalker(shapeVisitor, null,
                                                      tripleExpressionVisitor, null,
@@ -95,6 +96,10 @@ public class ShexLib {
         displayPrefixMap.add("rdf",  RDF.getURI());
         displayPrefixMap.add("rdfs", RDFS.getURI());
         displayPrefixMap.add("xsd",  XSD.getURI());
+    }
+
+    public static NodeFormatter getNodeFmtAbbrev() {
+        return nodeFmtAbbrev;
     }
 
     /** Display string for human-readable output. */
@@ -136,7 +141,6 @@ public class ShexLib {
     public static void printReport(OutputStream outStream, ShexReport report) {
         AWriter out = IO.wrapUTF8(outStream);
         try {
-            //if ( report.conforms() )
             if ( ! report.hasReports() )
                 out.println("OK");  // Empty.
             else

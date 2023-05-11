@@ -22,11 +22,9 @@ import static org.apache.jena.shex.sys.ShexLib.*;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 // ----
@@ -51,6 +49,10 @@ public class DatatypeConstraint extends NodeConstraintComponent {
         this.datatype = dt;
         this.dtURI = dtURI;
         this.rdfDatatype = NodeFactory.getType(dtURI);
+    }
+
+    public Node getDatatype() {
+        return datatype;
     }
 
     public String getDatatypeURI() {
@@ -81,28 +83,15 @@ public class DatatypeConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("Datatype[");
-        if ( datatype.isBlank() ) {
-            out.print("<_:");
-            out.print(datatype.getBlankNodeLabel());
-            out.print(">");
-        } else if ( datatype.isURI() && dtURI.startsWith(XSD.getURI()) ) {
-            out.print("xsd:");
-            out.print(datatype.getLocalName());
-        } else {
-            nFmt.format(out, datatype);
-        }
-        out.println("]");
-    }
-
-    @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
+        // TODO complex toString, useful ?
+        // TODO uses ShexLib
+        String className = DatatypeConstraint.class.getSimpleName();
         String x;
         if ( datatype.isURI() ) {
             if ( dtURI.startsWith(XSD.getURI()) )
@@ -114,7 +103,7 @@ public class DatatypeConstraint extends NodeConstraintComponent {
         else
             x = displayStr(datatype);
 
-        return "Datatype["+x+"]";
+        return String.format("%s[%s]", className, x);
     }
 
     @Override

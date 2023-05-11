@@ -68,28 +68,4 @@ public class EachOf extends TripleExpr {
         return Objects.equals(tripleExprs, other.tripleExprs);
     }
 
-    @Override
-        public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-    //        iOut.println("EachOf");
-    //        iOut.incIndent();
-    //        expressions().forEach(tExpr->tExpr.print(iOut, nFmt));
-    //        iOut.decIndent();
-    //        iOut.println("/EachOf");
-
-            iOut.println("EachOf");
-            iOut.incIndent();
-            int idx = 0;
-            for ( TripleExpr tExpr : tripleExprs) {
-                idx++;
-                iOut.printf("%d : ", idx);
-                tExpr.print(iOut, nFmt);
-            }
-            iOut.decIndent();
-            iOut.println("/EachOf");
-        }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName()+"["+ getTripleExprs()+"]";
-    }
 }

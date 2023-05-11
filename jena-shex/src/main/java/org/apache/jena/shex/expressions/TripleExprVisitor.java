@@ -19,10 +19,10 @@
 package org.apache.jena.shex.expressions;
 
 public interface TripleExprVisitor {
-    public default void visit(TripleExprCardinality tripleExpr) {}
-    public default void visit(EachOf tripleExpr) {}
-    public default void visit(OneOf tripleExpr) {}
-    public default void visit(TripleExprEmpty tripleExpr) {}
-    public default void visit(TripleExprRef tripleExpr) {}
-    public default void visit(TripleConstraint tripleExpr) {}
+    public default void visit(TripleExprCardinality tripleExprCardinality) {}
+    public default void visit(EachOf eachOf) {}
+    public default void visit(OneOf oneOf) {}
+    public default void visit(TripleExprEmpty tripleExprEmpty) {}
+    public default void visit(TripleExprRef tripleExprRef) {}
+    public default void visit(TripleConstraint tripleConstraint) {}
 }

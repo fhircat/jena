@@ -20,9 +20,7 @@ package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.sys.ShexLib;
 
@@ -50,23 +48,9 @@ public class ValueSetItem {
         return iriStr == null && langStr == null && literal == null;
     }
 
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        if ( iriStr != null ) nFmt.formatURI(out, iriStr);
-        else if ( langStr != null ) out.printf("@%s", langStr);
-        else if ( literal != null ) nFmt.format(out, literal);
-        if ( isStem )
-            out.print("~");
-    }
-
     @Override
     public String toString() {
-        String str = "invalid";
-        if ( iriStr != null ) str = "<"+iriStr+">";
-        else if ( langStr != null ) str = "@"+langStr;
-        else if ( literal != null ) str = ShexLib.strDatatype(literal);
-        if ( isStem )
-            str = str+"~";
-        return str;
+        return PrettyPrinter.asPrettyString(this);
     }
 
     @Override

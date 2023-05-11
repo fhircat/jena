@@ -18,4 +18,4 @@
 
 package org.apache.jena.shex.expressions;
 
-public interface ShapeElement extends Satisfies, ShexPrintable {}
+public interface ShapeElement extends Satisfies {}

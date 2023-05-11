@@ -25,7 +25,7 @@ import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.sys.ValidationContext;
 
-/** A labelled ShEx shape. */
+/** A labelled shape expression. */
 public class ShapeDecl {
     private final Node label;
     private ShapeExpr shExpression;
@@ -54,22 +54,6 @@ public class ShapeDecl {
         } finally {
             vCxt.finishValidate(this, data);
         }
-    }
-
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        iOut.printf("Shape: ");
-        if ( SysShex.startNode.equals(getLabel()) )
-            iOut.print("START");
-        else
-            nFmt.format(iOut, getLabel());
-        iOut.println();
-        iOut.incIndent();
-        // ShapeExpressionAND:
-        // Consolidate adjacent TripleConstraints.
-        ShapeExpr shExpr = getShapeExpression();
-        if (shExpr != null)
-            shExpr.print(iOut, nFmt);
-        iOut.decIndent();
     }
 
     @Override

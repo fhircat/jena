@@ -23,6 +23,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
+import java.util.StringJoiner;
+
 public class ShapeExternal extends ShapeExpr {
 
     public ShapeExternal() {
@@ -35,18 +37,8 @@ public class ShapeExternal extends ShapeExpr {
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println("EXTERNAL");
-    }
-
-    @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprExternal []";
     }
 
     @Override

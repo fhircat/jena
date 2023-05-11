@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
@@ -27,15 +28,6 @@ import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeNot extends ShapeExpr {
-
-//    public static ShapeExpression create(List<ShapeExpression> args) {
-//        if ( args.size() == 0 )
-//            return null;
-//        if ( args.size() != 1 )
-//            throw new InternalErrorException("ShapeExprNOT.create");
-//        ShapeExpression shapeExpr = args.get(0);
-//        return new ShapeExpressionNOT(shapeExpr);
-//    }
 
     public static ShapeExpr create (ShapeExpr subExpr) {
         return new ShapeNot(subExpr);
@@ -66,17 +58,6 @@ public class ShapeNot extends ShapeExpr {
     @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("NOT ");
-        shapeExpr.print(out, nFmt);
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprNOT["+ shapeExpr +"]";
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.jena.shex.expressions;
 import static java.lang.String.format;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.sys.ReportItem;
@@ -81,13 +82,16 @@ public class StrLengthConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        return "StrLength["+lengthType.label()+" "+length+"]";
+        return new StringJoiner(", ", StrLengthConstraint.class.getSimpleName() + "[", "]")
+                .add("lengthType=" + lengthType.label())
+                .add("length=" + length)
+                .toString();
     }
 
     @Override

@@ -18,22 +18,19 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.atlas.lib.NotImplemented;
-import org.apache.jena.riot.out.NodeFormatter;
+/** Visitor for NodeConstraintComponents. */
+public interface NodeConstraintComponentVisitor {
 
-/** Printable */
-public interface ShexPrintable {
+    public default void visit(NodeKindConstraint nodeKindCstr) {}
 
-    public default void print() {
-        ShexPrintOps.print(this);
-    }
+    public default void visit(DatatypeConstraint datatypeCstr) {}
 
-    public default void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        throw new NotImplemented(this.getClass().getSimpleName().toString()+".print");
-    }
+    public default void visit(NumLengthConstraint numLengthCstr) {}
+    public default void visit(NumRangeConstraint numRangeCstr) {}
 
-    public default String asString() {
-        return ShexPrintOps.asString(this);
-    }
+    public default void visit(StrRegexConstraint strRegexCstr) {}
+    public default void visit(StrLengthConstraint strLengthCstr) {}
+
+    public default void visit(ValueConstraint valueCstr) {}
+
 }

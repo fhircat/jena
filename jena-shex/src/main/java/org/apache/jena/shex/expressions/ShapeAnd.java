@@ -20,6 +20,7 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
@@ -30,8 +31,6 @@ import org.apache.jena.shex.sys.ValidationContext;
 public class ShapeAnd extends ShapeExpr {
 
     // Could pull out ShapeExpressionN
-    // [ ] print
-    // [ ] Most of equals.
 
     public static ShapeExpr create(List<ShapeExpr> subExprs) {
         if ( subExprs.size() == 0 )
@@ -66,26 +65,6 @@ public class ShapeAnd extends ShapeExpr {
     @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        //out.printf("AND(%d)\n", shapeExpressions.size());
-        out.println("AND");
-        int idx = 0;
-        for ( ShapeExpr shExpr : shapeExprs) {
-            idx++;
-            out.printf("%d -", idx);
-            out.incIndent(4);
-            shExpr.print(out, nFmt);
-            out.decIndent(4);
-        }
-        out.println("/AND");
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprAnd "+ getShapeExprs();
     }
 
     @Override

@@ -21,9 +21,6 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.riot.out.NodeFormatter;
-
 public class TripleExprCardinality extends TripleExpr {
 
     private final TripleExpr subExpr;
@@ -74,23 +71,4 @@ public class TripleExprCardinality extends TripleExpr {
         return Objects.equals(this.subExpr, other.subExpr);
     }
 
-    @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        String s = cardinalityString();
-        iOut.println("Cardinality");
-        if ( ! s.isEmpty() )
-            iOut.println("Cardinality = "+s);
-        iOut.incIndent();
-        subExpr.print(iOut, nFmt);
-        iOut.decIndent();
-        iOut.println("/Cardinality");
-    }
-
-    @Override
-    public String toString() {
-        String s = cardinalityString();
-        if ( s.isEmpty() )
-            return "Cardinality [{-} other="+ subExpr +"]";
-        return "Cardinality ["+s+" other="+ subExpr +"]";
-    }
 }

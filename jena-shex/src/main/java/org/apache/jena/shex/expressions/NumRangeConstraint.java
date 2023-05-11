@@ -21,6 +21,7 @@ package org.apache.jena.shex.expressions;
 import static java.lang.String.format;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFmtLib;
@@ -85,7 +86,7 @@ public class NumRangeConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -108,6 +109,12 @@ public class NumRangeConstraint extends NodeConstraintComponent {
 
     @Override
     public String toString() {
-        return "NumRange["+rangeKind.label()+" "+NodeFmtLib.displayStr(value)+"]";
+        // TODO uses NodeFmtLib, why not our internal pretty printer ?
+        return new StringJoiner(", ", NumRangeConstraint.class.getSimpleName() + "[", "]")
+                .add("rangeKind=" + rangeKind.label())
+                .add("value=" + NodeFmtLib.displayStr(value))
+                .add("numericValue=" + numericValue)
+                .toString();
     }
+
 }

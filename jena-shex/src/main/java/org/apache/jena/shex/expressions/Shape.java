@@ -31,25 +31,13 @@ public class Shape extends ShapeExpr {
     // [shex] This is the inlineShapeDefinition
     // Can we combine with a top-level ShexShape?
 
-    /*
-    Shape {
-        id:shapeExprLabel?
-        closed:BOOL?
-        extra:[IRIREF]?
-        expression:tripleExpr?
-        semActs:[SemAct+]?
-        annotations:[Annotation+]? }
-    */
-
     private Node label;
     private Set<Node> extras;
     private boolean closed;
-    //extra:[IRIREF]?
     private TripleExpr tripleExpr;
-    //semActs:[SemAct+]?
-    //annotations:[Annotation+]?
     public static Builder newBuilder() { return new Builder(); }
 
+    // TODO why a Shape has a label while the other shape expressions do not ?
     private Shape(Node label, Set<Node> extras, boolean closed, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
         this.label = label;
@@ -82,34 +70,18 @@ public class Shape extends ShapeExpr {
     }
 
     @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        iOut.print("Shape");
-        if ( label != null ) {
-            iOut.print(" ");
-            nFmt.format(iOut,  label);
-        }
-        iOut.println();
-        iOut.incIndent();
-        if ( closed )
-            iOut.println("CLOSED");
-        iOut.println("TripleExpression");
-        iOut.incIndent();
-        if ( tripleExpr != null )
-            tripleExpr.print(iOut, nFmt);
-        else
-            iOut.println("<none>");
-        iOut.decIndent();
-        iOut.decIndent();
-    }
-
-    @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        return "Shape: "+((label==null)?"":label);
+        return new StringJoiner(", ", Shape.class.getSimpleName() + "[", "]")
+                .add("label=" + label)
+                .add("extras=" + extras)
+                .add("closed=" + closed)
+                .add("tripleExpr=" + tripleExpr)
+                .toString();
     }
 
     @Override
@@ -134,10 +106,7 @@ public class Shape extends ShapeExpr {
         private Set<Node> extras = null;
         private List<SemAct> semActs;
         private Optional<Boolean> closed = null;
-        //extra:[IRIREF]?
         private TripleExpr tripleExpr = null;
-        //semActs:[SemAct+]?
-        //annotations:[Annotation+]?
 
         Builder() {}
 

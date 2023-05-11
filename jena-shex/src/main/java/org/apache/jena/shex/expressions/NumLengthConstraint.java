@@ -21,6 +21,7 @@ package org.apache.jena.shex.expressions;
 import static java.lang.String.format;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -128,13 +129,16 @@ public class NumLengthConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        return "NumLength["+lengthType.label()+" "+length+"]";
+        return new StringJoiner(", ", NumLengthConstraint.class.getSimpleName() + "[", "]")
+                .add("lengthType=" + lengthType.label())
+                .add("length=" + length)
+                .toString();
     }
 
     @Override

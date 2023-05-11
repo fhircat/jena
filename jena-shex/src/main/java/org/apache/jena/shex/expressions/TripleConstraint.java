@@ -20,9 +20,7 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 
 public class TripleConstraint extends TripleExpr {
 
@@ -67,31 +65,6 @@ public class TripleConstraint extends TripleExpr {
         visitor.visit(this);
     }
 
-    @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        iOut.print("TripleConstraint");
-        if ( label != null ) {
-            iOut.print(" $");
-            nFmt.format(iOut, label);
-        }
-        iOut.println(" {");
-        iOut.incIndent();
-        iOut.printf("predicate = ");
-        if (inverse)
-            iOut.print("^");
-        nFmt.format(iOut, predicate);
-        iOut.println();
-        valueExpr.print(iOut, nFmt);
-        /*
-        if ( cardinality != null ) {
-            iOut.print(cardinality.toString());
-            iOut.println();
-        }*/
-        iOut.decIndent();
-        iOut.println("}");
-    }
-
-
 //
 //    @Override
 //    public int hashCode() {
@@ -121,18 +94,6 @@ public class TripleConstraint extends TripleExpr {
     @Override
     public boolean equals(Object obj) {
         return this == obj;
-    }
-
-    @Override
-    public String toString() {
-        String cardStr = "";
-        /*
-        if ( ! cardinalityString().isEmpty() )
-            cardStr = "cardinality="+cardinalityString()+", "; */
-        String s = "TripleConstraint";
-        if ( label != null )
-            s = s+"($"+label+")";
-        return s+ " [predicate=" + predicate + ", "+cardStr+"shapeExpr=" + valueExpr + "]";
     }
 
 }

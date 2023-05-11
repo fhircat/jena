@@ -211,15 +211,15 @@ public class ShExC {
 
     private static class CheckFacets implements ShapeExprVisitor {
         @Override
-        public void visit(NodeConstraint nc) {
-            if ( nc == null )
+        public void visit(NodeConstraint nodeConstraint) {
+            if ( nodeConstraint == null )
                 return;
             // XXX [NodeConstraint]
             DatatypeConstraint dtConstraint = null;
             Set<StrLengthKind> x = new HashSet<>(3);
-            for ( NodeConstraintComponent expr: nc.getComponents() ) {
+            for ( NodeConstraintComponent expr: nodeConstraint.getComponents() ) {
                 // Visitor!
-                if ( expr instanceof StrLengthConstraint ) {
+                if ( expr instanceof StrLengthConstraint) {
                     StrLengthConstraint constraint = (StrLengthConstraint)expr;
                     StrLengthKind lenType = constraint.getLengthType();
                     if ( x.contains(lenType) )
@@ -237,7 +237,7 @@ public class ShExC {
                 }
 
                 if ( dtConstraint != null ) {
-                    if ( expr instanceof NumLengthConstraint || expr instanceof NumRangeConstraint ) {
+                    if ( expr instanceof NumLengthConstraint || expr instanceof NumRangeConstraint) {
                         RDFDatatype rdfDT = dtConstraint.getRDFDatatype();
                         if ( ! ( rdfDT instanceof XSDDatatype ) ) {
                             String msg = format("Numeric facet: Not a numeric: <%s> ", dtConstraint.getDatatypeURI());

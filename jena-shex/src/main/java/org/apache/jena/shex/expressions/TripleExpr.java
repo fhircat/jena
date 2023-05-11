@@ -24,14 +24,8 @@ import org.apache.jena.shex.sys.ValidationContext;
 import java.util.List;
 import java.util.Set;
 
-public abstract class TripleExpr implements ShexPrintable {
+public abstract class TripleExpr {
 
-    // tripleExpr = EachOf | OneOf | TripleConstraint | tripleExprRef
-
-    //cardinality, semActs, annotation.
-
-    // [shex] annotations
-    // [shex] semanticActions
     private List<SemAct> semActs;
 
     protected TripleExpr(List<SemAct> semActs) {
@@ -62,6 +56,6 @@ public abstract class TripleExpr implements ShexPrintable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()+"[]";
+        return PrettyPrinter.asPrettyString(this);
     }
 }

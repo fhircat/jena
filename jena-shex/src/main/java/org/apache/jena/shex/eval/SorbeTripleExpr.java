@@ -34,9 +34,9 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(EachOf tripleExpr) {
-                List<TripleExpr> subExpressions = new ArrayList<>(tripleExpr.getTripleExprs().size());
-                for (TripleExpr te : tripleExpr.getTripleExprs()) {
+            public void visit(EachOf eachOf) {
+                List<TripleExpr> subExpressions = new ArrayList<>(eachOf.getTripleExprs().size());
+                for (TripleExpr te : eachOf.getTripleExprs()) {
                     te.visit(this);
                     subExpressions.add(getResult());
                 }
@@ -44,9 +44,9 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(OneOf tripleExpr) {
-                List<TripleExpr> subExpressions = new ArrayList<>(tripleExpr.getTripleExprs().size());
-                for (TripleExpr te : tripleExpr.getTripleExprs()) {
+            public void visit(OneOf oneOf) {
+                List<TripleExpr> subExpressions = new ArrayList<>(oneOf.getTripleExprs().size());
+                for (TripleExpr te : oneOf.getTripleExprs()) {
                     te.visit(this);
                     subExpressions.add(getResult());
                 }
@@ -54,29 +54,29 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(TripleExprEmpty tripleExpr) {
+            public void visit(TripleExprEmpty tripleExprEmpty) {
                 setResult(TripleExprEmpty.get());
             }
 
             @Override
-            public void visit(TripleExprRef tripleExpr) {
-                schema.getTripleExpression(tripleExpr.getLabel()).visit(this);
+            public void visit(TripleExprRef tripleExprRef) {
+                schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
             }
 
             @Override
-            public void visit(TripleConstraint tripleExpr) {
-                setResult(TripleConstraint.create(tripleExpr.getLabel(), tripleExpr.getPredicate(), tripleExpr.isInverse(),
-                        tripleExpr.getValueExpr(), null));
+            public void visit(TripleConstraint tripleConstraint) {
+                setResult(TripleConstraint.create(tripleConstraint.getLabel(), tripleConstraint.getPredicate(), tripleConstraint.isInverse(),
+                        tripleConstraint.getValueExpr(), null));
             }
 
             @Override
-            public void visit(TripleExprCardinality expr) {
-                TripleExprVisitor.super.visit(expr);
+            public void visit(TripleExprCardinality tripleExprCardinality) {
+                TripleExprVisitor.super.visit(tripleExprCardinality);
 
-                TripleExpr subExpr = expr.getSubExpr();
+                TripleExpr subExpr = tripleExprCardinality.getSubExpr();
                 subExpr.visit(this);
-                Cardinality card = expr.getCardinality();
-                if (card.equals(Cardinality.PLUS) && containsEmpty(expr, schema))
+                Cardinality card = tripleExprCardinality.getCardinality();
+                if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
                     setResult(new TripleExprCardinality(subExpr, Cardinality.STAR, null));
                 else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
                         || card.equals(Cardinality.PLUS) || card.equals(IntervalComputation.ZERO_INTERVAL))
@@ -129,18 +129,18 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(TripleConstraint tc) {
+            public void visit(TripleConstraint tripleConstraint) {
                 result = false;
             }
 
             @Override
-            public void visit(TripleExprEmpty expr) {
+            public void visit(TripleExprEmpty tripleExprEmpty) {
                 result = false;
             }
 
             @Override
-            public void visit(EachOf expr) {
-                for (TripleExpr subExpr : expr.getTripleExprs()) {
+            public void visit(EachOf eachOf) {
+                for (TripleExpr subExpr : eachOf.getTripleExprs()) {
                     subExpr.visit(this);
                     if (!result)
                         return;
@@ -148,8 +148,8 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(OneOf expr) {
-                for (TripleExpr subExpr : expr.getTripleExprs()) {
+            public void visit(OneOf oneOf) {
+                for (TripleExpr subExpr : oneOf.getTripleExprs()) {
                     subExpr.visit(this);
                     if (result)
                         return;
@@ -157,17 +157,17 @@ public class SorbeTripleExpr {
             }
 
             @Override
-            public void visit(TripleExprCardinality expr) {
-                if (expr.min() == 0) {
+            public void visit(TripleExprCardinality tripleExprCardinality) {
+                if (tripleExprCardinality.min() == 0) {
                     result = true;
                 } else {
-                    expr.getSubExpr().visit(this);
+                    tripleExprCardinality.getSubExpr().visit(this);
                 }
             }
 
             @Override
-            public void visit(TripleExprRef expr) {
-                schema.getTripleExpression(expr.getLabel()).visit(this);
+            public void visit(TripleExprRef tripleExprRef) {
+                schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
             }
         }
 

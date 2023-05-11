@@ -219,13 +219,4 @@ public class ShexSchema {
         return semActs;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder s = new StringBuilder();
-        for (ShapeDecl d : shapes) {
-            s.append(String.format("%s -> %s\n", d.getLabel(),
-                    d.getShapeExpression() == null ? "empty expr" : d.getShapeExpression().asString()));
-        }
-        return s.toString();
-    }
 }

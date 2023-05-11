@@ -43,41 +43,41 @@ public class TripleExprWalker implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(EachOf object) {
-        before(object);
-        object.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
-        after(object);
+    public void visit(EachOf eachOf) {
+        before(eachOf);
+        eachOf.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
+        after(eachOf);
     }
 
     @Override
-    public void visit(OneOf object) {
-        before(object);
-        object.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
-        after(object);
+    public void visit(OneOf oneOf) {
+        before(oneOf);
+        oneOf.getTripleExprs().forEach(tripleExpr->tripleExpr.visit(this));
+        after(oneOf);
     }
 
     @Override
-    public void visit(TripleExprCardinality object) {
-        before(object);
-        object.getSubExpr().visit(this);
-        after(object);
+    public void visit(TripleExprCardinality tripleExprCardinality) {
+        before(tripleExprCardinality);
+        tripleExprCardinality.getSubExpr().visit(this);
+        after(tripleExprCardinality);
 
     }
 
-    @Override public void visit(TripleExprEmpty object) {
-        before(object);
-        after(object);
+    @Override public void visit(TripleExprEmpty tripleExprEmpty) {
+        before(tripleExprEmpty);
+        after(tripleExprEmpty);
     }
 
-    @Override public void visit(TripleExprRef object) {
-        before(object);
-        after(object);
+    @Override public void visit(TripleExprRef tripleExprRef) {
+        before(tripleExprRef);
+        after(tripleExprRef);
     }
 
-    @Override public void visit(TripleConstraint object) {
-        before(object);
+    @Override public void visit(TripleConstraint tripleConstraint) {
+        before(tripleConstraint);
         if ( shapeVisitor != null )
-            object.getValueExpr().visit(shapeVisitor);
-        after(object);
+            tripleConstraint.getValueExpr().visit(shapeVisitor);
+        after(tripleConstraint);
     }
 }

@@ -20,6 +20,7 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
@@ -67,26 +68,6 @@ public class ShapeOr extends ShapeExpr {
     @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println("OR");
-        //out.printf("OR(%d)\n", shapeExpressions.size());
-        int idx = 0;
-        for ( ShapeExpr shExpr : shapeExprs) {
-            idx++;
-            out.printf("%d -", idx);
-            out.incIndent(4);
-            shExpr.print(out, nFmt);
-            out.decIndent(4);
-        }
-        out.println("/OR");
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprOr "+ getShapeExprs();
     }
 
     @Override

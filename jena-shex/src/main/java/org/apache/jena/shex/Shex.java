@@ -33,6 +33,7 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.RiotLib;
+import org.apache.jena.shex.expressions.PrettyPrinter;
 import org.apache.jena.shex.parser.ShExC;
 import org.apache.jena.shex.parser.ShExJ;
 import org.apache.jena.shex.sys.SysShex;
@@ -139,12 +140,11 @@ public class Shex {
             }
 
             if ( ! shexSchema.getShapes().isEmpty() ) {
-                boolean shapePrinted = false;
                 NodeFormatter nFmt = new NodeFormatterTTL(null, shexSchema.getPrefixMap());
                 for ( ShapeDecl shape : shexSchema.getShapes() ) {
                     if ( havePrinted )
                         iOut.println();
-                    shape.print(iOut, nFmt);
+                    PrettyPrinter.print(shape, iOut, nFmt);
                     havePrinted = true;
                 }
             }
@@ -171,7 +171,6 @@ public class Shex {
                         iOut.decIndent(4);
                     }
                 });
-                havePrinted = true;
             }
         } finally {
             iOut.flush();

@@ -160,39 +160,39 @@ public class ShapeEval {
         //Walker
         return new TripleExprVisitor() {
             @Override
-            public void visit(TripleExprCardinality expr) {
-                expr.visit(step);
-                expr.getSubExpr().visit(this);
+            public void visit(TripleExprCardinality tripleExprCardinality) {
+                tripleExprCardinality.visit(step);
+                tripleExprCardinality.getSubExpr().visit(this);
             }
 
             @Override
-            public void visit(EachOf expr) {
-                expr.visit(step);
-                expr.getTripleExprs().forEach(ex -> ex.visit(this));
+            public void visit(EachOf eachOf) {
+                eachOf.visit(step);
+                eachOf.getTripleExprs().forEach(ex -> ex.visit(this));
             }
 
             @Override
-            public void visit(OneOf expr) {
-                expr.visit(step);
-                expr.getTripleExprs().forEach(ex -> ex.visit(this));
+            public void visit(OneOf oneOf) {
+                oneOf.visit(step);
+                oneOf.getTripleExprs().forEach(ex -> ex.visit(this));
             }
 
             @Override
-            public void visit(TripleExprEmpty expr) {
-                expr.visit(step);
+            public void visit(TripleExprEmpty tripleExprEmpty) {
+                tripleExprEmpty.visit(step);
             }
 
             @Override
-            public void visit(TripleExprRef expr) {
-                expr.visit(step);
-                if ( expr.getLabel() == null )
-                    throw new ShexException("Failed to dereference : "+expr.getLabel());
-                shapes.getTripleExpression(expr.getLabel()).visit(this);
+            public void visit(TripleExprRef tripleExprRef) {
+                tripleExprRef.visit(step);
+                if ( tripleExprRef.getLabel() == null )
+                    throw new ShexException("Failed to dereference : "+ tripleExprRef.getLabel());
+                shapes.getTripleExpression(tripleExprRef.getLabel()).visit(this);
             }
 
             @Override
-            public void visit(TripleConstraint expr) {
-                expr.visit(step);
+            public void visit(TripleConstraint tripleConstraint) {
+                tripleConstraint.visit(step);
             }
         };
     }

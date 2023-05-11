@@ -30,22 +30,22 @@ class IntervalComputation implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(TripleConstraint tc) {
+    public void visit(TripleConstraint tripleConstraint) {
 
-        int nbOcc = bag.get(tc);
+        int nbOcc = bag.get(tripleConstraint);
         setResult(new Cardinality(nbOcc, nbOcc));
     }
 
     @Override
-    public void visit(TripleExprEmpty emptyTripleExpression) {
+    public void visit(TripleExprEmpty tripleExprEmpty) {
         setResult(Cardinality.STAR);
     }
 
     @Override
-    public void visit(OneOf expr) {
+    public void visit(OneOf oneOf) {
         Cardinality res = ZERO_INTERVAL; // the neutral element for addition
 
-        for (TripleExpr subExpr : expr.getTripleExprs()) {
+        for (TripleExpr subExpr : oneOf.getTripleExprs()) {
             subExpr.visit(this);
             res = add(res, getResult());
         }
@@ -53,10 +53,10 @@ class IntervalComputation implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(EachOf expr) {
+    public void visit(EachOf eachOf) {
         Cardinality res = Cardinality.STAR; // the neutral element for intersection
 
-        for (TripleExpr subExpr : expr.getTripleExprs()) {
+        for (TripleExpr subExpr : eachOf.getTripleExprs()) {
             subExpr.visit(this);
             res = inter(res, getResult());
         }
@@ -64,11 +64,11 @@ class IntervalComputation implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(TripleExprCardinality expression) {
+    public void visit(TripleExprCardinality tripleExprCardinality) {
 
-        Cardinality card = new Cardinality(expression.min(), expression.max());
-        TripleExpr subExpr = expression.getSubExpr();
-        boolean isEmptySubbag = isEmptySubbag(bag, expression, vCxt);
+        Cardinality card = new Cardinality(tripleExprCardinality.min(), tripleExprCardinality.max());
+        TripleExpr subExpr = tripleExprCardinality.getSubExpr();
+        boolean isEmptySubbag = isEmptySubbag(bag, tripleExprCardinality, vCxt);
 
         if (card.equals(Cardinality.STAR)) {
             if (isEmptySubbag) {
@@ -109,8 +109,8 @@ class IntervalComputation implements TripleExprVisitor {
     }
 
     @Override
-    public void visit(TripleExprRef expr) {
-        vCxt.getShapes().getTripleExpression(expr.getLabel()).visit(this);
+    public void visit(TripleExprRef tripleExprRef) {
+        vCxt.getShapes().getTripleExpression(tripleExprRef.getLabel()).visit(this);
     }
 
     private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression,

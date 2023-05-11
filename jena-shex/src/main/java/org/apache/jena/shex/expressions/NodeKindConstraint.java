@@ -21,10 +21,9 @@ package org.apache.jena.shex.expressions;
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ValidationContext;
 
@@ -57,28 +56,24 @@ public class NodeKindConstraint extends NodeConstraintComponent {
                     return null;
                 break;
             default :
-//                data.isNodeTriple()
-//                data.isNodeGraph()
                 break;
         }
-        // Bad.
+        // TODO Bad.
         String msg = toString()+" : Expected "+nodeKind.toString()+" for "+displayStr(n);
         return new ReportItem(msg, n);
     }
 
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        return "NodeKind: "+nodeKind.toString();
+        return new StringJoiner(", ", NodeKindConstraint.class.getSimpleName() + "[", "]")
+                .add("nodeKind=" + nodeKind)
+                .toString();
     }
 
     @Override

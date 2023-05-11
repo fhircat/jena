@@ -150,7 +150,7 @@ public class WriterShExC {
         }
     }
 
-    private static class PrinterShExC implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintVisitor {
+    private static class PrinterShExC implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintComponentVisitor {
         final IndentedWriter out;
         final NodeFormatter formatter;
 
@@ -221,13 +221,13 @@ public class WriterShExC {
                 out.print(".");
                 return;
             }
-            item.print(out, formatter);
+            PrettyPrinter.print(item, out, formatter);
         }
 
         @Override
-        public void visit(ShapeAnd shape) {
-            List<ShapeExpr> shapes = shape.getShapeExprs();
-            printList(out, shape.getShapeExprs(), null, null, " AND",
+        public void visit(ShapeAnd shapeAnd) {
+            List<ShapeExpr> shapes = shapeAnd.getShapeExprs();
+            printList(out, shapeAnd.getShapeExprs(), null, null, " AND",
                       x->{
                           // Avoid flattening S1 AND ( S2 AND S3 )
                           boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
@@ -240,9 +240,9 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeOr shape) {
-            List<ShapeExpr> shapes = shape.getShapeExprs();
-            printList(out, shape.getShapeExprs(), null, null, " OR",
+        public void visit(ShapeOr shapeOr) {
+            List<ShapeExpr> shapes = shapeOr.getShapeExprs();
+            printList(out, shapeOr.getShapeExprs(), null, null, " OR",
                       x->{
                           // Avoid flattening S1 OR ( S2 OR S3 )
                           boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
@@ -255,9 +255,9 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeNot shape) {
+        public void visit(ShapeNot shapeNot) {
             out.print("NOT ");
-            ShapeExpr shExpr = shape.getShapeExpr();
+            ShapeExpr shExpr = shapeNot.getShapeExpr();
             boolean needParens = true;
 
             if ( shExpr instanceof Shape)
@@ -268,20 +268,20 @@ public class WriterShExC {
             if ( needParens ) {
                 out.print("( ");
             }
-            printShapeExpression(shape.getShapeExpr());
+            printShapeExpression(shapeNot.getShapeExpr());
             if ( needParens ) {
                 out.print(" ) ");
             }
         }
 
         @Override
-        public void visit(ShapeExprRef shape) {
+        public void visit(ShapeExprRef shapeExprRef) {
             out.print("@");
-            printNode(shape.getLabel());
+            printNode(shapeExprRef.getLabel());
         }
 
         @Override
-        public void visit(ShapeExternal shape) {
+        public void visit(ShapeExternal shapeExternal) {
             out.println("EXTERNAL");
         }
 
@@ -304,58 +304,58 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(StrRegexConstraint constraint) {
+        public void visit(StrRegexConstraint strRegexCstr) {
             out.print("/");
             //[LAYOUT] Escapes
-            String pattern = constraint.getPattern();
+            String pattern = strRegexCstr.getPattern();
             regexStringEsc(out, pattern);
             out.print("/");
-            if ( constraint.getFlagsStr() != null ) {
-                out.print(constraint.getFlagsStr());
+            if ( strRegexCstr.getFlagsStr() != null ) {
+                out.print(strRegexCstr.getFlagsStr());
             }
         }
 
         @Override
-        public void visit(StrLengthConstraint constraint) {
+        public void visit(StrLengthConstraint strLengthCstr) {
             //stringLength       ::=      "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-            out.print(constraint.getLengthType().label().toUpperCase(Locale.ROOT));
+            out.print(strLengthCstr.getLengthType().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            out.print(Integer.toString(constraint.getLength()));
+            out.print(Integer.toString(strLengthCstr.getLength()));
         }
 
         @Override
-        public void visit(DatatypeConstraint constraint) {
-            formatter.formatURI(out, constraint.getDatatypeURI());
+        public void visit(DatatypeConstraint datatypeCstr) {
+            formatter.formatURI(out, datatypeCstr.getDatatypeURI());
         }
 
         @Override
-        public void visit(NodeKindConstraint constraint) {
-            out.print(constraint.getNodeKind().label().toUpperCase(Locale.ROOT));
+        public void visit(NodeKindConstraint nodeKindCstr) {
+            out.print(nodeKindCstr.getNodeKind().label().toUpperCase(Locale.ROOT));
         }
 
         // [30]        numericFacet       ::=      numericRange numericLiteral | numericLength INTEGER
 
         @Override
-        public void visit(NumLengthConstraint constraint) {
+        public void visit(NumLengthConstraint numLengthCstr) {
             // [32]        numericLength      ::=      "TOTALDIGITS" | "FRACTIONDIGITS"
-            out.print(constraint.getLengthType().label().toUpperCase(Locale.ROOT));
+            out.print(numLengthCstr.getLengthType().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            out.print(Integer.toString(constraint.getLength()));
+            out.print(Integer.toString(numLengthCstr.getLength()));
         }
 
         @Override
-        public void visit(NumRangeConstraint constraint) {
+        public void visit(NumRangeConstraint numRangeCstr) {
             // [31]        numericRange       ::=      "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
-            out.print(constraint.getRangeKind().label().toUpperCase(Locale.ROOT));
+            out.print(numRangeCstr.getRangeKind().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            printNode(constraint.getValue());
+            printNode(numRangeCstr.getValue());
         }
 
         @Override
-        public void visit(ValueConstraint constraint) {
+        public void visit(ValueConstraint valueCstr) {
             // [49]        valueSetValue      ::=      iriRange | literalRange | languageRange | exclusion+
             out.print("[ ");
-            constraint.forEach(valueSetRange->{
+            valueCstr.forEach(valueSetRange->{
                 printValueSetItem(valueSetRange.item());
                 valueSetRange.exclusions(vsItem->{
                     out.print(" -");
@@ -365,26 +365,26 @@ public class WriterShExC {
             out.print(" ]");
         }
 
-        @Override public void visit(TripleExprCardinality tripleExpr) {
+        @Override public void visit(TripleExprCardinality tripleExprCardinality) {
             out.incIndent();
             out.print("( ");
-            printTripleExpressionNoSep(tripleExpr.getSubExpr());
+            printTripleExpressionNoSep(tripleExprCardinality.getSubExpr());
             out.print(" )");
-            String x = tripleExpr.cardinalityString();
+            String x = tripleExprCardinality.cardinalityString();
             out.print(x);
             out.decIndent();
         }
 
-        @Override public void visit(EachOf tripleExpr) {
-            printList(out, tripleExpr.getTripleExprs(), "(", ")", null, tExpr->{
+        @Override public void visit(EachOf eachOf) {
+            printList(out, eachOf.getTripleExprs(), "(", ")", null, tExpr->{
                 out.incIndent();
                 printTripleExpression(tExpr);
                 out.decIndent();
             });
             out.println();
         }
-        @Override public void visit(OneOf tripleExpr) {
-            printList(out, tripleExpr.getTripleExprs(), "(", ")", "|", tExpr->{
+        @Override public void visit(OneOf oneOf) {
+            printList(out, oneOf.getTripleExprs(), "(", ")", "|", tExpr->{
                     out.incIndent();
                     printTripleExpression(tExpr);
                     out.decIndent();
@@ -392,21 +392,21 @@ public class WriterShExC {
            out.println();
         }
 
-        @Override public void visit(TripleExprEmpty tripleExpr) { /* Nothing */ }
+        @Override public void visit(TripleExprEmpty tripleExprEmpty) { /* Nothing */ }
 
-        @Override public void visit(TripleExprRef tripleExpr) {
+        @Override public void visit(TripleExprRef tripleExprRef) {
             out.print("&");
-            printNode(tripleExpr.getLabel());
+            printNode(tripleExprRef.getLabel());
         }
 
-        @Override public void visit(TripleConstraint tripleExpr) {
-            Node predicate = tripleExpr.getPredicate();
+        @Override public void visit(TripleConstraint tripleConstraint) {
+            Node predicate = tripleConstraint.getPredicate();
             //formatter.format(w, node);
-            if ( tripleExpr.isInverse() )
+            if ( tripleConstraint.isInverse() )
                 out.print("^");
             printNode(predicate);
             out.print(" ");
-            printShapeExpression(tripleExpr.getValueExpr());
+            printShapeExpression(tripleConstraint.getValueExpr());
             /*String x =  tripleExpr.cardinalityString();
             if ( x != null && ! x.isEmpty() ) {
                 out.print(" ");

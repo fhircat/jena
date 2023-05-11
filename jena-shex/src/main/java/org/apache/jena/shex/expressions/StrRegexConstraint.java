@@ -21,6 +21,7 @@ package org.apache.jena.shex.expressions;
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 import org.apache.jena.graph.Node;
@@ -75,15 +76,17 @@ public class StrRegexConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        if ( flagsStr != null && ! flagsStr.isEmpty() )
-            return "Pattern["+patternString+"("+flagsStr+")]";
-        return "Pattern["+patternString+"]";
+        return new StringJoiner(", ", StrRegexConstraint.class.getSimpleName() + "[", "]")
+                .add("pattern=" + pattern)
+                .add("patternString='" + patternString + "'")
+                .add("flagsStr='" + flagsStr + "'")
+                .toString();
     }
 
     @Override

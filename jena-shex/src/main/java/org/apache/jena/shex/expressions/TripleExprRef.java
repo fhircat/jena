@@ -20,14 +20,12 @@ package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ShexLib;
 
 public class TripleExprRef extends TripleExpr {
 
-    private Node label;
+    private final Node label;
 
     public static TripleExprRef create (Node label) {
         return new TripleExprRef(label);
@@ -64,15 +62,4 @@ public class TripleExprRef extends TripleExpr {
         return Objects.equals(label, other.label);
     }
 
-    @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        iOut.print("tripleExprRef: ");
-        nFmt.format(iOut, label);
-        iOut.println();
-    }
-
-    @Override
-    public String toString() {
-        return "TripleExpressionRef["+ShexLib.displayStr(label)+"]";
-    }
 }

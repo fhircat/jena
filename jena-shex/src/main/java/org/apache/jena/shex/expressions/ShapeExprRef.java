@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
@@ -52,21 +53,10 @@ public class ShapeExprRef extends ShapeExpr {
         return shape.satisfies(vCxt, data);
     }
 
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("ShapeRef: ");
-        out.print(ShexLib.displayStr(label));
-        out.println();
-    }
 
     @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprRef [ref="+ label +"]";
     }
 
     @Override

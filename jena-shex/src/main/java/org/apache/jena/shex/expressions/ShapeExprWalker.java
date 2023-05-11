@@ -23,18 +23,11 @@ public class ShapeExprWalker implements ShapeExprVisitor {
     private final ShapeExprVisitor beforeVisitor;
     private final ShapeExprVisitor afterVisitor;
     private final TripleExprVisitor tripleExprWalker;
-    private NodeConstraintVisitor nodeConstraintVisitor;
-
-//    public ShapeExpressionWalker(ShapeExpressionVisitor beforeVisitor, ShapeExpressionVisitor afterVisitor) {
-//        this(beforeVisitor, afterVisitor, null, null);
-//    }
+    private NodeConstraintComponentVisitor nodeConstraintVisitor;
 
     public ShapeExprWalker(ShapeExprVisitor beforeVisitor, ShapeExprVisitor afterVisitor,
                            TripleExprVisitor beforeTripleExprVisitor, TripleExprVisitor afterTripleExprVisitor,
-                           NodeConstraintVisitor nodeConstraintVisitor
-                           // NodeConstraintVisitor beforeNodeConstraintVisitor,
-                           //, NodeConstraintVisitor afterNodeConstraintVisitor
-                           ) {
+                           NodeConstraintComponentVisitor nodeConstraintVisitor) {
         this.beforeVisitor = beforeVisitor;
         this.afterVisitor = afterVisitor;
         // Walker because TripleExpr can contain a ShapeExpression
@@ -54,34 +47,34 @@ public class ShapeExprWalker implements ShapeExprVisitor {
             shape.visit(afterVisitor);
     }
 
-    @Override public void visit(ShapeAnd shape) {
-        before(shape);
-        shape.getShapeExprs().forEach(sh->sh.visit(this));
-        after(shape);
+    @Override public void visit(ShapeAnd shapeAnd) {
+        before(shapeAnd);
+        shapeAnd.getShapeExprs().forEach(sh->sh.visit(this));
+        after(shapeAnd);
     }
 
-    @Override public void visit(ShapeOr shape) {
-        before(shape);
-        shape.getShapeExprs().forEach(sh->sh.visit(this));
-        after(shape);
+    @Override public void visit(ShapeOr shapeOr) {
+        before(shapeOr);
+        shapeOr.getShapeExprs().forEach(sh->sh.visit(this));
+        after(shapeOr);
     }
 
-    @Override public void visit(ShapeNot shape) {
-        before(shape);
-        shape.getShapeExpr().visit(this);
-        after(shape);
-    }
-
-    @Override
-    public void visit(ShapeExprRef shape) {
-        before(shape);
-        after(shape);
+    @Override public void visit(ShapeNot shapeNot) {
+        before(shapeNot);
+        shapeNot.getShapeExpr().visit(this);
+        after(shapeNot);
     }
 
     @Override
-    public void visit(ShapeExternal shape) {
-        before(shape);
-        after(shape);
+    public void visit(ShapeExprRef shapeExprRef) {
+        before(shapeExprRef);
+        after(shapeExprRef);
+    }
+
+    @Override
+    public void visit(ShapeExternal shapeExternal) {
+        before(shapeExternal);
+        after(shapeExternal);
     }
 
     @Override

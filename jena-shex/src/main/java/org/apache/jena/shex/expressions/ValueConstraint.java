@@ -20,11 +20,10 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ValidationContext;
@@ -41,11 +40,17 @@ public class ValueConstraint extends NodeConstraintComponent {
         valueSetRanges.forEach(action);
     }
 
+    public List<ValueSetRange> getValueSetRanges() {
+        return valueSetRanges;
+    }
+
     @Override
     public ReportItem nodeSatisfies(ValidationContext vCxt, Node data) {
         boolean b = valueSetRanges.stream().anyMatch(valueSetRange->validateRange(vCxt, valueSetRange, data));
-        if ( !b )
-            return new ReportItem("Value "+ShexLib.displayStr(data)+" not in range: "+asString(), null);
+        if ( !b ) {
+            String s = toString(); // TODO use the pretty print here
+            return new ReportItem("Value " + ShexLib.displayStr(data) + " not in range: " + s, null);
+        }
         return null;
     }
 
@@ -61,34 +66,15 @@ public class ValueConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        if ( valueSetRanges.isEmpty() ) {
-            out.println("[ ]");
-            return;
-        }
-        out.print("[");
-        valueSetRanges.forEach(valueSetRange->{
-            out.print(" ");
-            valueSetRange.item.print(out, nFmt);
-            if ( ! valueSetRange.exclusions.isEmpty() ) {
-                out.print(" -");
-                valueSetRange.exclusions.forEach(ex->{
-                    out.print(" ");
-                    ex.print(out, nFmt);
-                });
-            }
-        });
-        out.println(" ]");
-    }
-
-    @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(NodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
     public String toString() {
-        return "ValueConstraint"+asString();
+        return new StringJoiner(", ", ValueConstraint.class.getSimpleName() + "[", "]")
+                .add("valueSetRanges=" + valueSetRanges)
+                .toString();
     }
 
     @Override

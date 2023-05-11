@@ -18,13 +18,12 @@
 
 package org.apache.jena.shex.expressions;
 
-public interface ShapeExprVisitor //extends NodeConstraintVisitor
-{
-    public default void visit(ShapeAnd shape) {}
-    public default void visit(ShapeOr shape) {}
-    public default void visit(ShapeNot shape) {}
-    public default void visit(ShapeExprRef shape) {}
-    public default void visit(ShapeExternal shape) {}
+public interface ShapeExprVisitor {
+    public default void visit(ShapeAnd shapeAnd) {}
+    public default void visit(ShapeOr shapeOr) {}
+    public default void visit(ShapeNot shapeNot) {}
+    public default void visit(ShapeExprRef shapeExprRef) {}
+    public default void visit(ShapeExternal shapeExternal) {}
     public default void visit(Shape shape) {}
-    public default void visit(NodeConstraint shape) {}
+    public default void visit(NodeConstraint nodeConstraint) {}
 }
