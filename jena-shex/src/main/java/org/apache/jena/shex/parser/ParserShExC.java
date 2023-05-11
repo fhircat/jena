@@ -623,7 +623,7 @@ public class ParserShExC extends LangParserBase {
 
     protected Cardinality cardinalityRange(String image, int line, int column) {
         try {
-            return Cardinality.create(image);
+            return Cardinality.parse(image);
         } catch (Throwable th) {
             throw new ShexParseException("Bad cardinality: "+image, line, column);
         }

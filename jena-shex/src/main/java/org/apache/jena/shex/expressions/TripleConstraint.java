@@ -60,20 +60,8 @@ public class TripleConstraint extends TripleExpression {
         this.predicate = predicate;
         this.reverse = reverse;
         this.shapeExpr = valueExpr;
-        //this.min = (cardinality==null) ? 1 : cardinality.min;
-        //this.max = (cardinality==null) ? 1 : cardinality.max;
     }
 
-    public TripleConstraint(Node label, Node predicate, boolean reverse, ShapeExpr valueExpr, Cardinality cardinality, List<SemAct> semActs) {
-        super(semActs);
-        this.label = label;
-        this.predicate = predicate;
-        this.reverse = reverse;
-        this.shapeExpr = valueExpr;
-        //this.cardinality = cardinality;
-        //this.min = (cardinality==null) ? 1 : cardinality.min;
-        //this.max = (cardinality==null) ? 1 : cardinality.max;
-    }
 
     /*
     public String cardinalityString() {
@@ -140,22 +128,36 @@ public class TripleConstraint extends TripleExpression {
         iOut.println("}");
     }
 
+
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(predicate, reverse, shapeExpr);
+//    }
+//
+//    @Override
+//    public boolean equals(Object obj) {
+//        if ( this == obj )
+//            return true;
+//        if ( obj == null )
+//            return false;
+//        if ( getClass() != obj.getClass() )
+//            return false;
+//        TripleConstraint other = (TripleConstraint)obj;
+//        return /*max == other.max && min == other.min && */Objects.equals(predicate, other.predicate) && reverse == other.reverse
+//               && Objects.equals(shapeExpr, other.shapeExpr);
+//    }
+
+
+    // TODO hashcode and equals and used for testing printing shex schema, but are problematic for validation. Implement an external equality function instead.
     @Override
     public int hashCode() {
-        return Objects.hash(predicate, reverse, shapeExpr);
+        return System.identityHashCode(this);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        TripleConstraint other = (TripleConstraint)obj;
-        return /*max == other.max && min == other.min && */Objects.equals(predicate, other.predicate) && reverse == other.reverse
-               && Objects.equals(shapeExpr, other.shapeExpr);
+        return this == obj;
     }
 
     @Override

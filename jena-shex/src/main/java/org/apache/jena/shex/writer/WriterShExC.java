@@ -368,7 +368,7 @@ public class WriterShExC {
         @Override public void visit(TripleExprCardinality tripleExpr) {
             out.incIndent();
             out.print("( ");
-            printTripleExpressionNoSep(tripleExpr.target());
+            printTripleExpressionNoSep(tripleExpr.getSubExpr());
             out.print(" )");
             String x = tripleExpr.cardinalityString();
             out.print(x);
@@ -396,7 +396,7 @@ public class WriterShExC {
 
         @Override public void visit(TripleExprRef tripleExpr) {
             out.print("&");
-            printNode(tripleExpr.ref());
+            printNode(tripleExpr.getRef());
         }
 
         @Override public void visit(TripleConstraint tripleExpr) {
