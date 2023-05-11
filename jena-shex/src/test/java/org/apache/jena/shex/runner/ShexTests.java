@@ -52,6 +52,7 @@ public class ShexTests {
         //Sx.TRACE : true if there are inclusions
         //includes.add("#1val1IRIREFExtra1_pass-iri2");
         //includes.add("#start2RefS1-IstartS2");
+        //includes.add("#1dot_pass-noOthers");
 
         VERBOSE = ! includes.isEmpty();
 
@@ -313,6 +314,7 @@ public class ShexTests {
 
     private static boolean runTestExclusionsInclusions(ManifestEntry entry) {
         String fragment = fragment(entry);
+
         if ( fragment != null ) {
             // Includes, if present.
             if ( includes.contains(fragment) )

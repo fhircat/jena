@@ -21,11 +21,11 @@ package org.apache.jena.shex.expressions;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.riot.out.NodeFormatter;
 
-public class TripleExprNone extends TripleExpression {
-    private static TripleExpression instance = new TripleExprNone();
+public class TripleExprEmpty extends TripleExpression {
+    private static TripleExpression instance = new TripleExprEmpty();
     public static TripleExpression get() { return instance ; }
 
-    private TripleExprNone() { super(null); }
+    private TripleExprEmpty() { super(null); }
 
     @Override
     public void visit(TripleExprVisitor visitor) {

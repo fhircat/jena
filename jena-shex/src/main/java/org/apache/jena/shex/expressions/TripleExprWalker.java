@@ -64,7 +64,7 @@ public class TripleExprWalker implements TripleExprVisitor {
 
     }
 
-    @Override public void visit(TripleExprNone object) {
+    @Override public void visit(TripleExprEmpty object) {
         before(object);
         after(object);
     }

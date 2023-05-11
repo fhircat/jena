@@ -31,20 +31,21 @@ import org.apache.jena.riot.out.NodeFormatter;
  */
 public class TripleExprCardinality extends TripleExpression {
 
-    private final TripleExpression other;
+    private final TripleExpression subExpr;
     private final Cardinality cardinality;
     private final int min;
     private final int max;
 
+    // TODO: Cardinality should never be null
     public TripleExprCardinality(TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
         super(semActs);
-        this.other = tripleExpr;
+        this.subExpr = tripleExpr;
         this.cardinality = cardinality;
         this.min = (cardinality==null) ? 1 : cardinality.min;
         this.max = (cardinality==null) ? 1 : cardinality.max;
     }
 
-    public TripleExpression target() { return other; }
+    public TripleExpression target() { return subExpr; }
 
     public String cardinalityString() {
         if ( cardinality == null )
@@ -68,7 +69,7 @@ public class TripleExprCardinality extends TripleExpression {
 
     @Override
     public int hashCode() {
-        return Objects.hash(other);
+        return Objects.hash(subExpr);
     }
 
     @Override
@@ -80,7 +81,7 @@ public class TripleExprCardinality extends TripleExpression {
         if ( getClass() != obj.getClass() )
             return false;
         TripleExprCardinality other = (TripleExprCardinality)obj;
-        return Objects.equals(this.other, other.other);
+        return Objects.equals(this.subExpr, other.subExpr);
     }
 
     @Override
@@ -90,7 +91,7 @@ public class TripleExprCardinality extends TripleExpression {
         if ( ! s.isEmpty() )
             iOut.println("Cardinality = "+s);
         iOut.incIndent();
-        other.print(iOut, nFmt);
+        subExpr.print(iOut, nFmt);
         iOut.decIndent();
         iOut.println("/Cardinality");
     }
@@ -99,7 +100,7 @@ public class TripleExprCardinality extends TripleExpression {
     public String toString() {
         String s = cardinalityString();
         if ( s.isEmpty() )
-            return "Cardinality [{-} other="+other+"]";
-        return "Cardinality ["+s+" other="+other+"]";
+            return "Cardinality [{-} other="+ subExpr +"]";
+        return "Cardinality ["+s+" other="+ subExpr +"]";
     }
 }

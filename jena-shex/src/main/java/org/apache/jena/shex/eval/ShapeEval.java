@@ -20,11 +20,12 @@ package org.apache.jena.shex.eval;
 
 import static org.apache.jena.atlas.lib.StreamOps.toSet;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.jena.atlas.lib.NotImplemented;
+import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -55,7 +56,8 @@ public class ShapeEval {
         return shapeExpr.satisfies(vCxt, node);
     }
 
-    /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpression tripleExpr, Node node, Set<Node> extras, boolean closed) {
+    /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpression tripleExpr,
+                                                        Node node, Set<Node> extras, boolean closed) {
 //        Set<Triple> neigh = new HashSet<>();
 //        Set<Triple> arcsOut = new HashSet<>();
 //        Set<Triple> arcsIn = new HashSet<>();
@@ -66,13 +68,15 @@ public class ShapeEval {
 
         Set<Triple> arcsOut = new HashSet<>();
         arcsOut(arcsOut, vCxt.getData(), node);
-        Set<Node> predicates = findPredicates(vCxt, tripleExpr);
+        Set<Node> predicates = new HashSet<>(findPredicates(vCxt, tripleExpr));
+        // TODO: pre-matching that computes matchables and non_matchables in one pass
+        // TODO: arcs in and inverse properties ?
         Set<Triple> matchables = toSet(arcsOut.stream().filter(t->predicates.contains(t.getPredicate())));
 
         boolean b = matches(vCxt, matchables, node, tripleExpr, extras);
         if ( ! b )
             return false;
-        if ( closed ) {
+        if ( closed ) { // TODO moved the closed condition before, as it could return avoid unnecessary and costly calculation
             // CLOSED : no other triples.
             Set<Triple> non_matchables = toSet(arcsOut.stream().filter(t->!matchables.contains(t)));
             if ( ! non_matchables.isEmpty() )
@@ -81,11 +85,87 @@ public class ShapeEval {
         return true;
     }
 
-    static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node, TripleExpression tripleExpr, Set<Node> extras) {
-      return matchesExpr(vCxt, matchables, node, tripleExpr, extras);
-  }
+    static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node,
+                           TripleExpression tripleExpr, Set<Node> extras) {
+        // TODO extras should never be null, modify this in Shape
+        return matchesExpr2(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
+    }
 
-    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> T, Node node, TripleExpression tripleExpr, Set<Node> extras) {
+    private static boolean matchesExpr2(ValidationContext vCxt, Set<Triple> triples, Node node,
+                                       TripleExpression tripleExpr, Set<Node> extras) {
+
+        TripleExpression sorbeTripleExpr = getSorbe(tripleExpr);
+        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, sorbeTripleExpr);
+
+        // 1. Identify which triples could match which triple constraints
+        Map<Triple, List<TripleConstraint>> preMatching = computePredicateBasedPreMatching(triples, tripleConstraints);
+
+        // 2. Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
+        for (Map.Entry<Triple, List<TripleConstraint>> e : preMatching.entrySet()) {
+            Triple triple = e.getKey();
+            List<TripleConstraint> tcs = e.getValue();
+            Iterator<TripleConstraint> it = tcs.iterator();
+            while (it.hasNext()) {
+                TripleConstraint tc = it.next();
+                ShapeExpr valueExpr = tc.getShapeExpression();
+                Node opposite = tc.reverse() ? triple.getSubject() : triple.getObject();
+                if (! valueExpr.satisfies(vCxt, opposite))
+                    it.remove();
+            }
+        }
+
+        // 3. Check whether all non matching triples are allowed by extra
+        Iterator<Map.Entry<Triple, List<TripleConstraint>>> it = preMatching.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Triple, List<TripleConstraint>> e = it.next();
+            if (e.getValue().isEmpty()) {
+                // the triple satisfies none of the triple constraints
+                if (! extras.contains(e.getKey().getPredicate()))
+                    // should satisfy extra
+                    return false;
+                // remove the triple as it does not participate in the satisfaction of the triple expression
+                it.remove();
+            }
+        }
+
+        // 4. SORBE based validation algorithm on the matching triples
+        Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
+        while (mit.hasNext()) {
+            Map<Triple, TripleConstraint> matching = mit.next();
+
+            Interval interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints));
+            if (interval.contains(1)) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private static TripleExpression getSorbe(TripleExpression tripleExpr) {
+        // FIXME compute the real sorbe
+        return tripleExpr;
+    }
+
+    private static Map<Triple, List<TripleConstraint>> computePredicateBasedPreMatching(Collection<Triple> triples,
+                                                                              List<TripleConstraint> tripleConstraints) {
+        Map<Node, List<TripleConstraint>> tcsByPredicate = tripleConstraints.stream()
+                .collect(Collectors.groupingBy(TripleConstraint::getPredicate)); // TODO EFFICIENCY can be pre-computed for every sorbe expression
+        return triples.stream().collect(Collectors.toMap(Function.identity(), t -> tcsByPredicate.get(t.getPredicate())));
+    }
+
+    public static Map<TripleConstraint, Integer> matchingToBag (Map<Triple, TripleConstraint> matching,
+                                                                List<TripleConstraint> base) {
+        Map<TripleConstraint, Integer> bag = base.stream().collect(Collectors.toMap(Function.identity(), x->0));
+        for (TripleConstraint tc : matching.values())
+            bag.computeIfPresent(tc, (k, old) -> old+1);
+        return bag;
+    }
+
+
+    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> T, Node node,
+                                       TripleExpression tripleExpr, Set<Node> extras) {
+
         if ( tripleExpr instanceof EachOf) {
             return ShapeEvalEachOf.matchesEachOf(vCxt, T, node, (EachOf)tripleExpr, extras);
         }
@@ -101,7 +181,7 @@ public class ShapeEval {
         else if ( tripleExpr instanceof TripleConstraint ) {
             return ShapeEvalTripleConstraint.matchesCardinalityTC(vCxt, T, node, (TripleConstraint)tripleExpr, extras);
         }
-        else if ( tripleExpr instanceof TripleExprNone ) {
+        else if ( tripleExpr instanceof TripleExprEmpty) {
             return true;
         }
         throw new NotImplemented(tripleExpr.getClass().getSimpleName());
@@ -141,7 +221,7 @@ public class ShapeEval {
             }
 
             @Override
-            public void visit(TripleExprNone expr) {
+            public void visit(TripleExprEmpty expr) {
                 expr.visit(step);
             }
 
@@ -160,19 +240,20 @@ public class ShapeEval {
         };
     }
 
-    /*package*/ static Set<TripleConstraint> findTripleConstraint(ValidationContext vCxt, TripleExpression tripleExpr) {
-        Set<TripleConstraint> constraints = new HashSet<>();
+    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt, TripleExpression tripleExpr) {
+        List<TripleConstraint> constraints = new ArrayList<>();
         tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
         return constraints;
     }
 
-    /*package*/ static Set<Node> findPredicates(ValidationContext vCxt, TripleExpression tripleExpr) {
-        Set<Node> predicates = new HashSet<>();
+    /*package*/ static List<Node> findPredicates(ValidationContext vCxt, TripleExpression tripleExpr) {
+        List<Node> predicates = new ArrayList<>();
         tripleExpr.visit(accumulator(vCxt.getShapes(), predicates, TripleConstraint::getPredicate));
         return predicates;
     }
 
-    private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Set<X> acc, Function<TripleConstraint, X> mapper) {
+    private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Collection<X> acc,
+                                                     Function<TripleConstraint, X> mapper) {
         TripleExprVisitor step = new TripleExprVisitor() {
             @Override
             public void visit(TripleConstraint tripleConstraint) {
@@ -190,5 +271,133 @@ public class ShapeEval {
     private static void arcsIn(Set<Triple> neigh, Graph graph, Node node) {
         ExtendedIterator<Triple> x = G.find(graph, null, null, node);
         x.forEach(neigh::add);
+    }
+
+    private static Interval computeInterval (TripleExpression tripleExpr, Map<TripleConstraint, Integer> bag) {
+        IntervalComputation computation = new IntervalComputation(bag);
+        tripleExpr.visit(computation);
+        return computation.getResult();
+    }
+
+    private static class IntervalComputation implements TripleExprVisitor {
+        private final Map<TripleConstraint, Integer> bag;
+        Interval result;
+
+        public IntervalComputation(Map<TripleConstraint, Integer> bag) {
+            this.bag = bag;
+            result = null;
+        }
+
+        private void setResult (Interval result) {
+            this.result = result;
+        }
+
+        private Interval getResult() {
+            return this.result;
+        }
+
+        @Override
+        public void visit(TripleConstraint tc) {
+
+            int nbOcc = bag.get(tc);
+            setResult(new Interval(nbOcc, nbOcc));
+        }
+
+        @Override
+        public void visit(TripleExprEmpty emptyTripleExpression) {
+            setResult(Interval.STAR);
+        }
+
+        @Override
+        public void visit(OneOf expr) {
+            Interval res = Interval.ZERO; // the neutral element for addition
+
+            for (TripleExpression subExpr : expr.expressions()) {
+                subExpr.visit(this);
+                res = Interval.add(res, getResult());
+            }
+            setResult(res);
+        }
+
+        @Override
+        public void visit(EachOf expr) {
+            Interval res = Interval.STAR; // the neutral element for intersection
+
+            for (TripleExpression subExpr : expr.expressions()) {
+                subExpr.visit(this);
+                res = Interval.inter(res, getResult());
+            }
+            setResult(res);
+        }
+
+        @Override
+        public void visit(TripleExprCardinality expression) {
+
+            Interval card = new Interval(expression.min(), expression.max());
+            TripleExpression subExpr = expression.target();
+            boolean isEmptySubbag = isEmptySubbag(bag, expression);
+
+            if (card.equals(Interval.STAR)) {
+                if (isEmptySubbag) {
+                    setResult(Interval.STAR);
+                } else {
+                    subExpr.visit(this);
+                    if (! this.getResult().equals(Interval.EMPTY)) {
+                        setResult(Interval.PLUS);
+                    }
+                }
+            }
+
+            else if (card.equals(Interval.PLUS)) {
+                if (isEmptySubbag) {
+                    setResult(Interval.ZERO);
+                } else {
+                    subExpr.visit(this);
+                    if (! this.getResult().equals(Interval.EMPTY)) {
+                        setResult(new Interval(1, getResult().max));
+                    } else {
+                        setResult(Interval.EMPTY);
+                    }
+                }
+            }
+
+            else if (card.equals(Interval.OPT)) {
+                subExpr.visit(this);
+                setResult(Interval.add(getResult(), Interval.STAR));
+            }
+
+            else if (subExpr instanceof TripleConstraint) {
+                int nbOcc = bag.get((TripleConstraint)  subExpr);
+                setResult(Interval.div(nbOcc, card));
+            }
+
+            else if (card.equals(Interval.ZERO)) {
+                if (isEmptySubbag) {
+                    setResult(Interval.STAR);
+                } else {
+                    setResult(Interval.EMPTY);
+                }
+            }
+
+            else {
+                throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
+            }
+
+        }
+
+        @Override
+        public void visit(TripleExprRef expr) {
+            expr.getTarget().visit(this);
+        }
+
+        private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpression expression){
+            List<TripleConstraint> list = findTripleConstraints(null, expression);
+            for(TripleConstraint tripleConstraint : list){
+                if(bag.get(tripleConstraint) != 0)
+                    return false;
+            }
+            return true;
+        }
+
     }
 }
