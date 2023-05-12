@@ -18,17 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
-import static java.lang.String.format;
-
 import java.util.Objects;
 import java.util.StringJoiner;
-
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class NumLengthConstraint extends NodeConstraintComponent {
 
@@ -47,85 +38,6 @@ public class NumLengthConstraint extends NodeConstraintComponent {
 
     public int getLength() {
         return length;
-    }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( ! n.isLiteral() ) {
-            String msg = format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(n));
-            return new ReportItem(msg, n);
-        }
-
-        RDFDatatype rdfDT = n.getLiteralDatatype();
-        if ( ! ( rdfDT instanceof XSDDatatype ) ) {
-            String msg = format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(n));
-            return new ReportItem(msg, n);
-        }
-
-        if ( XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT) ) {
-            String msg = format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(n));
-            return new ReportItem(msg, n);
-        }
-        String lexicalForm = n.getLiteralLexicalForm();
-        if ( ! rdfDT.isValid(lexicalForm) ) {
-            String msg = format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(n));
-            return new ReportItem(msg, n);
-        }
-
-        String str = lexicalForm;
-        int N = str.length();
-        int idx = str.indexOf('.');
-
-        switch (lengthType) {
-            case FRACTIONDIGITS : {
-                // Does not include trailing zeros.
-                if ( idx < 0 )
-                    return null;
-                //int before = idx;
-                int after = str.length()-idx-1;
-                for(int i = N-1 ; i > idx ; i-- ) {
-                    if ( str.charAt(i) != '0' )
-                        break;
-                    after--;
-                }
-                if ( after <= length )
-                    return null;
-                break;
-            }
-            case TOTALDIGITS : {
-                // Canonical form.
-                int start = 0;
-                char ch1 = str.charAt(0);
-                if ( ch1 == '+' || ch1 == '-' )
-                    start++;
-                // Leading zeros
-                for( int i = start ; i < N ; i++ ) {
-                    if ( str.charAt(i) != '0' )
-                        break;
-                    start++;
-                }
-                int finish = N ;
-                // Trailing zeros
-                if ( idx >= 0 ) {
-                    finish--;
-                    for(int i = N-1 ; i > idx ; i-- ) {
-                        if ( str.charAt(i) != '0' )
-                            break;
-                        finish--;
-                    }
-                }
-                int digits = finish-start;
-
-                if ( digits <= length )
-                    return null;
-                break;
-            }
-            default :
-                break;
-        }
-
-        String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-        return new ReportItem(msg, n);
     }
 
     @Override

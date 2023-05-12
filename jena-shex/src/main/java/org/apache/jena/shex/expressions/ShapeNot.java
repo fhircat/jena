@@ -40,17 +40,6 @@ public class ShapeNot extends ShapeExpr {
         this.shapeExpr = shapeExpr;
     }
 
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ValidationContext vCxt2 = vCxt.create();
-        boolean innerSatisfies = shapeExpr.satisfies(vCxt2, data);
-        if ( ! innerSatisfies )
-            return true;
-        ReportItem item = new ReportItem("NOT: Term reject because it conforms", data);
-        vCxt.reportEntry(item);
-        return false;
-    }
-
     public ShapeExpr getShapeExpr() {
         return shapeExpr;
     }

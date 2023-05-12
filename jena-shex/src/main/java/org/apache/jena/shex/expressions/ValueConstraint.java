@@ -23,11 +23,6 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
-
 public class ValueConstraint extends NodeConstraintComponent {
 
     private final List<ValueSetRange> valueSetRanges;
@@ -42,27 +37,6 @@ public class ValueConstraint extends NodeConstraintComponent {
 
     public List<ValueSetRange> getValueSetRanges() {
         return valueSetRanges;
-    }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node data) {
-        boolean b = valueSetRanges.stream().anyMatch(valueSetRange->validateRange(vCxt, valueSetRange, data));
-        if ( !b ) {
-            String s = toString(); // TODO use the pretty print here
-            return new ReportItem("Value " + ShexLib.displayStr(data) + " not in range: " + s, null);
-        }
-        return null;
-    }
-
-    private boolean validateRange(ValidationContext vCxt, ValueSetRange valueSetRange, Node data) {
-        boolean b1 = valueSetRange.included(data);
-        if ( ! b1 )
-            return false;
-        boolean b2 = valueSetRange.excluded(data);
-        if ( b2 )
-            return false;
-        // OK
-        return true;
     }
 
     @Override

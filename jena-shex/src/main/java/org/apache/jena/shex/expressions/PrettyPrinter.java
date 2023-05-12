@@ -95,7 +95,7 @@ public class PrettyPrinter {
             nFmt.format(out, shapeDecl.getLabel());
         out.println();
         out.incIndent();
-        ShapeExpr shExpr = shapeDecl.getShapeExpression();
+        ShapeExpr shExpr = shapeDecl.getShapeExpr();
         if (shExpr != null)
             print(shExpr, out, nFmt);
         out.decIndent();
@@ -267,7 +267,7 @@ public class PrettyPrinter {
         @Override
         public void visit(StrRegexConstraint strRegexCstr) {
             String flagsStr = strRegexCstr.getFlagsStr();
-            String patternString = strRegexCstr.getPattern();
+            String patternString = strRegexCstr.getPatternString();
             if (flagsStr != null && !flagsStr.isEmpty())
                 out.write("Pattern[" + patternString + "(" + flagsStr + ")]");
             else

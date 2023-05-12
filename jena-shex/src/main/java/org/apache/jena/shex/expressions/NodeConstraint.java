@@ -20,10 +20,6 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
-
 public class NodeConstraint extends ShapeExpr {
 
     private final List<NodeConstraintComponent> components;
@@ -44,19 +40,6 @@ public class NodeConstraint extends ShapeExpr {
     @Override
     public void visit(ShapeExprVisitor visitor) {
         visitor.visit(this);
-    }
-
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        for ( NodeConstraintComponent ncc : components) {
-            ReportItem item = ncc.nodeSatisfies(vCxt, data);
-            if ( item != null ) {
-                vCxt.reportEntry(item);
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override

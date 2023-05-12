@@ -20,13 +20,8 @@ package org.apache.jena.shex.expressions;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.StringJoiner;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeAnd extends ShapeExpr {
 
@@ -49,17 +44,6 @@ public class ShapeAnd extends ShapeExpr {
 
     public List<ShapeExpr> getShapeExprs() {
         return shapeExprs;
-    }
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        // Record all reports?
-        for ( ShapeExpr shExpr : shapeExprs) {
-            boolean innerSatisfies = shExpr.satisfies(vCxt, data);
-            if ( !innerSatisfies )
-                return false;
-        }
-        return true;
     }
 
     @Override

@@ -18,16 +18,12 @@
 
 package org.apache.jena.shex.expressions;
 
-import static java.lang.String.format;
-
 import java.util.Objects;
 import java.util.StringJoiner;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.shex.ShexException;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.sparql.expr.NodeValue;
 
 public class NumRangeConstraint extends NodeConstraintComponent {
@@ -56,33 +52,6 @@ public class NumRangeConstraint extends NodeConstraintComponent {
 
     public NodeValue getNumericValue() {
         return numericValue;
-    }
-
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( ! n.isLiteral() )
-            return new ReportItem("NumRange: Not a literal number", n);
-        NodeValue nv = NodeValue.makeNode(n);
-        int r = NodeValue.compare(nv, numericValue);
-
-        switch(rangeKind) {
-            case MAXEXCLUSIVE :
-                if ( r < 0 ) return null;
-                break;
-            case MAXINCLUSIVE :
-                if ( r <= 0 ) return null;
-                break;
-            case MINEXCLUSIVE :
-                if ( r > 0 ) return null;
-                break;
-            case MININCLUSIVE :
-                if ( r >= 0 ) return null;
-                break;
-            default :
-                break;
-        }
-        String msg = format("Expected %s %s : got = %s", rangeKind.label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(n));
-        return new ReportItem(msg, n);
     }
 
     @Override

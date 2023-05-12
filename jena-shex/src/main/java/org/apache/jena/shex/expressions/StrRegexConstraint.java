@@ -18,17 +18,11 @@
 
 package org.apache.jena.shex.expressions;
 
-import static org.apache.jena.shex.sys.ShexLib.displayStr;
-
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.sparql.expr.RegexJava;
-import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
 /** sh:pattern.
  *
@@ -53,7 +47,7 @@ public class StrRegexConstraint extends NodeConstraintComponent {
         this.pattern = Pattern.compile(pattern, flags);
     }
 
-    public String getPattern() {
+    public String getPatternString() {
         return patternString;
     }
 
@@ -61,18 +55,8 @@ public class StrRegexConstraint extends NodeConstraintComponent {
         return flagsStr;
     }
 
-    @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( n.isBlank() ) {
-            String msg = toString()+": Blank node: "+displayStr(n);
-            return new ReportItem(msg, n);
-        }
-        String str = NodeFunctions.str(n);
-        boolean b = pattern.matcher(str).find();
-        if ( b )
-            return null;
-        String msg = toString()+": Does not match: '"+str+"'";
-        return new ReportItem(msg, n);
+    public Pattern getPattern () {
+        return pattern;
     }
 
     @Override

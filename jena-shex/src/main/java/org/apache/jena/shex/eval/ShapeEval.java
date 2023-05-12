@@ -47,20 +47,9 @@ public class ShapeEval {
     // With help from the ideas (not code) of:
     // https://github.com/hsolbrig/PyShEx/blob/master/pyshex/shape_expressions_language/p5_5_shapes_and_triple_expressions.py
 
-    public static boolean matchesShapeExpr(ValidationContext vCxt, ShapeExpr shapeExpr, Node node) {
-        return shapeExpr.satisfies(vCxt, node);
-    }
 
     /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
-//        Set<Triple> neigh = new HashSet<>();
-//        Set<Triple> arcsOut = new HashSet<>();
-//        Set<Triple> arcsIn = new HashSet<>();
-//        arcsOut(arcsOut, vCxt.getData(), node);
-//        arcsIn(arcsIn, vCxt.getData(), node);
-//        neigh.addAll(arcsOut);
-//        neigh.addAll(arcsIn);
-
         List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, tripleExpr);
         Set<Node> forwardPredicates  = tripleConstraints.stream()
                 .filter(tc -> ! tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
@@ -75,13 +64,7 @@ public class ShapeEval {
 
         if (closed && ! non_matchables.isEmpty())
             return false;
-        return  matches(vCxt, matchables, node, tripleExpr, extras);
-    }
-
-    static boolean matches(ValidationContext vCxt, Set<Triple> matchables, Node node,
-                           TripleExpr tripleExpr, Set<Node> extras) {
-        // TODO extras should never be null, modify this in Shape
-        return matchesExpr(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
+        return  matchesExpr(vCxt, matchables, node, tripleExpr, extras != null ? extras : Collections.emptySet());
     }
 
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples, Node node,
@@ -102,7 +85,7 @@ public class ShapeEval {
                 TripleConstraint tc = it.next();
                 ShapeExpr valueExpr = tc.getValueExpr();
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                if (! valueExpr.satisfies(vCxt, opposite))
+                if (! ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
                     it.remove();
             }
         }

@@ -24,7 +24,7 @@ import org.apache.jena.shex.sys.ValidationContext;
 import java.util.List;
 
 // TODO are annotations allowed for shape expressions ? If yes, we should add them
-public abstract class ShapeExpr implements ShapeElement {
+public abstract class ShapeExpr {
 
     private final List<SemAct> semActs;
 
@@ -37,9 +37,6 @@ public abstract class ShapeExpr implements ShapeElement {
     public List<SemAct> getSemActs() {
         return semActs;
     }
-
-    @Override
-    public abstract boolean satisfies(ValidationContext vCxt, Node data);
 
     public boolean testShapeExprSemanticActions(ValidationContext v, Node focus) {
         if (this.semActs == null)

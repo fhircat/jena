@@ -18,24 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
-
-public abstract class NodeConstraintComponent implements Satisfies  {
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ReportItem item = nodeSatisfies(vCxt, data);
-        if ( item != null ) {
-            vCxt.reportEntry(item);
-            return false;
-        }
-        return true;
-    }
-
-    /** The function "nodeSatisfies" == satisfies2(n, nc)*/
-    public abstract ReportItem nodeSatisfies(ValidationContext vCxt, Node data);
+public abstract class NodeConstraintComponent  {
 
     public abstract void visit(NodeConstraintComponentVisitor visitor);
 

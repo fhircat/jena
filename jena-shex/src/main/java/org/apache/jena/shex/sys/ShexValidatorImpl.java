@@ -26,6 +26,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.eval.ShapeExprEval;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 class ShexValidatorImpl implements ShexValidator{
@@ -165,11 +166,12 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Worker.
-    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape, Node shapeRef, Node focus) {
+    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape,
+                                                Node shapeRef, Node focus) {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         vCxtInner.startValidate(shape, focus);
-        boolean isValid = shape.satisfies(vCxtInner, focus);
+        boolean isValid = ShapeExprEval.satisfies(shape, focus, vCxtInner);
         vCxtInner.finishValidate(shape, focus);
         if ( ! isValid ) {
             atLeastOneReportItem(vCxtInner, focus);
