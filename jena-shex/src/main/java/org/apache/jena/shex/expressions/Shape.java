@@ -98,7 +98,7 @@ public class Shape extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         Shape other = (Shape)obj;
-        return closed == other.closed && Objects.equals(label, other.label) && Objects.equals(tripleExpr, other.tripleExpr);
+        return closed == other.closed && Objects.equals(label, other.label) && tripleExpr.equals(other.tripleExpr);
     }
 
     public static class Builder {

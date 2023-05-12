@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.jena.graph.Node;
 
@@ -93,7 +94,20 @@ public class TripleConstraint extends TripleExpr {
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
+        TripleConstraint other = (TripleConstraint)obj;
+        if (!this.predicate.equals(other.predicate) || !this.inverse == other.inverse)
+            return false;
+        if ( valueExpr == null ) {
+            if ( other.valueExpr != null )
+                return false;
+        } else if ( !valueExpr.equals(other.valueExpr) )
+            return false;
+        return true;
     }
-
 }
