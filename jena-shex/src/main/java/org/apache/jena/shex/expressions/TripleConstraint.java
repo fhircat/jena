@@ -25,8 +25,7 @@ import org.apache.jena.graph.Node;
 
 public class TripleConstraint extends TripleExpr {
 
-    // TODO why triple expr has a label while shape expr does not ?
-    // TODO no annotations ?
+    // TODO why triple constraint has a label while no other triple expression has, neither have shape expressions
     private final Node label;
     private final Node predicate;
     private final ShapeExpr valueExpr;
@@ -86,7 +85,7 @@ public class TripleConstraint extends TripleExpr {
 //    }
 
 
-    // TODO hashcode and equals and used for testing printing shex schema, but are problematic for validation. Implement an external equality function instead.
+    // FIXME incompatible hashCode and equals
     @Override
     public int hashCode() {
         return System.identityHashCode(this);

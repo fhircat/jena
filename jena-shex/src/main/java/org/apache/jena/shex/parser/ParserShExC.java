@@ -420,7 +420,7 @@ public class ParserShExC extends LangParserBase {
     protected void finishBracketedTripleExpr(Node label, TripleExpr tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
         TripleExpr tripleExpr2 = tripleExpr;
         if ( cardinality != null )
-            tripleExpr2 = new TripleExprCardinality(tripleExpr, cardinality, semActs);
+            tripleExpr2 = TripleExprCardinality.create(tripleExpr, cardinality, semActs);
         else
             tripleExpr2.setSemActs(semActs);
         push(tripleExprStack, tripleExpr2);
@@ -446,7 +446,7 @@ public class ParserShExC extends LangParserBase {
         // Cardinality as argument.
         TripleExpr tripleExpr = TripleConstraint.create(label, predicate, reverse, arg, semActs);
         if (cardinality != null)
-            tripleExpr = new TripleExprCardinality(tripleExpr, cardinality, null);
+            tripleExpr = TripleExprCardinality.create(tripleExpr, cardinality, null);
         push(tripleExprStack, tripleExpr);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr);

@@ -26,8 +26,12 @@ public class TripleExprCardinality extends TripleExpr {
     private final TripleExpr subExpr;
     private final Cardinality cardinality;
 
+    public static TripleExprCardinality create (TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
+        return new TripleExprCardinality(subExpr, cardinality, semActs);
+    }
+
     // TODO can this have semantic actions ?
-    public TripleExprCardinality(TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
+    private TripleExprCardinality(TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
         super(semActs);
         this.subExpr = subExpr;
         this.cardinality = cardinality;
