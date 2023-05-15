@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.eval.TripleExprVisitor2;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.List;
@@ -47,6 +48,8 @@ public abstract class TripleExpr {
     }
 
     public abstract void visit(TripleExprVisitor visitor);
+
+    public abstract <R> R visit(TripleExprVisitor2<R> visitor);
 
     @Override
     public abstract int hashCode();

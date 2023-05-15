@@ -21,9 +21,8 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.riot.out.NodeFormatter;
+import org.apache.jena.shex.eval.TripleExprVisitor2;
 
 public class OneOf extends TripleExpr {
 
@@ -49,6 +48,11 @@ public class OneOf extends TripleExpr {
     @Override
     public void visit(TripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TripleExprVisitor2<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

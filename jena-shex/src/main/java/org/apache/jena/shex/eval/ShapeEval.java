@@ -44,13 +44,10 @@ public class ShapeEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    // With help from the ideas (not code) of:
-    // https://github.com/hsolbrig/PyShEx/blob/master/pyshex/shape_expressions_language/p5_5_shapes_and_triple_expressions.py
-
-
     /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
-        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, tripleExpr);
+        List<TripleConstraint> tripleConstraints = Util.collectTripleConstraints(tripleExpr,
+                true, vCxt.getShapes());
         Set<Node> forwardPredicates  = tripleConstraints.stream()
                 .filter(tc -> ! tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
         Set<Node> backwardPredicates = tripleConstraints.stream()
@@ -71,7 +68,8 @@ public class ShapeEval {
                                        TripleExpr tripleExpr, Set<Node> extras) {
 
         SorbeTripleExpr sorbeTripleExpr = getSorbe(tripleExpr, vCxt);
-        List<TripleConstraint> tripleConstraints = findTripleConstraints(vCxt, sorbeTripleExpr.sorbe);
+        List<TripleConstraint> tripleConstraints = Util.collectTripleConstraints(sorbeTripleExpr.sorbe,
+                false, null);
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = computePredicateBasedPreMatching(triples, tripleConstraints);
@@ -191,23 +189,24 @@ public class ShapeEval {
         };
     }
 
-    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt,
-                                                                    TripleExpr tripleExpr) {
-        List<TripleConstraint> constraints = new ArrayList<>();
-        tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
-        return constraints;
-    }
+//
+//    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt,
+//                                                                    TripleExpr tripleExpr) {
+//        List<TripleConstraint> constraints = new ArrayList<>();
+//        tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
+//        return constraints;
+//    }
 
-    private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Collection<X> acc,
-                                                     Function<TripleConstraint, X> mapper) {
-        TripleExprVisitor step = new TripleExprVisitor() {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                    acc.add(mapper.apply(tripleConstraint));
-            }
-        };
-        return walker(shapes, step);
-    }
+//    private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Collection<X> acc,
+//                                                     Function<TripleConstraint, X> mapper) {
+//        TripleExprVisitor step = new TripleExprVisitor() {
+//            @Override
+//            public void visit(TripleConstraint tripleConstraint) {
+//                    acc.add(mapper.apply(tripleConstraint));
+//            }
+//        };
+//        return walker(shapes, step);
+//    }
 
     private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {
         ExtendedIterator<Triple> x = G.find(graph, node, null, null);
@@ -227,8 +226,7 @@ public class ShapeEval {
     private static Cardinality computeInterval (TripleExpr tripleExpr, Map<TripleConstraint, Integer> bag,
                                                 ValidationContext vCxt) {
         IntervalComputation computation = new IntervalComputation(bag, vCxt);
-        tripleExpr.visit(computation);
-        return computation.getResult();
+        return tripleExpr.visit(computation);
     }
 
 }

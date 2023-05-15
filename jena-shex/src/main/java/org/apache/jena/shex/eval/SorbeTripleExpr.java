@@ -19,17 +19,18 @@ public class SorbeTripleExpr {
     private final Map<TripleConstraint, TripleConstraint> sorbeToSourceMap;
     private final Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap;
 
-    public boolean containsSemActs () {
-        return ! subexprsWithSemActs.isEmpty();
+    public boolean containsSemActs() {
+        return !subexprsWithSemActs.isEmpty();
     }
 
-    public List<TripleExpr> getSubExprsWithSemActs () {
+    public List<TripleExpr> getSubExprsWithSemActs() {
         return subexprsWithSemActs;
     }
 
-    /*package*/ List<TripleConstraint> sorbeTripleConstraints (TripleExpr sourceSubExpr, ValidationContext vCxt) {
+    /*package*/ List<TripleConstraint> sorbeTripleConstraints(TripleExpr sourceSubExpr, ValidationContext vCxt) {
         // TODO lazy computation here
-        List<TripleConstraint> sourceTripleConstraints = ShapeEval.findTripleConstraints(vCxt, sourceSubExpr);
+        List<TripleConstraint> sourceTripleConstraints = Util.collectTripleConstraints(sourceSubExpr,
+                true, vCxt.getShapes());
         if (sourceTripleExpr == sorbe)
             return sourceTripleConstraints;
         else
@@ -51,56 +52,52 @@ public class SorbeTripleExpr {
         this.sourceToSorbeMap = sourceToSorbeMap;
     }
 
-    public static SorbeTripleExpr create (TripleExpr tripleExpr, ShexSchema schema) {
+    public static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
 
-        List<TripleExpr> subexprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
+        List<TripleExpr> subexprsWithSemActs = Util.collectSubExprWithSemActs(tripleExpr, true, schema);
 
         if (isSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subexprsWithSemActs, null, null);
 
         Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
         Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap = new HashMap<>();
+
         class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
 
-            public TripleExpr getResult() {
-                return result;
-            }
-
             @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                super.visit(tripleConstraint);
-                TripleConstraint copy = (TripleConstraint) result;
+            public TripleExpr visit(TripleConstraint tripleConstraint) {
+                TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
                 sorbeToSourceMap.put(copy, tripleConstraint);
-                List<TripleConstraint> knownCopies = sourceToSorbeMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
+                List<TripleConstraint> knownCopies
+                        = sourceToSorbeMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
                 knownCopies.add(copy);
+                return copy;
             }
 
             @Override
-            public void visit(TripleExprRef tripleExprRef) {
+            public TripleExpr visit(TripleExprRef tripleExprRef) {
                 // will set result to a clone of the referenced triple expression
-                schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
+                return schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
             }
 
             @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
+            public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
 
                 Cardinality card = tripleExprCardinality.getCardinality();
 
-                Supplier<TripleExpr> clonedSubExpr = () -> {
+                Supplier<TripleExpr> clonedSubExpr = () ->
                     tripleExprCardinality.getSubExpr().visit(this);
-                    return result;
-                };
 
                 if (tripleExprCardinality.getSubExpr() instanceof TripleConstraint)
                     // leave as is, just clone the subexpression
-                    this.result = TripleExprCardinality.create(clonedSubExpr.get(), card, null);
+                    return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
                 if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
                     // PLUS on an expression that contains the empty word becomes a star
-                    this.result = TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
+                    return TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
                 else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
                         || card.equals(Cardinality.PLUS) || card.equals(IntervalComputation.ZERO_INTERVAL))
                     // the standard intervals OPT STAR PLUS and ZERO are allowed
-                    this.result = TripleExprCardinality.create(clonedSubExpr.get(), card, null);
+                    return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
                 else {
                     // non-standard cardinality on non-TripleConstraint -> create clones
                     int nbClones;
@@ -128,202 +125,136 @@ public class SorbeTripleExpr {
                     if (remainingForUnbounded != null)
                         newSubExprs.add(remainingForUnbounded);
 
-                    this.result = EachOf.create(newSubExprs, null);
+                    return EachOf.create(newSubExprs, null);
                 }
             }
         }
 
         SorbeConstructor constructor = new SorbeConstructor();
-        tripleExpr.visit(constructor);
-        TripleExpr sorbe = constructor.getResult();
+        TripleExpr sorbe = tripleExpr.visit(constructor);
         return new SorbeTripleExpr(tripleExpr, sorbe, subexprsWithSemActs, sorbeToSourceMap, sourceToSorbeMap);
     }
 
-    public List<TripleExpr> collectSubExprsWithSemActs() {
-        return subexprsWithSemActs;
-    }
 
-    private static boolean isSorbe (TripleExpr triplExpr) {
+    private static boolean isSorbe(TripleExpr tripleExpr) {
 
-        class CheckIsSorbe implements TripleExprVisitor {
+        // List with most one element
+        List<Object> acc = new ArrayList<>(1) {
+            @Override
+            public boolean add(Object o) {
+                if (isEmpty())
+                    super.add(o);
+                return true;
+            }
+        };
 
-            private boolean result = true;
-            boolean getResult () {
-                return result;
+        // Not the most natural or most efficient implementation, but reuses recursive mechanism of accumulation walker
+        TripleExprAccumulationVisitor2<Object> step = new TripleExprAccumulationVisitor2<>(acc) {
+            @Override
+            public Void visit(TripleExprRef tripleExprRef) {
+                acc.add(false);
+                return null;
             }
 
             @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                result = false;
-            }
-
-            @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
+            public Void visit(TripleExprCardinality tripleExprCardinality) {
                 Cardinality card = tripleExprCardinality.getCardinality();
                 TripleExpr subExpr = tripleExprCardinality.getSubExpr();
                 if (subExpr instanceof TripleConstraint)
-                    return;
+                    return null;
                 if (card.equals(Cardinality.PLUS) && containsEmpty(subExpr, null))
-                    result = false;
-                else if (! (card.equals(Cardinality.PLUS) || card.equals(Cardinality.STAR) ||
+                    acc.add(false);
+                else if (!(card.equals(Cardinality.PLUS) || card.equals(Cardinality.STAR) ||
                         card.equals(Cardinality.OPT) || card.equals(IntervalComputation.ZERO_INTERVAL)))
-                    result = false;
+                    acc.add(false);
+                return null;
             }
-        }
-        CheckIsSorbe visitor = new CheckIsSorbe();
-        TripleExprVisitor walker = new TripleExprWalker(visitor, null, null);
-        triplExpr.visit(walker);
-        return visitor.getResult();
-    }
+        };
 
-    private static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr, ShexSchema schema) {
-
-        class CollectSemActs implements TripleExprVisitor {
-            List<TripleExpr> withSemAct = new ArrayList<>();
-
-            List<TripleExpr> getResult() {
-                return withSemAct;
-            }
-            @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
-                if (tripleExprCardinality.getSemActs() != null)
-                    withSemAct.add(tripleExprCardinality);
-                tripleExprCardinality.getSubExpr().visit(this);
-            }
-
-            @Override
-            public void visit(EachOf eachOf) {
-                if (eachOf.getSemActs() != null)
-                    withSemAct.add(eachOf);
-                eachOf.getTripleExprs().forEach(te -> te.visit(this));
-            }
-
-            @Override
-            public void visit(OneOf oneOf) {
-                if (oneOf.getSemActs() != null)
-                    withSemAct.add(oneOf);
-                oneOf.getTripleExprs().forEach(te -> te.visit(this));
-            }
-
-            @Override
-            public void visit(TripleExprEmpty tripleExprEmpty) {
-                // empty
-            }
-
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
-            }
-
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                if (tripleConstraint.getSemActs() != null)
-                    withSemAct.add(tripleConstraint);
-            }
-        }
-
-        CollectSemActs visitor = new CollectSemActs();
-        tripleExpr.visit(visitor);
-        return visitor.getResult();
+        TripleExprWalker2 walker = new TripleExprWalker2(step, null, false, null);
+        tripleExpr.visit(walker);
+        return acc.isEmpty();
     }
 
     private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
 
-        class CheckContainsEmpty implements TripleExprVisitor {
+        class CheckContainsEmpty implements TripleExprVisitor2<Boolean> {
 
-            private boolean result;
-
-            boolean getResult() {
-                return result;
+            @Override
+            public Boolean visit(TripleConstraint tripleConstraint) {
+                return false;
             }
 
             @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                result = false;
+            public Boolean visit(TripleExprEmpty tripleExprEmpty) {
+                return true;
             }
 
             @Override
-            public void visit(TripleExprEmpty tripleExprEmpty) {
-                result = false;
+            public Boolean visit(EachOf eachOf) {
+                return eachOf.getTripleExprs().stream()
+                        .allMatch(subExpr -> subExpr.visit(this));
             }
 
             @Override
-            public void visit(EachOf eachOf) {
-                result = eachOf.getTripleExprs().stream()
-                        .allMatch(subExpr -> {subExpr.visit(this); return result;});
+            public Boolean visit(OneOf oneOf) {
+                return oneOf.getTripleExprs().stream()
+                        .anyMatch(subExpr -> subExpr.visit(this));
             }
 
             @Override
-            public void visit(OneOf oneOf) {
-                result = oneOf.getTripleExprs().stream()
-                        .anyMatch(subExpr -> {subExpr.visit(this); return result;});
+            public Boolean visit(TripleExprCardinality tripleExprCardinality) {
+                return (tripleExprCardinality.min() == 0) || tripleExprCardinality.getSubExpr().visit(this);
             }
 
             @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
-                if (tripleExprCardinality.min() == 0) {
-                    result = true;
-                } else {
-                    tripleExprCardinality.getSubExpr().visit(this);
-                }
-            }
-
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
+            public Boolean visit(TripleExprRef tripleExprRef) {
+                return schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
             }
         }
 
         CheckContainsEmpty visitor = new CheckContainsEmpty();
-        tripleExpr.visit(visitor);
-        return visitor.getResult();
+        return tripleExpr.visit(visitor);
     }
 
-    static class CloneWithNullSemanticActionsAndEraseLabels implements TripleExprVisitor {
-
-        protected TripleExpr result;
+    static class CloneWithNullSemanticActionsAndEraseLabels implements TripleExprVisitor2<TripleExpr> {
 
         @Override
-        public void visit(EachOf eachOf) {
-            List<TripleExpr> clonedSubExpressions = new ArrayList<>(eachOf.getTripleExprs().size());
-            for (TripleExpr te : eachOf.getTripleExprs()) {
-                te.visit(this);
-                clonedSubExpressions.add(result);
-            }
-            result = EachOf.create(clonedSubExpressions, null);
+        public TripleExpr visit(EachOf eachOf) {
+            List<TripleExpr> clonedSubExpressions = eachOf.getTripleExprs().stream()
+                    .map(expr -> expr.visit(this))
+                    .collect(Collectors.toList());
+            return EachOf.create(clonedSubExpressions, null);
         }
 
         @Override
-        public void visit(OneOf oneOf) {
-            List<TripleExpr> clonedSubExpressions = new ArrayList<>(oneOf.getTripleExprs().size());
-            for (TripleExpr te : oneOf.getTripleExprs()) {
-                te.visit(this);
-                clonedSubExpressions.add(result);
-            }
-            result = OneOf.create(clonedSubExpressions, null);
+        public TripleExpr visit(OneOf oneOf) {
+            List<TripleExpr> clonedSubExpressions = oneOf.getTripleExprs().stream()
+                    .map(expr -> expr.visit(this))
+                    .collect(Collectors.toList());
+            return OneOf.create(clonedSubExpressions, null);
         }
 
         @Override
-        public void visit(TripleExprEmpty tripleExprEmpty) {
-            result = TripleExprEmpty.get();
+        public TripleExpr visit(TripleExprEmpty tripleExprEmpty) {
+            return TripleExprEmpty.get();
         }
 
         @Override
-        public void visit(TripleExprRef tripleExprRef) {
-            result = TripleExprRef.create(tripleExprRef.getLabel());
+        public TripleExpr visit(TripleExprRef tripleExprRef) {
+            return TripleExprRef.create(tripleExprRef.getLabel());
         }
 
         @Override
-        public void visit(TripleConstraint tripleConstraint) {
-            result = TripleConstraint.create(null, tripleConstraint.getPredicate(),
+        public TripleExpr visit(TripleConstraint tripleConstraint) {
+            return TripleConstraint.create(null, tripleConstraint.getPredicate(),
                     tripleConstraint.isInverse(), tripleConstraint.getValueExpr(), null);
         }
 
         @Override
-        public void visit(TripleExprCardinality tripleExprCardinality) {
-            tripleExprCardinality.getSubExpr().visit(this);
-            TripleExpr clonedSubExpr = result;
-            result = TripleExprCardinality.create(clonedSubExpr, tripleExprCardinality.getCardinality(), null);
+        public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
+            TripleExpr clonedSubExpr = tripleExprCardinality.getSubExpr().visit(this);
+            return TripleExprCardinality.create(clonedSubExpr, tripleExprCardinality.getCardinality(), null);
         }
     }
 }
