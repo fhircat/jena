@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
+// TODO used only once in ShExC, worth keeping ?
 public class ShapeExprWalker implements ShapeExprVisitor {
 
     private final ShapeExprVisitor beforeVisitor;

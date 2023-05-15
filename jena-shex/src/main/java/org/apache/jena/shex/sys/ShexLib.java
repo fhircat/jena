@@ -63,6 +63,7 @@ public class ShexLib {
 //        shExpr.visit(walker);
 //    }
 
+    // TODO used only once in ShExC, move it there or inline it
     public static void walk(ShapeExpr shExpr,
                             ShapeExprVisitor shapeVisitor,
                             TripleExprVisitor tripleExpressionVisitor,

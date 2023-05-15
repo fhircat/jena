@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
+// TODO never used with non null after, used only once as such. Worth keeping ?
 public class TripleExprWalker implements TripleExprVisitor {
 
     private final TripleExprVisitor beforeVisitor;
