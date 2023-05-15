@@ -68,7 +68,6 @@ public class ShexTests {
         // SemanticAction trait supported
         // OrderedSemanticActions trait supported
         excludeTraits.add(ShexT.tExternalSemanticAction); // add external parser
-        excludeTraits.add(ShexT.tSemanticAction);
 
         // ## annotations + semantic actions
         excludes.add("#open3Eachdotclosecard23Annot3Code2-p1p2p3X3");

@@ -110,8 +110,19 @@ public class ShapeEval {
             Map<Triple, TripleConstraint> matching = mit.next();
 
             Cardinality interval = computeInterval(sorbeTripleExpr.sorbe, matchingToBag(matching, tripleConstraints), vCxt);
-            if (1 >= interval.min && 1 <= interval.max) {
-                return true;
+            if (interval.min <= 1 && 1 <= interval.max) {
+                boolean allSemActsSatisfied = true;
+                // the triple expression is satisfied by the matching, check semantic actions
+                for (TripleExpr subExpr : sorbeTripleExpr.getSubExprsWithSemActs()) {
+                    List<TripleConstraint> tripleConstraintsForSemAct = sorbeTripleExpr.sorbeTripleConstraints(subExpr, vCxt);
+                    Set<Triple> matchedTriples = matching.entrySet().stream()
+                            .filter(e -> tripleConstraintsForSemAct.contains(e.getValue()))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toSet());
+                    allSemActsSatisfied &= subExpr.testSemanticActions(vCxt, matchedTriples);
+                }
+                if (allSemActsSatisfied)
+                    return true;
             }
         }
         return false;
@@ -139,7 +150,7 @@ public class ShapeEval {
     }
 
     // Recursive.
-    private static TripleExprVisitor walk(ShexSchema shapes, TripleExprVisitor step) {
+    private static TripleExprVisitor walker(ShexSchema shapes, TripleExprVisitor step) {
         //Walker
         return new TripleExprVisitor() {
             @Override
@@ -195,7 +206,7 @@ public class ShapeEval {
                     acc.add(mapper.apply(tripleConstraint));
             }
         };
-        return walk(shapes, step);
+        return walker(shapes, step);
     }
 
     private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {

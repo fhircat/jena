@@ -167,13 +167,14 @@ public class PrettyPrinter {
         @Override
         public void visit(TripleExprCardinality tripleExprCardinality) {
             String s = tripleExprCardinality.cardinalityString();
-            out.println("Cardinality");
-            if (!s.isEmpty())
-                out.println("Cardinality = " + s);
+            if (s == null)
+                s = tripleExprCardinality.getCardinality().toString();
+            out.println("TripleExprCardinality");
             out.incIndent();
+            out.println("Cardinality = " + s);
             tripleExprCardinality.getSubExpr().visit(this);
             out.decIndent();
-            out.println("/Cardinality");
+            out.println("/TripleExprCardinality");
         }
 
         @Override
