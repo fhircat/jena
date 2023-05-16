@@ -95,6 +95,7 @@ class ShexValidatorImpl implements ShexValidator{
         ShexRecord entry = new ShexRecord(focus, shape.getLabel());
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
+        boolean started = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         boolean isValid = validationStep(vCxt, entry, entry.shapeExprLabel, focus);
         return vCxt.generateReport();
     }
@@ -108,6 +109,7 @@ class ShexValidatorImpl implements ShexValidator{
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         List<ShexRecord> reports = new ArrayList<>();
+        boolean isValid = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         shapeMap.entries().forEach(mapEntry->{
             validateOneShapeRecord(vCxt, mapEntry, focus);
         });
