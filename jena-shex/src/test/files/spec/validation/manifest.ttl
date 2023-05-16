@@ -1549,7 +1549,7 @@
 
 <#bnode1dot_fail-missing> a sht:ValidationFailure ;
     mf:name "bnode1dot_fail-missing" ;
-    sht:trait sht:BNodeShapeLabel , sht:TriplePattern ;
+    sht:trait sht:BNodeShapeLabel , sht:RefBNodeShapeLabel , sht:TriplePattern ;
     rdfs:comment "_:S { <p1> . } on { <s1> <p2> <o1> }" ;
     mf:status mf:Approved ;
     mf:action [
@@ -1562,7 +1562,7 @@
 
 <#bnode1dot_pass-others_lexicallyEarlier> a sht:ValidationTest ;
     mf:name "bnode1dot_pass-others_lexicallyEarlier" ;
-    sht:trait sht:BNodeShapeLabel , sht:TriplePattern ;
+    sht:trait sht:BNodeShapeLabel , sht:RefBNodeShapeLabel , sht:TriplePattern ;
     rdfs:comment "_:S1 { <p1> . } on { <s1> <p0> <o0>; <p1> <o1> }" ;
     mf:status mf:Approved ;
     mf:action [
@@ -16151,7 +16151,7 @@
 
 <#1valExprRefbnode-IV1_fail-lit-short> a sht:ValidationFailure ;
     mf:name "1valExprRefbnode-IV1_fail-lit-short" ;
-    sht:trait sht:ValueReference , sht:LengthFacet , sht:Import ;
+    sht:trait sht:BNodeShapeLabel , sht:CrossFileBNodeShapeLabel , sht:ValueReference , sht:LengthFacet , sht:Import ;
     rdfs:comment "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> _:vc1 } on { <s1> <p1> \"abcd\" }" ;
     mf:status mf:Approved ;
     mf:action [
@@ -16164,7 +16164,7 @@
 
 <#1valExprRefbnode-IV1_pass-lit-equal> a sht:ValidationTest ;
     mf:name "1valExprRefbnode-IV1_pass-lit-equal" ;
-    sht:trait sht:ValueReference , sht:LengthFacet , sht:Import ;
+    sht:trait sht:BNodeShapeLabel , sht:CrossFileBNodeShapeLabel , sht:ValueReference , sht:LengthFacet , sht:Import ;
     rdfs:comment "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> _:vc1 } on { <s1> <p1> \"abcde\" }" ;
     mf:status mf:Approved ;
     mf:action [
