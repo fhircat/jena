@@ -32,8 +32,6 @@ import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexReport;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.expressions.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -46,20 +44,6 @@ public class ShexLib {
         if ( idx < 0 )
             return "";
         return uri.substring(idx);
-    }
-
-    // TODO used only once in ShExC, move it there or inline it
-    public static void walk(ShapeExpr shExpr,
-                            VoidShapeExprVisitor shapeVisitor,
-                            VoidTripleExprVisitor tripleExpressionVisitor,
-                            VoidNodeConstraintComponentVisitor nodeConstraintVisitor
-                            ) {
-        VoidWalker walker = new VoidWalker.Builder()
-                .processShapeExprsWith(shapeVisitor)
-                .traverseShapes()
-                .traverseTripleConstraints()
-                .build();
-        shExpr.visit(walker);
     }
 
     private static PrefixMap displayPrefixMap = PrefixMapFactory.createForOutput();

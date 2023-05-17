@@ -90,7 +90,7 @@ public class ShexSchema {
     }
 
     /** Get all the shapes. This includes the start shape, which has label {@link SysShex#startNode}. */
-    public TripleExpr getTripleExpression(Node label) {
+    public TripleExpr getTripleExpr(Node label) {
         return tripleRefs.get(label);
     }
 

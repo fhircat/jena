@@ -20,20 +20,25 @@ package org.apache.jena.shex.eval;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+// TODO this class uses several maps with keys being triple expressions. Will probably become incorrect when TripleConstraint's equals is re-introduced
+// TODO comments and explanations needed for the contract of this class
 public class SorbeTripleExpr {
 
     private final TripleExpr sourceTripleExpr;
     /*package*/ final TripleExpr sorbe;
     private List<TripleConstraint> allSorbeTripleConstraints;
+    private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
     private final List<TripleExpr> srcSubExprsWithSemActs;
     // With every original triple subExpr having semantic actions, maps its triple constraints. Set is necessary here
     private final Map<TripleExpr, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
@@ -50,6 +55,13 @@ public class SorbeTripleExpr {
         return allSorbeTripleConstraints;
     }
 
+    private Map<Node, List<TripleConstraint>> getTripleConstraintsGroupedByPredicate () {
+        if (tripleConstraintsGroupedByPredicate == null) {
+            tripleConstraintsGroupedByPredicate = getAllSorbeTripleConstraints().stream()
+                    .collect(Collectors.groupingBy(TripleConstraint::getPredicate));
+        }
+        return tripleConstraintsGroupedByPredicate;
+    }
 
     private SorbeTripleExpr(TripleExpr sourceTripleExpr, TripleExpr sorbe,
                             List<TripleExpr> srcSubExprsWithSemActs,
@@ -65,7 +77,7 @@ public class SorbeTripleExpr {
     private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
         return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr, e -> {
             Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
-            collectTripleConstraints(srcSubExpr, true, vCxt.getShapes(), sourceTripleConstraintsSet);
+            collectTripleConstraints(srcSubExpr, true, vCxt.getSchema(), sourceTripleConstraintsSet);
             if (sourceTripleExpr == sorbe)
                 return sourceTripleConstraintsSet;
             else
@@ -73,6 +85,13 @@ public class SorbeTripleExpr {
                         .flatMap(tc -> tripleConstraintsCopiesMap.get(tc).stream())
                         .collect(Collectors.toSet());
         });
+    }
+
+    /*package*/ Map<Triple, List<TripleConstraint>> getPredicateBasedPreMatching(Collection<Triple> triples) {
+
+        Map<Node, List<TripleConstraint>> tcsByPredicate = getTripleConstraintsGroupedByPredicate();
+        return triples.stream().collect(Collectors.toMap(Function.identity(),
+                t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
     }
 
     public static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
@@ -100,7 +119,7 @@ public class SorbeTripleExpr {
             @Override
             public TripleExpr visit(TripleExprRef tripleExprRef) {
                 // will set result to a clone of the referenced triple expression
-                return schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
+                return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
             }
 
             @Override
@@ -248,7 +267,7 @@ public class SorbeTripleExpr {
 
             @Override
             public Boolean visit(TripleExprRef tripleExprRef) {
-                return schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
+                return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
             }
         }
 

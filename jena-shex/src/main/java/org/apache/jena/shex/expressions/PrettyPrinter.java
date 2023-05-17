@@ -332,7 +332,7 @@ public class PrettyPrinter {
         if (valueSetItem.isStem)
             out.print("~");
 
-        /* TODO different implementation in ValueSetItem.toString
+        /* this different implementation in from ValueSetItem.toString
         String str = "invalid";
         if ( iriStr != null ) str = "<"+iriStr+">";
         else if ( langStr != null ) str = "@"+langStr;

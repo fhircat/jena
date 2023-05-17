@@ -89,7 +89,7 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef) {
-            ShapeDecl shapeDecl = vCxt.getShape(shapeExprRef.getLabel());
+            ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
             if ( shapeDecl == null )
                 return false;
             else if ( vCxt.cycle(shapeDecl, dataNode) )

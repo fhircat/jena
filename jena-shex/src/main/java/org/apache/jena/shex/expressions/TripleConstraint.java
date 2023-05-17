@@ -24,7 +24,7 @@ import org.apache.jena.graph.Node;
 
 public class TripleConstraint extends TripleExpr {
 
-    // TODO why triple constraint has a label while no other triple expression has, neither have shape expressions
+    // TODO why triple constraint has a label while no other triple expression has, neither have shape expressions except for shapes
     private final Node label;
     private final Node predicate;
     private final ShapeExpr valueExpr;

@@ -159,7 +159,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     public void visit(TripleExprRef tripleExprRef) {
         process(tripleExprRef);
         if (followTripleExprRefs)
-            schema.getTripleExpression(tripleExprRef.getLabel()).visit(this);
+            schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
     }
 
     @Override

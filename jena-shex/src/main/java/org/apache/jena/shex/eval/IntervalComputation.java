@@ -109,13 +109,6 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
         throw new IllegalArgumentException("References not supported");
     }
 
-    /*
-    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression) {
-        // TODO lazy computation : needs a reference to the sorbe triple expr, or maybe through the context ?
-        List<TripleConstraint> list = sorbeTripleExpr.getTripleConstraints(expression);
-        return list.stream().allMatch(tc -> bag.get(tc) == 0);
-    }*/
-
     private static Cardinality add (Cardinality i1, Cardinality i2) {
         int imin, imax;
 

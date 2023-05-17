@@ -73,8 +73,6 @@ public class DatatypeConstraint extends NodeConstraintComponent {
 
     @Override
     public String toString() {
-        // TODO complex toString, useful ?
-        // TODO uses ShexLib
         String className = DatatypeConstraint.class.getSimpleName();
         String x;
         if ( datatype.isURI() ) {
