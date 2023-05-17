@@ -104,7 +104,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
         if (varName.charAt(0) == '"')
             return varName.replaceAll("\\\\(.)", "$1");
 
-        throw new RuntimeException(String.format("%s semantic action argument %s was not a literal", SemActIri, varName));
+        throw new RuntimeException(String.format("Start %s semantic action argument %s was not a literal", SemActIri, varName));
     }
 
     private static String resolveNodeVar(String varName, Node focus) {
@@ -115,7 +115,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
         switch (varName) {
             case "s": pos = focus; break;
             default:
-                throw new RuntimeException(String.format("%s semantic action argument %s was not literal or 's', 'p', or 'o'", SemActIri, varName));
+                throw new RuntimeException(String.format("ShapeExpr %s semantic action argument %s was not literal or 's'", SemActIri, varName));
         }
         return pos.toString();
     }
@@ -133,7 +133,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
             case "p": pos = triple.getPredicate(); break;
             case "o": pos = triple.getObject(); break;
             default:
-                throw new RuntimeException(String.format("%s semantic action argument %s was not a literal or 's', 'p', or 'o'", SemActIri, varName));
+                throw new RuntimeException(String.format("TripleExpr %s semantic action argument %s was not a literal or 's', 'p', or 'o'", SemActIri, varName));
         }
         return pos.toString();
     }
