@@ -44,7 +44,8 @@ public abstract class ShapeExpr {
         return v.dispatchShapeExprSemanticAction(this, focus);
     }
 
-    public abstract void visit(ShapeExprVisitor visitor);
+    public abstract void visit(VoidShapeExprVisitor visitor);
+    public abstract <R> R visit(TypedShapeExprVisitor<R> visitor);
 
     @Override
     public String toString() {

@@ -54,8 +54,13 @@ public class TripleExprCardinality extends TripleExpr {
 
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

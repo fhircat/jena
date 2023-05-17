@@ -19,7 +19,6 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.jena.graph.Node;
 
@@ -61,8 +60,13 @@ public class TripleConstraint extends TripleExpr {
     }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
 //

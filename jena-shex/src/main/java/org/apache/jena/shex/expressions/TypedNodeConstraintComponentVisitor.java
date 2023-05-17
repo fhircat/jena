@@ -18,19 +18,14 @@
 
 package org.apache.jena.shex.expressions;
 
-/** Visitor for NodeConstraintComponents. */
-public interface NodeConstraintComponentVisitor {
+public interface TypedNodeConstraintComponentVisitor<R> {
 
-    public default void visit(NodeKindConstraint nodeKindCstr) {}
-
-    public default void visit(DatatypeConstraint datatypeCstr) {}
-
-    public default void visit(NumLengthConstraint numLengthCstr) {}
-    public default void visit(NumRangeConstraint numRangeCstr) {}
-
-    public default void visit(StrRegexConstraint strRegexCstr) {}
-    public default void visit(StrLengthConstraint strLengthCstr) {}
-
-    public default void visit(ValueConstraint valueCstr) {}
+    R visit(NodeKindConstraint nodeKindCstr);
+    R visit(DatatypeConstraint datatypeCstr);
+    R visit(NumLengthConstraint numLengthCstr);
+    R visit(NumRangeConstraint numRangeCstr);
+    R visit(StrRegexConstraint strRegexCstr);
+    R visit(StrLengthConstraint strLengthCstr);
+    R visit(ValueConstraint valueCstr);
 
 }

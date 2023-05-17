@@ -46,7 +46,9 @@ public abstract class TripleExpr {
         return v.dispatchTripleExprSemanticAction(this, matchables);
     }
 
-    public abstract void visit(TripleExprVisitor visitor);
+    public abstract void visit(VoidTripleExprVisitor visitor);
+
+    public abstract <R> R visit(TypedTripleExprVisitor<R> visitor);
 
     @Override
     public abstract int hashCode();

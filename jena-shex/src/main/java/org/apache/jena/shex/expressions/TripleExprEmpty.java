@@ -25,8 +25,13 @@ public class TripleExprEmpty extends TripleExpr {
     private TripleExprEmpty() { super(null); }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

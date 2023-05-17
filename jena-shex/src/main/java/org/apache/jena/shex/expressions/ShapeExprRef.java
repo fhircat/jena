@@ -38,8 +38,13 @@ public class ShapeExprRef extends ShapeExpr {
     public Node getLabel() { return label; }
 
     @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

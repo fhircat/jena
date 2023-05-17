@@ -39,8 +39,7 @@ public class ShapeExprEval {
     public static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
 
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, vCxt);
-        shapeExpr.visit(evaluator);
-        return evaluator.getResult();
+        return shapeExpr.visit(evaluator);
     }
 
     public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
@@ -54,7 +53,7 @@ public class ShapeExprEval {
         }
     }
 
-    static class ShapeExprEvalVisitor implements ShapeExprVisitor {
+    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean> {
 
         private final ValidationContext vCxt;
         private final Node dataNode;
@@ -64,67 +63,58 @@ public class ShapeExprEval {
             this.dataNode = data;
         }
 
-        private boolean result;
-        public boolean getResult() {
+        @Override
+        public Boolean visit(ShapeAnd shapeAnd) {
+            // Record all reports?
+            return shapeAnd.getShapeExprs().stream().allMatch(se ->
+                se.visit(this));
+        }
+
+        @Override
+        public Boolean visit(ShapeOr shapeOr) {
+            boolean result = shapeOr.getShapeExprs().stream().anyMatch(se ->
+                se.visit(this));
+            if (!result)
+                vCxt.reportEntry(new ReportItem("OR expression not satisfied:", dataNode));
             return result;
         }
 
         @Override
-        public void visit(ShapeAnd shapeAnd) {
-            // Record all reports?
-            result = shapeAnd.getShapeExprs().stream().allMatch(se -> {
-                se.visit(this);
-                return this.result;
-            });
-        }
-
-        @Override
-        public void visit(ShapeOr shapeOr) {
-            result = shapeOr.getShapeExprs().stream().anyMatch(se -> {
-                se.visit(this);
-                return this.result;
-            });
-            if (!result)
-                vCxt.reportEntry(new ReportItem("OR expression not satisfied:", dataNode));
-        }
-
-        @Override
-        public void visit(ShapeNot shapeNot) {
-            shapeNot.getShapeExpr().visit(this);
-            result = !result;
+        public Boolean visit(ShapeNot shapeNot) {
+            boolean result = !shapeNot.getShapeExpr().visit(this);
             if (!result)
                 vCxt.reportEntry(new ReportItem("NOT: Term reject because it conforms", dataNode));
+            return result;
         }
 
         @Override
-        public void visit(ShapeExprRef shapeExprRef) {
+        public Boolean visit(ShapeExprRef shapeExprRef) {
             ShapeDecl shapeDecl = vCxt.getShape(shapeExprRef.getLabel());
             if ( shapeDecl == null )
-                result = false;
+                return false;
             else if ( vCxt.cycle(shapeDecl, dataNode) )
-                result = true;
+                return true;
             else
-                result = satisfies(shapeDecl, dataNode, vCxt);
+                return satisfies(shapeDecl, dataNode, vCxt);
         }
 
         @Override
-        public void visit(ShapeExternal shapeExternal) {
+        public Boolean visit(ShapeExternal shapeExternal) {
             // TODO shape external never satisfied
-            result = false;
+            return false;
         }
 
         @Override
-        public void visit(Shape shape) {
-            result = ShapeEval.matchesTripleExpr(vCxt, shape.getTripleExpr(), dataNode,
+        public Boolean visit(Shape shape) {
+            return ShapeEval.matchesTripleExpr(vCxt, shape.getTripleExpr(), dataNode,
                     shape.getExtras(), shape.isClosed());
         }
 
         @Override
-        public void visit(NodeConstraint nodeConstraint) {
+        public Boolean visit(NodeConstraint nodeConstraint) {
             NodeConstraintComponentEvalVisitor componentEval = new NodeConstraintComponentEvalVisitor(dataNode);
-            result = nodeConstraint.getComponents().stream().allMatch( ncc -> {
-                ncc.visit(componentEval);
-                ReportItem error = componentEval.getResult();
+            return nodeConstraint.getComponents().stream().allMatch( ncc -> {
+                ReportItem error = ncc.visit(componentEval);
                 if (error != null)
                     vCxt.reportEntry(error);
                 return error == null;
@@ -132,7 +122,7 @@ public class ShapeExprEval {
         }
     }
 
-    static class NodeConstraintComponentEvalVisitor implements NodeConstraintComponentVisitor {
+    static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<ReportItem> {
 
         private final Node dataNode;
 
@@ -140,13 +130,8 @@ public class ShapeExprEval {
             this.dataNode = dataNode;
         }
 
-        private ReportItem result;
-        ReportItem getResult() {
-            return result;
-        }
-
         @Override
-        public void visit(NodeKindConstraint nodeKindCstr) {
+        public ReportItem visit(NodeKindConstraint nodeKindCstr) {
             NodeKind nodeKind = nodeKindCstr.getNodeKind();
             boolean satisfied = true;
 
@@ -165,57 +150,51 @@ public class ShapeExprEval {
                     break;
             }
             // TODO Bad.
-            result = satisfied ? null
+            return satisfied ? null
                     : new ReportItem(nodeKindCstr + " : Expected " + nodeKind + " for " + displayStr(dataNode),
                                      dataNode);
         }
 
         @Override
-        public void visit(DatatypeConstraint datatypeCstr) {
-            result = null;
-
+        public ReportItem visit(DatatypeConstraint datatypeCstr) {
             if (! dataNode.isLiteral()) {
-                result = new ReportItem(datatypeCstr+" : Not a literal", dataNode);
-                return;
+                return new ReportItem(datatypeCstr+" : Not a literal", dataNode);
             }
 
             if (datatypeCstr.getDatatypeURI().equals(dataNode.getLiteralDatatypeURI())) {
                 // Must be valid for the type
                 if ( ! datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm()) ) {
                     String errMsg = datatypeCstr+" : Not valid value : Node "+displayStr(dataNode);
-                    result = new ReportItem(errMsg, dataNode);
+                    return new ReportItem(errMsg, dataNode);
                 }
             } else {
                 String errMsg = datatypeCstr + " -- Wrong datatype: " + strDatatype(dataNode) + " for focus node: " + displayStr(dataNode);
-                result = new ReportItem(errMsg, dataNode);
+                return new ReportItem(errMsg, dataNode);
             }
+            return null;
         }
 
         @Override
-        public void visit(NumLengthConstraint numLengthCstr) {
+        public ReportItem visit(NumLengthConstraint numLengthCstr) {
             if ( ! dataNode.isLiteral() ) {
                 String msg = format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode));
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
 
             RDFDatatype rdfDT = dataNode.getLiteralDatatype();
             if ( ! ( rdfDT instanceof XSDDatatype) ) {
                 String msg = format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(dataNode));
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
 
             if ( XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT) ) {
                 String msg = format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(dataNode));
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
             String lexicalForm = dataNode.getLiteralLexicalForm();
             if ( ! rdfDT.isValid(lexicalForm) ) {
                 String msg = format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(dataNode));
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
 
             String str = lexicalForm;
@@ -226,8 +205,7 @@ public class ShapeExprEval {
                 case FRACTIONDIGITS : {
                     // Does not include trailing zeros.
                     if ( idx < 0 ) {
-                        result = null;
-                        return;
+                        return null;
                     }
                     //int before = idx;
                     int after = str.length()-idx-1;
@@ -237,8 +215,7 @@ public class ShapeExprEval {
                         after--;
                     }
                     if ( after <= numLengthCstr.getLength() ) {
-                        result = null;
-                        return;
+                        return null;
                     }
                     break;
                 }
@@ -267,8 +244,7 @@ public class ShapeExprEval {
                     int digits = finish-start;
 
                     if ( digits <= numLengthCstr.getLength() ) {
-                        result = null;
-                        return;
+                        return null;
                     }
                     break;
                 }
@@ -278,14 +254,13 @@ public class ShapeExprEval {
 
             String msg = format("Expected %s %d : got = %d", numLengthCstr.getLengthType().label(),
                     numLengthCstr.getLength(), str.length());
-            result = new ReportItem(msg, dataNode);
+            return new ReportItem(msg, dataNode);
         }
 
         @Override
-        public void visit(NumRangeConstraint numRangeCstr) {
+        public ReportItem visit(NumRangeConstraint numRangeCstr) {
             if ( ! dataNode.isLiteral() ) {
-                result = new ReportItem("NumRange: Not a literal number", dataNode);
-                return;
+                return new ReportItem("NumRange: Not a literal number", dataNode);
             }
             NodeValue nv = NodeValue.makeNode(dataNode);
             int r = NodeValue.compare(nv, numRangeCstr.getNumericValue());
@@ -293,73 +268,69 @@ public class ShapeExprEval {
             switch(numRangeCstr.getRangeKind()) {
 
                 case MAXEXCLUSIVE :
-                    if ( r < 0 ) {result = null; return;}
+                    if ( r < 0 ) {return null;}
                     break;
                 case MAXINCLUSIVE :
-                    if ( r <= 0 ) {result = null; return;}
+                    if ( r <= 0 ) {return null;}
                     break;
                 case MINEXCLUSIVE :
-                    if ( r > 0 ) {result = null; return;}
+                    if ( r > 0 ) {return null;}
                     break;
                 case MININCLUSIVE :
-                    if ( r >= 0 ) {result = null; return;}
+                    if ( r >= 0 ) {return null;}
                     break;
             }
             String msg = format("Expected %s %s : got = %s", numRangeCstr.getRangeKind().label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(dataNode));
-            result = new ReportItem(msg, dataNode);
+            return new ReportItem(msg, dataNode);
         }
 
         @Override
-        public void visit(StrRegexConstraint strRegexCstr) {
+        public ReportItem visit(StrRegexConstraint strRegexCstr) {
             if ( dataNode.isBlank() ) {
                 String msg = toString()+": Blank node: "+displayStr(dataNode);
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
             String str = NodeFunctions.str(dataNode);
             if ( strRegexCstr.getPattern().matcher(str).find() ) {
-                result = null;
-                return;
+                return null;
             }
             String msg = strRegexCstr+": Does not match: '"+str+"'";
-            result = new ReportItem(msg, dataNode);
+            return new ReportItem(msg, dataNode);
         }
 
         @Override
-        public void visit(StrLengthConstraint strLengthCstr) {
+        public ReportItem visit(StrLengthConstraint strLengthCstr) {
             StrLengthKind lengthType = strLengthCstr.getLengthType();
             int length = strLengthCstr.getLength();
             if ( ! dataNode.isLiteral() && ! dataNode.isURI() ) {
                 String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(dataNode));
-                result = new ReportItem(msg, dataNode);
-                return;
+                return new ReportItem(msg, dataNode);
             }
             String str = NodeFunctions.str(dataNode);
             switch (lengthType) {
                 case LENGTH :
-                    if ( str.length() == length ) {result = null; return;}
+                    if ( str.length() == length ) {return null;}
                     break;
                 case MAXLENGTH :
-                    if ( str.length() <= length ) {result = null; return;}
+                    if ( str.length() <= length ) {return null;}
                     break;
                 case MINLENGTH :
-                    if ( str.length() >= length ) {result = null; return;}
+                    if ( str.length() >= length ) {return null;}
                     break;
             }
 
             String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-            result = new ReportItem(msg, dataNode);
+            return new ReportItem(msg, dataNode);
         }
 
         @Override
-        public void visit(ValueConstraint valueCstr) {
+        public ReportItem visit(ValueConstraint valueCstr) {
             boolean b = valueCstr.getValueSetRanges().stream()
                     .anyMatch(valueSetRange->validateRange(valueSetRange, dataNode));
             if ( !b ) {
-                result = new ReportItem("Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr, null);
-                return;
+                return new ReportItem("Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr, null);
             }
-            result = null;
+            return null;
         }
 
         private boolean validateRange(ValueSetRange valueSetRange, Node data) {

@@ -18,35 +18,11 @@
 
 package org.apache.jena.shex.expressions;
 
-public class ShapeExternal extends ShapeExpr {
-
-    public ShapeExternal() {
-        super();
-    }
-
-    @Override
-    public void visit(VoidShapeExprVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
-        return visitor.visit(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return ShexConst.hashShExprExternal;
-    }
-
-    @Override
-    public  boolean equals(Object obj) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        return true;
-    }
+public interface VoidTripleExprVisitor {
+    public default void visit(TripleExprCardinality tripleExprCardinality) {}
+    public default void visit(EachOf eachOf) {}
+    public default void visit(OneOf oneOf) {}
+    public default void visit(TripleExprEmpty tripleExprEmpty) {}
+    public default void visit(TripleExprRef tripleExprRef) {}
+    public default void visit(TripleConstraint tripleConstraint) {}
 }

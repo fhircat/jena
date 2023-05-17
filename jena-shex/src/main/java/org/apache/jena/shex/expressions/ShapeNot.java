@@ -19,13 +19,6 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
-import java.util.StringJoiner;
-
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeNot extends ShapeExpr {
 
@@ -45,8 +38,13 @@ public class ShapeNot extends ShapeExpr {
     }
 
     @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

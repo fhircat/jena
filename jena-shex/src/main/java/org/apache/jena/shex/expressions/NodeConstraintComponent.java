@@ -20,7 +20,9 @@ package org.apache.jena.shex.expressions;
 
 public abstract class NodeConstraintComponent  {
 
-    public abstract void visit(NodeConstraintComponentVisitor visitor);
+    public abstract void visit(VoidNodeConstraintComponentVisitor visitor);
+
+    public abstract <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor);
 
     @Override
     public abstract int hashCode();
