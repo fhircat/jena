@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.expressions;
 
-import org.apache.jena.shex.expressions.*;
+public interface TypedNodeConstraintComponentVisitor<R> {
 
-public interface TripleExprVisitor2<R> {
-    R visit(TripleExprCardinality tripleExprCardinality);
-    R visit(EachOf eachOf);
-    R visit(OneOf oneOf);
-    R visit(TripleExprEmpty tripleExprEmpty);
-    R visit(TripleExprRef tripleExprRef);
-    R visit(TripleConstraint tripleConstraint);
+    R visit(NodeKindConstraint nodeKindCstr);
+    R visit(DatatypeConstraint datatypeCstr);
+    R visit(NumLengthConstraint numLengthCstr);
+    R visit(NumRangeConstraint numRangeCstr);
+    R visit(StrRegexConstraint strRegexCstr);
+    R visit(StrLengthConstraint strLengthCstr);
+    R visit(ValueConstraint valueCstr);
+
 }

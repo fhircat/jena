@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.shex.eval.TripleExprVisitor2;
 
 public class OneOf extends TripleExpr {
 
@@ -46,12 +45,12 @@ public class OneOf extends TripleExpr {
     }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public <R> R visit(TripleExprVisitor2<R> visitor) {
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
         return visitor.visit(this);
     }
 

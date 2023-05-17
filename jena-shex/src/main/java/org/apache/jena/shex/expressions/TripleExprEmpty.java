@@ -18,8 +18,6 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.shex.eval.TripleExprVisitor2;
-
 public class TripleExprEmpty extends TripleExpr {
     private static final TripleExpr instance = new TripleExprEmpty();
     public static TripleExpr get() { return instance ; }
@@ -27,12 +25,12 @@ public class TripleExprEmpty extends TripleExpr {
     private TripleExprEmpty() { super(null); }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public <R> R visit(TripleExprVisitor2<R> visitor) {
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
         return visitor.visit(this);
     }
 

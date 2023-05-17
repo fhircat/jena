@@ -148,9 +148,9 @@ public class ShapeEval {
     }
 
     // Recursive.
-    private static TripleExprVisitor walker(ShexSchema shapes, TripleExprVisitor step) {
+    private static VoidTripleExprVisitor walker(ShexSchema shapes, VoidTripleExprVisitor step) {
         //Walker
-        return new TripleExprVisitor() {
+        return new VoidTripleExprVisitor() {
             @Override
             public void visit(TripleExprCardinality tripleExprCardinality) {
                 tripleExprCardinality.visit(step);

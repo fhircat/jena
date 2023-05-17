@@ -19,7 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 /** Visitor for NodeConstraintComponents. */
-public interface NodeConstraintComponentVisitor {
+public interface VoidNodeConstraintComponentVisitor {
 
     public default void visit(NodeKindConstraint nodeKindCstr) {}
 

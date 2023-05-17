@@ -37,6 +37,56 @@ public class SorbeTripleExpr {
     private final Map<TripleConstraint, TripleConstraint> sorbeToSourceMap;
     private final Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap;
 
+    public static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr, ShexSchema schema) {
+
+        List<TripleExpr> result = new ArrayList<>();
+
+        TripleExprAccumulationVisitor<TripleExpr> accumulator = new TripleExprAccumulationVisitor<>(result) {
+
+            private void _visit(TripleExpr tripleExpr) {
+                if (tripleExpr.getSemActs() != null)
+                    accumulate(tripleExpr);
+            }
+
+            @Override
+            public void visit(TripleExprCardinality tripleExprCardinality) {
+                _visit(tripleExprCardinality);
+            }
+
+            @Override
+            public void visit(EachOf eachOf) {
+                _visit(eachOf);
+            }
+
+            @Override
+            public void visit(OneOf oneOf) {
+                _visit(oneOf);
+            }
+
+            @Override
+            public void visit(TripleExprEmpty tripleExprEmpty) {
+                _visit(tripleExpr);
+            }
+
+            @Override
+            public void visit(TripleExprRef tripleExprRef) {
+                _visit(tripleExprRef);
+            }
+
+            @Override
+            public void visit(TripleConstraint tripleConstraint) {
+                _visit(tripleConstraint);
+            }
+        };
+
+        VoidWalker walker = new VoidWalker.Builder()
+                .processTripleExprsWith(accumulator)
+                .followTripleExprRefs(schema)
+                .build();
+        tripleExpr.visit(walker);
+        return result;
+    }
+
     public boolean containsSemActs() {
         return !subexprsWithSemActs.isEmpty();
     }
@@ -72,10 +122,10 @@ public class SorbeTripleExpr {
 
     public static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
 
-        List<TripleExpr> subexprsWithSemActs = Util.collectSubExprWithSemActs(tripleExpr, true, schema);
+        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
 
         if (isSorbe(tripleExpr))
-            return new SorbeTripleExpr(tripleExpr, tripleExpr, subexprsWithSemActs, null, null);
+            return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null, null);
 
         Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
         Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap = new HashMap<>();
@@ -150,7 +200,7 @@ public class SorbeTripleExpr {
 
         SorbeConstructor constructor = new SorbeConstructor();
         TripleExpr sorbe = tripleExpr.visit(constructor);
-        return new SorbeTripleExpr(tripleExpr, sorbe, subexprsWithSemActs, sorbeToSourceMap, sourceToSorbeMap);
+        return new SorbeTripleExpr(tripleExpr, sorbe, subExprsWithSemActs, sorbeToSourceMap, sourceToSorbeMap);
     }
 
 
@@ -167,36 +217,36 @@ public class SorbeTripleExpr {
         };
 
         // Not the most natural or most efficient implementation, but reuses recursive mechanism of accumulation walker
-        TripleExprAccumulationVisitor2<Object> step = new TripleExprAccumulationVisitor2<>(acc) {
+        TripleExprAccumulationVisitor<Object> step = new TripleExprAccumulationVisitor<>(acc) {
             @Override
-            public Void visit(TripleExprRef tripleExprRef) {
-                acc.add(false);
-                return null;
+            public void visit(TripleExprRef tripleExprRef) {
+                accumulate(false);
             }
 
             @Override
-            public Void visit(TripleExprCardinality tripleExprCardinality) {
+            public void visit(TripleExprCardinality tripleExprCardinality) {
                 Cardinality card = tripleExprCardinality.getCardinality();
                 TripleExpr subExpr = tripleExprCardinality.getSubExpr();
                 if (subExpr instanceof TripleConstraint)
-                    return null;
+                    return;
                 if (card.equals(Cardinality.PLUS) && containsEmpty(subExpr, null))
-                    acc.add(false);
+                    accumulate(false);
                 else if (!(card.equals(Cardinality.PLUS) || card.equals(Cardinality.STAR) ||
                         card.equals(Cardinality.OPT) || card.equals(IntervalComputation.ZERO_INTERVAL)))
-                    acc.add(false);
-                return null;
+                    accumulate(false);
             }
         };
 
-        TripleExprWalker2 walker = new TripleExprWalker2(step, null, false, null);
+        VoidWalker walker = new VoidWalker.Builder()
+                .processTripleExprsWith(step)
+                .build();
         tripleExpr.visit(walker);
         return acc.isEmpty();
     }
 
     private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
 
-        class CheckContainsEmpty implements TripleExprVisitor2<Boolean> {
+        class CheckContainsEmpty implements TypedTripleExprVisitor<Boolean> {
 
             @Override
             public Boolean visit(TripleConstraint tripleConstraint) {
@@ -235,7 +285,7 @@ public class SorbeTripleExpr {
         return tripleExpr.visit(visitor);
     }
 
-    static class CloneWithNullSemanticActionsAndEraseLabels implements TripleExprVisitor2<TripleExpr> {
+    static class CloneWithNullSemanticActionsAndEraseLabels implements TypedTripleExprVisitor<TripleExpr> {
 
         @Override
         public TripleExpr visit(EachOf eachOf) {

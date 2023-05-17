@@ -18,8 +18,6 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.shex.eval.TripleExprVisitor2;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -56,12 +54,12 @@ public class TripleExprCardinality extends TripleExpr {
 
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public <R> R visit(TripleExprVisitor2<R> visitor) {
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
         return visitor.visit(this);
     }
 

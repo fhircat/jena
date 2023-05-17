@@ -21,11 +21,10 @@ package org.apache.jena.shex.eval;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-class IntervalComputation implements TripleExprVisitor2<Cardinality> {
+class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 
     /*package*/ static Cardinality ZERO_INTERVAL = new Cardinality(0, 0);
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);

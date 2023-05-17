@@ -33,7 +33,7 @@ import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.expressions.NodeConstraintComponentVisitor;
+import org.apache.jena.shex.expressions.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -48,46 +48,19 @@ public class ShexLib {
         return uri.substring(idx);
     }
 
-//    public static void walk(ShapeExpression shExpr, ShapeExprVisitor beforeVisitor, ShapeExprVisitor afterVisitor) {
-//        TripleExprVisitor tExprVisitor = new TripleExprVisitor() {
-//            @Override public void visit(TripleConstraint object) {
-//                // One level call of visitor.
-//                //object.getPredicate();
-//                ShapeExpression theShapeExpression = object.getShapeExpression();
-//                if ( theShapeExpression != null )
-//                    theShapeExpression.visit(beforeVisitor);
-//            }
-//        };
-//
-//        ShapeExprWalker walker = new ShapeExprWalker(beforeVisitor, afterVisitor, tExprVisitor, null, null);
-//        shExpr.visit(walker);
-//    }
-
     // TODO used only once in ShExC, move it there or inline it
     public static void walk(ShapeExpr shExpr,
-                            ShapeExprVisitor shapeVisitor,
-                            TripleExprVisitor tripleExpressionVisitor,
-                            NodeConstraintComponentVisitor nodeConstraintVisitor
+                            VoidShapeExprVisitor shapeVisitor,
+                            VoidTripleExprVisitor tripleExpressionVisitor,
+                            VoidNodeConstraintComponentVisitor nodeConstraintVisitor
                             ) {
-        ShapeExprWalker walker = new ShapeExprWalker(shapeVisitor, null,
-                                                     tripleExpressionVisitor, null,
-                                                     nodeConstraintVisitor);
+        VoidWalker walker = new VoidWalker.Builder()
+                .processShapeExprsWith(shapeVisitor)
+                .traverseShapes()
+                .traverseTripleConstraints()
+                .build();
         shExpr.visit(walker);
     }
-
-
-    // XXX Does this make sense?
-//    private static void walk(ShapeExpression shExpr,
-//                             ShapeExprVisitor beforeVisitor, ShapeExprVisitor afterVisitor,
-//                             //TripleExprVisitor beforeTripleExpressionVisitor, TripleExprVisitor afterTripleExpressionVisitor,
-//                             //NodeConstraint beforeNodeConstraintVisitor, NodeConstraint afterNodeConstraintVisitor
-//                             NodeConstraintVisitor beforeNodeConstraintVisitor, NodeConstraint afterNodeConstraintVisitor
-//                            ) {
-//        ShapeExprWalker walker = new ShapeExprWalker(beforeVisitor, afterVisitor,
-//                                                     beforeTripleExpressionVisitor, afterTripleExpressionVisitor,
-//                                                     beforeNodeConstraintVisitor, afterNodeConstraintVisitor);
-//        shExpr.visit(walker);
-//    }
 
     private static PrefixMap displayPrefixMap = PrefixMapFactory.createForOutput();
     private static NodeFormatter nodeFmtAbbrev = new NodeFormatterTTL(null, displayPrefixMap);

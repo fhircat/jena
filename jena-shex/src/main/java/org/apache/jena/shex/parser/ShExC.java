@@ -204,12 +204,19 @@ public class ShExC {
 
     private static void validatePhase2(ShexSchema shapes, ShapeDecl shape) {
         ShapeExpr shExpr = shape.getShapeExpr();
-        ShapeExprVisitor checker = new CheckFacets();
-        if (shExpr != null)
-            ShexLib.walk(shExpr, checker, null, null);
+        VoidShapeExprVisitor checker = new CheckFacets();
+        if (shExpr != null) {
+            // TODO the checker should be a NodeConstraintComponentVisitor => need to add node constraint components visitor to walkers
+            VoidWalker walker = new VoidWalker.Builder()
+                    .processShapeExprsWith(checker)
+                    .traverseShapes()
+                    .traverseTripleConstraints()
+                    .build();
+            shExpr.visit(walker);
+        }
     }
 
-    private static class CheckFacets implements ShapeExprVisitor {
+    private static class CheckFacets implements VoidShapeExprVisitor {
         @Override
         public void visit(NodeConstraint nodeConstraint) {
             if ( nodeConstraint == null )

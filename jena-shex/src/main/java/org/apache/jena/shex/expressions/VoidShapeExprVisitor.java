@@ -18,7 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
-public interface ShapeExprVisitor {
+public interface VoidShapeExprVisitor {
     public default void visit(ShapeAnd shapeAnd) {}
     public default void visit(ShapeOr shapeOr) {}
     public default void visit(ShapeNot shapeNot) {}
