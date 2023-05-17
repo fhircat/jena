@@ -22,11 +22,12 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
-import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
@@ -46,12 +47,9 @@ public class ShapeEval {
 
     /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
-        List<TripleConstraint> tripleConstraints = Util.collectTripleConstraints(tripleExpr,
-                true, vCxt.getShapes());
-        Set<Node> forwardPredicates  = tripleConstraints.stream()
-                .filter(tc -> ! tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
-        Set<Node> backwardPredicates = tripleConstraints.stream()
-                .filter(tc -> tc.isInverse()).map(TripleConstraint::getPredicate).collect(Collectors.toSet());
+        Pair<Set<Node>, Set<Node>> predicates = collectPredicates(tripleExpr, vCxt.getShapes());
+        Set<Node> forwardPredicates  = predicates.getLeft();
+        Set<Node> backwardPredicates = predicates.getRight();
 
         Set<Triple> matchables = new HashSet<>();
         Set<Triple> non_matchables = new HashSet<>();
@@ -67,9 +65,8 @@ public class ShapeEval {
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples, Node node,
                                        TripleExpr tripleExpr, Set<Node> extras) {
 
-        SorbeTripleExpr sorbeTripleExpr = getSorbe(tripleExpr, vCxt);
-        List<TripleConstraint> tripleConstraints = Util.collectTripleConstraints(sorbeTripleExpr.sorbe,
-                false, null);
+        SorbeTripleExpr sorbeTripleExpr = SorbeTripleExpr.create(tripleExpr, vCxt.getShapes());
+        List<TripleConstraint> tripleConstraints = sorbeTripleExpr.getAllSorbeTripleConstraints();
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = computePredicateBasedPreMatching(triples, tripleConstraints);
@@ -107,28 +104,16 @@ public class ShapeEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
 
-            Cardinality interval = computeInterval(sorbeTripleExpr.sorbe, matchingToBag(matching, tripleConstraints), vCxt);
+            Cardinality interval = computeInterval(sorbeTripleExpr, matchingToBag(matching, tripleConstraints), vCxt);
             if (interval.min <= 1 && 1 <= interval.max) {
-                boolean allSemActsSatisfied = true;
                 // the triple expression is satisfied by the matching, check semantic actions
-                for (TripleExpr subExpr : sorbeTripleExpr.getSubExprsWithSemActs()) {
-                    List<TripleConstraint> tripleConstraintsForSemAct = sorbeTripleExpr.sorbeTripleConstraints(subExpr, vCxt);
-                    Set<Triple> matchedTriples = matching.entrySet().stream()
-                            .filter(e -> tripleConstraintsForSemAct.contains(e.getValue()))
-                            .map(Map.Entry::getKey)
-                            .collect(Collectors.toSet());
-                    allSemActsSatisfied &= subExpr.testSemanticActions(vCxt, matchedTriples);
-                }
-                if (allSemActsSatisfied)
+                if (sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
+                        .allMatch(p -> p.getKey().testSemanticActions(vCxt, p.getValue())))
                     return true;
             }
         }
         return false;
 
-    }
-
-    private static SorbeTripleExpr getSorbe(TripleExpr tripleExpr, ValidationContext vCxt) {
-        return SorbeTripleExpr.create(tripleExpr, vCxt.getShapes());
     }
 
     private static Map<Triple, List<TripleConstraint>> computePredicateBasedPreMatching(Collection<Triple> triples,
@@ -147,67 +132,6 @@ public class ShapeEval {
         return bag;
     }
 
-    // Recursive.
-    private static VoidTripleExprVisitor walker(ShexSchema shapes, VoidTripleExprVisitor step) {
-        //Walker
-        return new VoidTripleExprVisitor() {
-            @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
-                tripleExprCardinality.visit(step);
-                tripleExprCardinality.getSubExpr().visit(this);
-            }
-
-            @Override
-            public void visit(EachOf eachOf) {
-                eachOf.visit(step);
-                eachOf.getTripleExprs().forEach(ex -> ex.visit(this));
-            }
-
-            @Override
-            public void visit(OneOf oneOf) {
-                oneOf.visit(step);
-                oneOf.getTripleExprs().forEach(ex -> ex.visit(this));
-            }
-
-            @Override
-            public void visit(TripleExprEmpty tripleExprEmpty) {
-                tripleExprEmpty.visit(step);
-            }
-
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                tripleExprRef.visit(step);
-                if ( tripleExprRef.getLabel() == null )
-                    throw new ShexException("Failed to dereference : "+ tripleExprRef.getLabel());
-                shapes.getTripleExpression(tripleExprRef.getLabel()).visit(this);
-            }
-
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                tripleConstraint.visit(step);
-            }
-        };
-    }
-
-//
-//    /*package*/ static List<TripleConstraint> findTripleConstraints(ValidationContext vCxt,
-//                                                                    TripleExpr tripleExpr) {
-//        List<TripleConstraint> constraints = new ArrayList<>();
-//        tripleExpr.visit(accumulator(vCxt.getShapes(), constraints, Function.identity()));
-//        return constraints;
-//    }
-
-//    private static <X> TripleExprVisitor accumulator(ShexSchema shapes, Collection<X> acc,
-//                                                     Function<TripleConstraint, X> mapper) {
-//        TripleExprVisitor step = new TripleExprVisitor() {
-//            @Override
-//            public void visit(TripleConstraint tripleConstraint) {
-//                    acc.add(mapper.apply(tripleConstraint));
-//            }
-//        };
-//        return walker(shapes, step);
-//    }
-
     private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {
         ExtendedIterator<Triple> x = G.find(graph, node, null, null);
         x.forEach(t -> {
@@ -223,10 +147,39 @@ public class ShapeEval {
         x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
     }
 
-    private static Cardinality computeInterval (TripleExpr tripleExpr, Map<TripleConstraint, Integer> bag,
+    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Map<TripleConstraint, Integer> bag,
                                                 ValidationContext vCxt) {
-        IntervalComputation computation = new IntervalComputation(bag, vCxt);
-        return tripleExpr.visit(computation);
+        IntervalComputation computation = new IntervalComputation(sorbeTripleExpr, bag, vCxt);
+        return sorbeTripleExpr.sorbe.visit(computation);
+    }
+
+    private static Pair<Set<Node>, Set<Node>> collectPredicates (TripleExpr tripleExpr, ShexSchema schema) {
+
+        Set<Node> fwdPredicates = new HashSet<>();
+        Set<Node> invPredicates = new HashSet<>();
+        TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(fwdPredicates) {
+            @Override
+            public void visit(TripleConstraint tripleConstraint) {
+                if (! tripleConstraint.isInverse())
+                    accumulate(tripleConstraint.getPredicate());
+            }
+        };
+        TripleExprAccumulationVisitor<Node> invPredaccumulator = new TripleExprAccumulationVisitor<>(invPredicates) {
+            @Override
+            public void visit(TripleConstraint tripleConstraint) {
+                if (tripleConstraint.isInverse())
+                    accumulate(tripleConstraint.getPredicate());
+                super.visit(tripleConstraint);
+            }
+        };
+
+        VoidWalker walker = new VoidWalker.Builder()
+                .processTripleExprsWith(fwdPredAccumulator)
+                .processTripleExprsWith(invPredaccumulator)
+                .followTripleExprRefs(schema)
+                .build();
+        tripleExpr.visit(walker);
+        return new ImmutablePair<>(fwdPredicates, invPredicates);
     }
 
 }

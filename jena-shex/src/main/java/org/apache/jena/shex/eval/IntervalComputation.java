@@ -21,8 +21,10 @@ package org.apache.jena.shex.eval;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 
@@ -30,10 +32,12 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
     private final Map<TripleConstraint, Integer> bag;
+    private final SorbeTripleExpr sorbeTripleExpr;
     private final ValidationContext vCxt;
 
-    public IntervalComputation(Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
+    public IntervalComputation(SorbeTripleExpr sorbeTripleExpr, Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
         this.bag = bag;
+        this.sorbeTripleExpr = sorbeTripleExpr;
         this.vCxt = vCxt;
     }
 
@@ -71,17 +75,16 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 
         Cardinality card = new Cardinality(tripleExprCardinality.min(), tripleExprCardinality.max());
         TripleExpr subExpr = tripleExprCardinality.getSubExpr();
-        boolean isEmptySubbag = isEmptySubbag(bag, tripleExprCardinality, vCxt);
 
         if (card.equals(Cardinality.STAR))
-            if (isEmptySubbag)
+            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
                 return Cardinality.STAR;
             else {
                 Cardinality subResult = subExpr.visit(this);
                 return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : Cardinality.PLUS;
             }
         if (card.equals(Cardinality.PLUS))
-            if (isEmptySubbag)
+            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
                 return ZERO_INTERVAL;
             else {
                 Cardinality subResult = subExpr.visit(this);
@@ -96,27 +99,22 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
             return div(nbOcc, card);
         }
         if (card.equals(ZERO_INTERVAL))
-            return isEmptySubbag ? Cardinality.STAR : EMPTY_INTERVAL;
+            return sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality) ? Cardinality.STAR : EMPTY_INTERVAL;
 
         throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
     }
 
-
     @Override
     public Cardinality visit(TripleExprRef tripleExprRef) {
-        return vCxt.getShapes().getTripleExpression(tripleExprRef.getLabel()).visit(this);
+        throw new IllegalArgumentException("References not supported");
     }
 
-    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression,
-                                  ValidationContext vCxt) {
-        // TODO lazy computation
-        List<TripleConstraint> list = Util.collectTripleConstraints(expression, false, null);
-        for (TripleConstraint tripleConstraint : list) {
-            if (bag.get(tripleConstraint) != 0)
-                return false;
-        }
-        return true;
-    }
+    /*
+    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression) {
+        // TODO lazy computation : needs a reference to the sorbe triple expr, or maybe through the context ?
+        List<TripleConstraint> list = sorbeTripleExpr.getTripleConstraints(expression);
+        return list.stream().allMatch(tc -> bag.get(tc) == 0);
+    }*/
 
     private static Cardinality add (Cardinality i1, Cardinality i2) {
         int imin, imax;

@@ -2,10 +2,13 @@ package org.apache.jena.shex.expressions;
 
 import org.apache.jena.shex.ShexSchema;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
 
-    private final VoidShapeExprVisitor shapeExprProcessor;
-    private final VoidTripleExprVisitor tripleExprProcessor;
+    private final List<VoidShapeExprVisitor> shapeExprProcessors;
+    private final List<VoidTripleExprVisitor> tripleExprProcessors;
     private final boolean traverseShapes;
     private final boolean traverseTripleConstraints;
     private final boolean followShapeExprRefs;
@@ -13,8 +16,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private final ShexSchema schema;
 
     public static class Builder {
-        private VoidShapeExprVisitor _shapeExprProcessor = null;
-        private VoidTripleExprVisitor _tripleExprProcessor = null;
+        private final List<VoidShapeExprVisitor> _shapeExprProcessors = new ArrayList<>();
+        private final List<VoidTripleExprVisitor> _tripleExprProcessors = new ArrayList<>();
         private boolean _traverseShapes = false;
         private boolean _traverseTripleConstraints = false;
         private boolean _followShapeExprRefs = false;
@@ -22,12 +25,12 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         private ShexSchema _schema = null;
 
         public Builder processShapeExprsWith(VoidShapeExprVisitor shapeExprProcessor) {
-            this._shapeExprProcessor = shapeExprProcessor;
+            this._shapeExprProcessors.add(shapeExprProcessor);
             return this;
         }
 
         public Builder processTripleExprsWith(VoidTripleExprVisitor tripleExprProcessor) {
-            this._tripleExprProcessor = tripleExprProcessor;
+            this._tripleExprProcessors.add(tripleExprProcessor);
             return this;
         }
 
@@ -58,19 +61,19 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         }
 
         public VoidWalker build() {
-            return new VoidWalker(_shapeExprProcessor, _tripleExprProcessor,
+            return new VoidWalker(_shapeExprProcessors, _tripleExprProcessors,
                     _traverseShapes, _traverseTripleConstraints,
                     _followShapeExprRefs, _followTripleExprRefs, _schema);
         }
 
     }
 
-    private VoidWalker(VoidShapeExprVisitor shapeExprProcessor, VoidTripleExprVisitor tripleExprProcessor,
+    private VoidWalker(List<VoidShapeExprVisitor> shapeExprProcessors, List<VoidTripleExprVisitor> tripleExprProcessors,
                       boolean traverseShapes, boolean traverseTripleConstraints,
                       boolean followShapeExprRefs, boolean followTripleExprRefs,
                       ShexSchema schema) {
-        this.shapeExprProcessor = shapeExprProcessor;
-        this.tripleExprProcessor = tripleExprProcessor;
+        this.shapeExprProcessors = shapeExprProcessors;
+        this.tripleExprProcessors = tripleExprProcessors;
         this.traverseShapes = traverseShapes;
         this.traverseTripleConstraints = traverseTripleConstraints;
         this.followShapeExprRefs = followShapeExprRefs;
@@ -79,13 +82,11 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     }
 
     private void process(TripleExpr tripleExpr) {
-        if (tripleExprProcessor != null)
-            tripleExpr.visit(tripleExprProcessor);
+        tripleExprProcessors.forEach(v -> tripleExpr.visit(v));
     }
 
     private void process(ShapeExpr shapeExpr) {
-        if (shapeExprProcessor != null)
-            shapeExpr.visit(shapeExprProcessor);
+        shapeExprProcessors.forEach(v -> shapeExpr.visit(v));
     }
 
     @Override

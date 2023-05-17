@@ -28,6 +28,7 @@ public abstract class TripleExpr {
 
     private List<SemAct> semActs;
 
+    // TODO semacts are most often empty, it's weird to have the unique constructor requiring semantic actions
     protected TripleExpr(List<SemAct> semActs) {
         this.semActs = semActs;
     }
