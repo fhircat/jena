@@ -244,13 +244,21 @@ void inlineShapeOrRef() : { int idx; }
     inlineShapeDefinition() | pushShapeRef()
 }
 
+<<<<<<< HEAD
 void pushShapeRef() : { Token t ; ShapeExprRef ref; }
+=======
+void pushShapeRef() : { Token t ; Node ref; }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 {
     ( ref = shapeRef() )
     { shapeReference(ref); }
 }
 
+<<<<<<< HEAD
 ShapeExprRef shapeRef() : { Token t ; Node ref; }
+=======
+Node shapeRef() : { Token t ; Node ref; }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 {
     ( t = <ATPNAME_LN>
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
@@ -258,7 +266,11 @@ ShapeExprRef shapeRef() : { Token t ; Node ref; }
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
     | <AT> ref = shapeExprLabel()
     )
+<<<<<<< HEAD
     { return ShapeExprRef.create(ref); }
+=======
+    { return ref; }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 }
 
 void litInlineNodeConstraint() : { int idx; } {
@@ -365,7 +377,11 @@ String numericLength() : { Token t; }
 void shapeDefinition() :
 { boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+<<<<<<< HEAD
   List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
+=======
+  List<Node> xtends = new ArrayList<Node>();
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
   List<SemAct> semActs;
 }
 {
@@ -374,20 +390,32 @@ void shapeDefinition() :
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
     (annotation())*
     semActs = semanticActions()
+<<<<<<< HEAD
     { finishShapeDefinition(tripleExpr, extras, closed, xtends, semActs); }
+=======
+    { finishShapeDefinition(tripleExpr, extras, xtends, closed, semActs); }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 }
 
 void inlineShapeDefinition() :
 { boolean closed = false ;
   TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+<<<<<<< HEAD
   List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
+=======
+  List<Node> xtends = new ArrayList<Node>();
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 }
 {
     { startShapeDefinition(); }
    	( extraPropertySet(extras) | extendsShapeRefList(xtends) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
+<<<<<<< HEAD
     { finishShapeDefinition(tripleExpr, extras, closed, xtends, null); }
+=======
+    { finishShapeDefinition(tripleExpr, extras, xtends, closed, null); }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 }
 
 void extraPropertySet(List<Node> extras) : { Node p; }
@@ -395,7 +423,11 @@ void extraPropertySet(List<Node> extras) : { Node p; }
    	<EXTRA> (p = predicate() { extras.add(p); })+
 }
 
+<<<<<<< HEAD
 void extendsShapeRefList(List<ShapeExprRef> xtends) : { ShapeExprRef r; }
+=======
+void extendsShapeRefList(List<Node> xtends) : { Node r; }
+>>>>>>> e750f6ebcc (parse ShEx 2.2)
 {
    	<EXTENDS> (r = shapeRef() { xtends.add(r); })
 }
