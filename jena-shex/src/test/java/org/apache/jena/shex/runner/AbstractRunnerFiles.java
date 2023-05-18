@@ -24,15 +24,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.arq.junit.runners.Directories;
 import org.apache.jena.arq.junit.runners.RunnerOneTest;
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.reasoner.rulesys.builtins.Regex;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
@@ -57,6 +62,15 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
     protected AbstractRunnerFiles(Class<? > klass, Function <String, Runnable> maker,
                                   Set<String> includes, Set<String> excludes, String endsWith) throws InitializationError {
         super(klass);
+        String testsDirEnv = System.getenv("TESTS_DIR");
+        String testsEnv = System.getenv("TESTS");
+        List<Pattern> selected = null;
+        if (testsEnv != null) {
+          selected = Arrays.stream(testsEnv.split(";"))
+                  .map(s -> Pattern.compile(s))
+                  .collect(Collectors.toList());
+        }
+
         String label = ShexTests.getLabel(klass);
         if ( label == null )
             label = klass.getName();
@@ -66,7 +80,6 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
 
         for ( String directory : directories ) {
             // LEVEL per directory?
-            String testsDirEnv = System.getenv("TESTS_DIR");
             if (testsDirEnv != null) {
                 File override = new File(testsDirEnv);
                 if (!override.exists())
@@ -76,7 +89,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
                 File overridden = new File(String.valueOf(overriddenPath));
                 directory = String.valueOf(overridden.exists() ? overridden : override);
             }
-            List<String> files = getFiles(directory, includes, excludes, endsWith);
+            List<String> files = getFiles(directory, includes, excludes, endsWith, selected);
             if ( files.isEmpty() )
                 //System.err.println("No files: "+label);
                 throw new InitializationError("No files");
@@ -98,7 +111,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
         }
     }
 
-    protected final List<String> getFiles(String directory, Set<String> includes, Set<String> excludes, String endsWith) {
+    protected final List<String> getFiles(String directory, Set<String> includes, Set<String> excludes, String endsWith, List<Pattern> selected) {
         Path src = Path.of(directory);
         BiPredicate<Path, BasicFileAttributes> predicate = (path,attr)->attr.isRegularFile() && path.toString().endsWith(".shex");
 
@@ -109,6 +122,11 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
                 Files.find(src, 1, predicate)
                     .filter(p-> p.getFileName().toString().endsWith(endsWith))
                     .filter(p-> ! excludes.contains(p.getFileName().toString()))
+                    .filter(p -> {
+                        if (selected == null) return true;
+                        String fn = p.getFileName().toString();
+                        return selected.stream().filter(pattern -> pattern.matcher(fn).matches()).findAny().isPresent();
+                    })
                     .sorted()
                     .map(Path::toString)
                     .forEach(files::add);
