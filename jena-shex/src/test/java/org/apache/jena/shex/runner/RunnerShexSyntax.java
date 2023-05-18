@@ -33,7 +33,7 @@ import org.junit.runners.model.InitializationError;
 public class RunnerShexSyntax extends AbstractRunnerFiles {
 
     public RunnerShexSyntax(Class<? > klass) throws InitializationError {
-        super(klass, RunnerShexSyntax::makeShexSyntaxTest, includes(), excludes());
+        super(klass, RunnerShexSyntax::makeShexSyntaxTest, includes(), excludes(), ".shex");
     }
 
     private static Set<String> includes() {

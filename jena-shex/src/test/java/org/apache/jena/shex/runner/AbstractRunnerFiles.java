@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.runner;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +50,12 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
     // Includes and excludes are filenames with a directory.
     protected AbstractRunnerFiles(Class<? > klass, Function <String, Runnable> maker,
                                   Set<String> includes, Set<String> excludes) throws InitializationError {
+        this(klass, maker, includes, excludes, null);
+    }
+
+    // Includes and excludes are filenames with a directory.
+    protected AbstractRunnerFiles(Class<? > klass, Function <String, Runnable> maker,
+                                  Set<String> includes, Set<String> excludes, String endsWith) throws InitializationError {
         super(klass);
         String label = ShexTests.getLabel(klass);
         if ( label == null )
@@ -59,7 +66,17 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
 
         for ( String directory : directories ) {
             // LEVEL per directory?
-            List<String> files = getFiles(directory, includes, excludes);
+            String testsDirEnv = System.getenv("TESTS_DIR");
+            if (testsDirEnv != null) {
+                File override = new File(testsDirEnv);
+                if (!override.exists())
+                    throw new InitializationError("Can't resolve " + Path.of("").toAbsolutePath().toString());
+                String subDir = new File(directory).getName();
+                Path overriddenPath = Path.of(testsDirEnv, subDir);
+                File overridden = new File(String.valueOf(overriddenPath));
+                directory = String.valueOf(overridden.exists() ? overridden : override);
+            }
+            List<String> files = getFiles(directory, includes, excludes, endsWith);
             if ( files.isEmpty() )
                 //System.err.println("No files: "+label);
                 throw new InitializationError("No files");
@@ -81,7 +98,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
         }
     }
 
-    protected final List<String> getFiles(String directory, Set<String> includes, Set<String> excludes) {
+    protected final List<String> getFiles(String directory, Set<String> includes, Set<String> excludes, String endsWith) {
         Path src = Path.of(directory);
         BiPredicate<Path, BasicFileAttributes> predicate = (path,attr)->attr.isRegularFile() && path.toString().endsWith(".shex");
 
@@ -90,6 +107,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
         if ( includes.isEmpty() ) {
             try {
                 Files.find(src, 1, predicate)
+                    .filter(p-> p.getFileName().toString().endsWith(endsWith))
                     .filter(p-> ! excludes.contains(p.getFileName().toString()))
                     .sorted()
                     .map(Path::toString)
