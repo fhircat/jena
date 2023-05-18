@@ -154,10 +154,10 @@ class ShexValidatorImpl implements ShexValidator{
     private static boolean validationStep(ValidationContext vCxt, ShexRecord mapEntry, Node shapeRef, Node focus) {
         track(mapEntry.shapeExprLabel, focus);
         // Isolate.
-        ShapeDecl shape = vCxt.getShape(shapeRef);
+        ShapeDecl shape = vCxt.getShapeDecl(shapeRef);
         if ( shape == null ) {
             // No such shape.
-            vCxt.getShape(shapeRef);
+            vCxt.getShapeDecl(shapeRef);
             String msg = "No such shape: "+ShexLib.displayStr(shapeRef);
             ReportItem item = new ReportItem(msg, shapeRef);
             vCxt.reportEntry(item);

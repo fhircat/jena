@@ -19,13 +19,12 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.jena.graph.Node;
 
 public class TripleConstraint extends TripleExpr {
 
-    // TODO why triple constraint has a label while no other triple expression has, neither have shape expressions
+    // TODO why triple constraint has a label while no other triple expression has, neither have shape expressions except for shapes
     private final Node label;
     private final Node predicate;
     private final ShapeExpr valueExpr;
@@ -61,8 +60,13 @@ public class TripleConstraint extends TripleExpr {
     }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
 //

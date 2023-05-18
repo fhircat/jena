@@ -150,7 +150,7 @@ public class WriterShExC {
         }
     }
 
-    private static class PrinterShExC implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintComponentVisitor {
+    private static class PrinterShExC implements VoidShapeExprVisitor, VoidTripleExprVisitor, VoidNodeConstraintComponentVisitor {
         final IndentedWriter out;
         final NodeFormatter formatter;
 

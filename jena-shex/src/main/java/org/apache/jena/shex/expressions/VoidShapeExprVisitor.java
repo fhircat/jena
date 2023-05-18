@@ -18,11 +18,12 @@
 
 package org.apache.jena.shex.expressions;
 
-public interface TripleExprVisitor {
-    public default void visit(TripleExprCardinality tripleExprCardinality) {}
-    public default void visit(EachOf eachOf) {}
-    public default void visit(OneOf oneOf) {}
-    public default void visit(TripleExprEmpty tripleExprEmpty) {}
-    public default void visit(TripleExprRef tripleExprRef) {}
-    public default void visit(TripleConstraint tripleConstraint) {}
+public interface VoidShapeExprVisitor {
+    public default void visit(ShapeAnd shapeAnd) {}
+    public default void visit(ShapeOr shapeOr) {}
+    public default void visit(ShapeNot shapeNot) {}
+    public default void visit(ShapeExprRef shapeExprRef) {}
+    public default void visit(ShapeExternal shapeExternal) {}
+    public default void visit(Shape shape) {}
+    public default void visit(NodeConstraint nodeConstraint) {}
 }

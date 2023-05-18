@@ -21,7 +21,6 @@ package org.apache.jena.shex.expressions;
 import java.util.Objects;
 
 import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ShexLib;
 
 public class TripleExprRef extends TripleExpr {
 
@@ -41,8 +40,13 @@ public class TripleExprRef extends TripleExpr {
     }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

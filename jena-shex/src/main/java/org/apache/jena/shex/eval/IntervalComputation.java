@@ -1,126 +1,112 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.jena.shex.eval;
 
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
-class IntervalComputation implements TripleExprVisitor {
+class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 
     /*package*/ static Cardinality ZERO_INTERVAL = new Cardinality(0, 0);
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
     private final Map<TripleConstraint, Integer> bag;
+    private final SorbeTripleExpr sorbeTripleExpr;
     private final ValidationContext vCxt;
-    Cardinality result;
 
-    public IntervalComputation(Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
+    public IntervalComputation(SorbeTripleExpr sorbeTripleExpr, Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
         this.bag = bag;
+        this.sorbeTripleExpr = sorbeTripleExpr;
         this.vCxt = vCxt;
-        result = null;
-    }
-
-    private void setResult(Cardinality result) {
-        this.result = result;
-    }
-
-    public Cardinality getResult() {
-        return this.result;
     }
 
     @Override
-    public void visit(TripleConstraint tripleConstraint) {
-
+    public Cardinality visit(TripleConstraint tripleConstraint) {
         int nbOcc = bag.get(tripleConstraint);
-        setResult(new Cardinality(nbOcc, nbOcc));
+        return new Cardinality(nbOcc, nbOcc);
     }
 
     @Override
-    public void visit(TripleExprEmpty tripleExprEmpty) {
-        setResult(Cardinality.STAR);
+    public Cardinality visit(TripleExprEmpty tripleExprEmpty) {
+        return Cardinality.STAR;
     }
 
     @Override
-    public void visit(OneOf oneOf) {
+    public Cardinality visit(OneOf oneOf) {
         Cardinality res = ZERO_INTERVAL; // the neutral element for addition
 
-        for (TripleExpr subExpr : oneOf.getTripleExprs()) {
-            subExpr.visit(this);
-            res = add(res, getResult());
-        }
-        setResult(res);
+        for (TripleExpr subExpr : oneOf.getTripleExprs())
+            res = add(res, subExpr.visit(this));
+        return res;
     }
 
     @Override
-    public void visit(EachOf eachOf) {
+    public Cardinality visit(EachOf eachOf) {
         Cardinality res = Cardinality.STAR; // the neutral element for intersection
 
-        for (TripleExpr subExpr : eachOf.getTripleExprs()) {
-            subExpr.visit(this);
-            res = inter(res, getResult());
-        }
-        setResult(res);
+        for (TripleExpr subExpr : eachOf.getTripleExprs())
+            res = inter(res, subExpr.visit(this));
+        return res;
     }
 
     @Override
-    public void visit(TripleExprCardinality tripleExprCardinality) {
+    public Cardinality visit(TripleExprCardinality tripleExprCardinality) {
 
         Cardinality card = new Cardinality(tripleExprCardinality.min(), tripleExprCardinality.max());
         TripleExpr subExpr = tripleExprCardinality.getSubExpr();
-        boolean isEmptySubbag = isEmptySubbag(bag, tripleExprCardinality, vCxt);
 
-        if (card.equals(Cardinality.STAR)) {
-            if (isEmptySubbag) {
-                setResult(Cardinality.STAR);
-            } else {
-                subExpr.visit(this);
-                if (!this.getResult().equals(EMPTY_INTERVAL)) {
-                    setResult(Cardinality.PLUS);
-                }
+        if (card.equals(Cardinality.STAR))
+            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
+                return Cardinality.STAR;
+            else {
+                Cardinality subResult = subExpr.visit(this);
+                return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : Cardinality.PLUS;
             }
-        } else if (card.equals(Cardinality.PLUS)) {
-            if (isEmptySubbag) {
-                setResult(ZERO_INTERVAL);
-            } else {
-                subExpr.visit(this);
-                if (!this.getResult().equals(EMPTY_INTERVAL)) {
-                    setResult(new Cardinality(1, getResult().max));
-                } else {
-                    setResult(EMPTY_INTERVAL);
-                }
+        if (card.equals(Cardinality.PLUS))
+            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
+                return ZERO_INTERVAL;
+            else {
+                Cardinality subResult = subExpr.visit(this);
+                return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : new Cardinality(1, subResult.max);
             }
-        } else if (card.equals(Cardinality.OPT)) {
-            subExpr.visit(this);
-            setResult(add(getResult(), Cardinality.STAR));
-        } else if (subExpr instanceof TripleConstraint) {
-            int nbOcc = bag.get((TripleConstraint) subExpr);
-            setResult(div(nbOcc, card));
-        } else if (card.equals(ZERO_INTERVAL)) {
-            if (isEmptySubbag) {
-                setResult(Cardinality.STAR);
-            } else {
-                setResult(EMPTY_INTERVAL);
-            }
-        } else {
-            throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
+        if (card.equals(Cardinality.OPT)) {
+            Cardinality subResult = subExpr.visit(this);
+            return add(subResult, Cardinality.STAR);
         }
+        if (subExpr instanceof TripleConstraint) {
+            int nbOcc = bag.get((TripleConstraint) subExpr);
+            return div(nbOcc, card);
+        }
+        if (card.equals(ZERO_INTERVAL))
+            return sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality) ? Cardinality.STAR : EMPTY_INTERVAL;
 
+        throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
     }
 
     @Override
-    public void visit(TripleExprRef tripleExprRef) {
-        vCxt.getShapes().getTripleExpression(tripleExprRef.getLabel()).visit(this);
-    }
-
-    private boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr expression,
-                                  ValidationContext vCxt) {
-        List<TripleConstraint> list = ShapeEval.findTripleConstraints(vCxt, expression);
-        for (TripleConstraint tripleConstraint : list) {
-            if (bag.get(tripleConstraint) != 0)
-                return false;
-        }
-        return true;
+    public Cardinality visit(TripleExprRef tripleExprRef) {
+        throw new IllegalArgumentException("References not supported");
     }
 
     private static Cardinality add (Cardinality i1, Cardinality i2) {
@@ -170,6 +156,4 @@ class IntervalComputation implements TripleExprVisitor {
 
         return new Cardinality(imin,imax);
     }
-
-
 }

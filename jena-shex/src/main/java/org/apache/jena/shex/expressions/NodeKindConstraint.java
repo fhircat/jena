@@ -31,8 +31,13 @@ public class NodeKindConstraint extends NodeConstraintComponent {
     public NodeKind getNodeKind() { return nodeKind; }
 
     @Override
-    public void visit(NodeConstraintComponentVisitor visitor) {
+    public void visit(VoidNodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

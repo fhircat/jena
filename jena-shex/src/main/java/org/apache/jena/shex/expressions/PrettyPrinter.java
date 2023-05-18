@@ -101,7 +101,7 @@ public class PrettyPrinter {
         out.decIndent();
     }
 
-    static class ExprPrinter implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintComponentVisitor {
+    static class ExprPrinter implements VoidShapeExprVisitor, VoidTripleExprVisitor, VoidNodeConstraintComponentVisitor {
 
         final IndentedWriter out;
         final NodeFormatter nFmt;
@@ -256,7 +256,7 @@ public class PrettyPrinter {
 
         @Override
         public void visit(NumLengthConstraint numLengthCstr) {
-            NodeConstraintComponentVisitor.super.visit(numLengthCstr);
+            VoidNodeConstraintComponentVisitor.super.visit(numLengthCstr);
         }
 
         @Override
@@ -332,7 +332,7 @@ public class PrettyPrinter {
         if (valueSetItem.isStem)
             out.print("~");
 
-        /* TODO different implementation in ValueSetItem.toString
+        /* this different implementation in from ValueSetItem.toString
         String str = "invalid";
         if ( iriStr != null ) str = "<"+iriStr+">";
         else if ( langStr != null ) str = "@"+langStr;

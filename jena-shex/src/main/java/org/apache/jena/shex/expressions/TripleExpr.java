@@ -28,6 +28,7 @@ public abstract class TripleExpr {
 
     private List<SemAct> semActs;
 
+    // TODO semacts are most often empty, it's weird to have the unique constructor requiring semantic actions
     protected TripleExpr(List<SemAct> semActs) {
         this.semActs = semActs;
     }
@@ -46,7 +47,9 @@ public abstract class TripleExpr {
         return v.dispatchTripleExprSemanticAction(this, matchables);
     }
 
-    public abstract void visit(TripleExprVisitor visitor);
+    public abstract void visit(VoidTripleExprVisitor visitor);
+
+    public abstract <R> R visit(TypedTripleExprVisitor<R> visitor);
 
     @Override
     public abstract int hashCode();
