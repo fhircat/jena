@@ -360,15 +360,15 @@ public class ParserShExC extends LangParserBase {
         push(shapeExprStack, NodeConstraint.create(Collections.emptyList(), null));
     }
 
-    protected void shapeReference(Node label) {
-        push(shapeExprStack, ShapeExprRef.create(label));
+    protected void shapeReference(ShapeExprRef ref) {
+        push(shapeExprStack, ref);
     }
 
     protected void startShapeDefinition() {
         start("ShapeDefinition");
     }
 
-    protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, List<Node> xtends, boolean closed, List<SemAct> semActs) {
+    protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, boolean closed, List<ShapeExprRef> xtends, List<SemAct> semActs) {
         if ( tripleExpr == null )
             return;
             // XXX [Print] Below causes "{ ; }"

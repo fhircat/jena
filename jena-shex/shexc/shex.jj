@@ -244,13 +244,13 @@ void inlineShapeOrRef() : { int idx; }
     inlineShapeDefinition() | pushShapeRef()
 }
 
-void pushShapeRef() : { Token t ; Node ref; }
+void pushShapeRef() : { Token t ; ShapeExprRef ref; }
 {
     ( ref = shapeRef() )
     { shapeReference(ref); }
 }
 
-Node shapeRef() : { Token t ; Node ref; }
+ShapeExprRef shapeRef() : { Token t ; Node ref; }
 {
     ( t = <ATPNAME_LN>
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
@@ -258,7 +258,7 @@ Node shapeRef() : { Token t ; Node ref; }
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
     | <AT> ref = shapeExprLabel()
     )
-    { return ref; }
+    { return ShapeExprRef.create(ref); }
 }
 
 void litInlineNodeConstraint() : { int idx; } {
@@ -365,7 +365,7 @@ String numericLength() : { Token t; }
 void shapeDefinition() :
 { boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
-  List<Node> xtends = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
   List<SemAct> semActs;
 }
 {
@@ -374,20 +374,20 @@ void shapeDefinition() :
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
     (annotation())*
     semActs = semanticActions()
-    { finishShapeDefinition(tripleExpr, extras, xtends, closed, semActs); }
+    { finishShapeDefinition(tripleExpr, extras, closed, xtends, semActs); }
 }
 
 void inlineShapeDefinition() :
 { boolean closed = false ;
   TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
-  List<Node> xtends = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
 }
 {
     { startShapeDefinition(); }
    	( extraPropertySet(extras) | extendsShapeRefList(xtends) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
-    { finishShapeDefinition(tripleExpr, extras, xtends, closed, null); }
+    { finishShapeDefinition(tripleExpr, extras, closed, xtends, null); }
 }
 
 void extraPropertySet(List<Node> extras) : { Node p; }
@@ -395,7 +395,7 @@ void extraPropertySet(List<Node> extras) : { Node p; }
    	<EXTRA> (p = predicate() { extras.add(p); })+
 }
 
-void extendsShapeRefList(List<Node> xtends) : { Node r; }
+void extendsShapeRefList(List<ShapeExprRef> xtends) : { ShapeExprRef r; }
 {
    	<EXTENDS> (r = shapeRef() { xtends.add(r); })
 }

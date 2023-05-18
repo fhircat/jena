@@ -29,13 +29,13 @@ public class Shape extends ShapeExpr {
 
     private Node label;
     private Set<Node> extras;
-    private List<Node> xtends;
+    private List<ShapeExprRef> xtends;
     private boolean closed;
     private TripleExpr tripleExpr;
     public static Builder newBuilder() { return new Builder(); }
 
     // TODO why a Shape has a label while the other shape expressions do not ?
-    private Shape(Node label, Set<Node> extras, boolean closed, List<Node> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
+    private Shape(Node label, Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
         this.label = label;
         if ( extras == null || extras.isEmpty() )
@@ -64,7 +64,7 @@ public class Shape extends ShapeExpr {
         return closed;
     }
 
-    public List<Node> getExtends() {
+    public List<ShapeExprRef> getExtends() {
         return xtends;
     }
 
@@ -104,7 +104,7 @@ public class Shape extends ShapeExpr {
     public static class Builder {
         private Node label;
         private Set<Node> extras = null;
-        private List<Node> xtends = null;
+        private List<ShapeExprRef> xtends = null;
         private List<SemAct> semActs;
         private Optional<Boolean> closed = null;
         private TripleExpr tripleExpr = null;
@@ -120,7 +120,7 @@ public class Shape extends ShapeExpr {
             return this;
         }
 
-        public Builder xtends(List<Node> extendsList) {
+        public Builder xtends(List<ShapeExprRef> extendsList) {
             if ( xtends == null )
                 xtends = new ArrayList<>();
             this.xtends.addAll(extendsList);

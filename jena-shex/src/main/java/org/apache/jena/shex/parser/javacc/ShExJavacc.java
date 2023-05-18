@@ -647,12 +647,12 @@ finishInlineShapeAtom(idx);
     }
 }
 
-  final public void pushShapeRef() throws ParseException {Token t ; Node ref;
+  final public void pushShapeRef() throws ParseException {Token t ; ShapeExprRef ref;
     ref = shapeRef();
 shapeReference(ref);
 }
 
-  final public Node shapeRef() throws ParseException {Token t ; Node ref;
+  final public ShapeExprRef shapeRef() throws ParseException {Token t ; Node ref;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case ATPNAME_LN:{
       t = jj_consume_token(ATPNAME_LN);
@@ -674,7 +674,7 @@ ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ;
       jj_consume_token(-1);
       throw new ParseException();
     }
-{if ("" != null) return ref;}
+{if ("" != null) return ShapeExprRef.create(ref);}
     throw new Error("Missing return statement in function");
 }
 
@@ -1044,7 +1044,7 @@ int num = integer(t.image, t.beginLine, t.beginColumn);
 // "{ ... }"
   final public void shapeDefinition() throws ParseException {boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
-  List<Node> xtends = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
   List<SemAct> semActs;
 startShapeDefinition();
     label_14:
@@ -1112,13 +1112,13 @@ closed = true;
       annotation();
     }
     semActs = semanticActions();
-finishShapeDefinition(tripleExpr, extras, xtends, closed, semActs);
+finishShapeDefinition(tripleExpr, extras, closed, xtends, semActs);
 }
 
   final public void inlineShapeDefinition() throws ParseException {boolean closed = false ;
   TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
-  List<Node> xtends = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
 startShapeDefinition();
     label_16:
     while (true) {
@@ -1171,7 +1171,7 @@ closed = true;
       ;
     }
     jj_consume_token(RBRACE);
-finishShapeDefinition(tripleExpr, extras, xtends, closed, null);
+finishShapeDefinition(tripleExpr, extras, closed, xtends, null);
 }
 
   final public void extraPropertySet(List<Node> extras) throws ParseException {Node p;
@@ -1195,7 +1195,7 @@ extras.add(p);
     }
 }
 
-  final public void extendsShapeRefList(List<Node> xtends) throws ParseException {Node r;
+  final public void extendsShapeRefList(List<ShapeExprRef> xtends) throws ParseException {ShapeExprRef r;
     jj_consume_token(EXTENDS);
     r = shapeRef();
 xtends.add(r);
