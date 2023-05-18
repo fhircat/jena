@@ -74,6 +74,7 @@ public class ParserShExC extends LangParserBase {
 
     // The shape currently in progress.
     private Node currentShexShapeLabel = null;
+    private boolean currrentDeclIsAbstract = false;
     // TripleExpression references
     private Map<Node, TripleExpr> tripleExprRefs = new HashMap<>();
 
@@ -175,9 +176,10 @@ public class ParserShExC extends LangParserBase {
         finish("ShapeExprDecl");
     }
 
-    protected void shapeExprDecl(Node label, int line, int column) {
+    protected void shapeExprDecl(Node label, boolean bstract, int line, int column) {
         debug("shape label: %s", label);
         currentShexShapeLabel = label;
+        currrentDeclIsAbstract = bstract;
     }
 
     protected void shapeExternal() {
@@ -198,9 +200,10 @@ public class ParserShExC extends LangParserBase {
     }
 
     private ShapeDecl newShape(ShapeExpr sExpr) {
-        ShapeDecl newShexShape = new ShapeDecl(currentShexShapeLabel, sExpr);
+        ShapeDecl newShexShape = new ShapeDecl(currentShexShapeLabel, currrentDeclIsAbstract, sExpr);
         shapes.add(newShexShape);
         currentShexShapeLabel = null;
+        currrentDeclIsAbstract = false;
         return newShexShape;
     }
 
@@ -365,7 +368,7 @@ public class ParserShExC extends LangParserBase {
         start("ShapeDefinition");
     }
 
-    protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, boolean closed, List<SemAct> semActs) {
+    protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, List<Node> xtends, boolean closed, List<SemAct> semActs) {
         if ( tripleExpr == null )
             return;
             // XXX [Print] Below causes "{ ; }"

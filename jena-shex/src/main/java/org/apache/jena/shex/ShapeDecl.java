@@ -22,19 +22,27 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.sys.ValidationContext;
 
+import java.util.Objects;
+
 /** A labelled shape expression. */
 public class ShapeDecl {
     private final Node label;
+    private final boolean bstract;
     private ShapeExpr shapeExpr;
 
     // [shex] Future : builder.
-    public ShapeDecl(Node label, ShapeExpr shapeExpr) {
+    public ShapeDecl(Node label, boolean bstract, ShapeExpr shapeExpr) {
         this.label = label;
+        this.bstract = bstract;
         this.shapeExpr = shapeExpr;
     }
 
     public Node getLabel() {
         return label;
+    }
+
+    public boolean isAbstract() {
+        return bstract;
     }
 
     public ShapeExpr getShapeExpr() {
@@ -46,6 +54,7 @@ public class ShapeDecl {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((label == null) ? 0 : label.hashCode());
+        result = prime * result + Objects.hash(bstract);
         result = prime * result + ((shapeExpr == null) ? 0 : shapeExpr.hashCode());
         return result;
     }
@@ -63,6 +72,8 @@ public class ShapeDecl {
             if ( other.label != null )
                 return false;
         } else if ( !label.equals(other.label) )
+            return false;
+        if ( isAbstract() != other.isAbstract() )
             return false;
         if ( shapeExpr == null ) {
             if ( other.shapeExpr != null )
