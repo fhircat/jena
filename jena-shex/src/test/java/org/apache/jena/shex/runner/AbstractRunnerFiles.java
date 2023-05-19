@@ -120,7 +120,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
         if ( includes.isEmpty() ) {
             try {
                 Files.find(src, 1, predicate)
-                    .filter(p-> p.getFileName().toString().endsWith(endsWith))
+                    .filter(p-> endsWith == null || p.getFileName().toString().endsWith(endsWith))
                     .filter(p-> ! excludes.contains(p.getFileName().toString()))
                     .filter(p -> {
                         if (selected == null) return true;

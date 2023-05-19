@@ -30,12 +30,12 @@ import org.junit.runner.RunWith;
 @RunWith(RunnerShexValidation.class)
 @Label("Shex Validation")
 @Manifests({
-    "src/test/files/spec/validation/manifest.ttl"
+    "src/test/files/shexTest/validation/manifest.ttl"
 })
 
 // Syntax are file files in:
-// TestShexSyntax:    "src/test/files/spec/syntax"
-// TestShexBadSyntax: "src/test/files/spec/negativeSyntax"
+// TestShexSyntax:    "src/test/files/shexTest/schemas"
+// TestShexBadSyntax: "src/test/files/shexTest/negativeSyntax"
 
 public class TestShexValidation {
     private static boolean bVerboseWarnings;

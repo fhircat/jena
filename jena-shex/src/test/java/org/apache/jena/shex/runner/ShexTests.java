@@ -297,7 +297,7 @@ public class ShexTests {
 
     private static void setup() {
         // Setup StreamManager.
-        String places[] = { "src/test/files/spec/schemas/", "src/test/files/spec/validation/" };
+        String places[] = { "src/test/files/shexTest/schemas/", "src/test/files/spec/validation/" };
 
 
         for ( String dir : places ) {

@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 @RunWith(RunnerPrintShex.class)
 @Label("Print ShexC")
 @Directories({
-    "src/test/files/spec/syntax"
+    "src/test/files/shexTest/schemas"
 })
 
 public class TestShexPrintShexC {}
