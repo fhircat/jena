@@ -73,6 +73,9 @@ public class WriterShExC {
     private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl decl, boolean printNL) {
         if (printNL)
             out.println();
+        if ( decl.isAbstract() ) {
+            out.print("ABSTRACT ");
+        }
         if ( decl.getLabel() != null ) {
 
             Node n = decl.getLabel();
@@ -294,6 +297,13 @@ public class WriterShExC {
                 out.println("EXTRA ");
                 shape.getExtras().forEach(n-> { formatter.format(out, n); out.print(" ");});
             }
+            if ( shape.getExtends() != null && ! shape.getExtends().isEmpty() ) {
+                shape.getExtends().forEach(n-> {
+                    out.println("EXTENDS @");
+                    formatter.format(out, n.getLabel());
+                    out.print(" ");
+                });
+            }
             out.println("{");
             out.incIndent();
 
@@ -361,8 +371,9 @@ public class WriterShExC {
                     out.print(" -");
                     printValueSetItem(vsItem);
                 });
+                out.print(" ");
             });
-            out.print(" ]");
+            out.print("]");
         }
 
         @Override public void visit(TripleExprCardinality tripleExprCardinality) {
