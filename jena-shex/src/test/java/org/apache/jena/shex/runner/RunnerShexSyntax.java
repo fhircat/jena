@@ -43,12 +43,8 @@ public class RunnerShexSyntax extends AbstractRunnerFiles {
 
     private static Set<String> excludes() {
         Set<String> excludes = new HashSet<>();
-
-        // Contains \ud800 (ill-formed surrogate pair)
-        excludes.add("1refbnode_with_spanning_PN_CHARS_BASE1.shex");
-        // Contains \u0d00 (ill-formed surrogate pair)
-        excludes.add("_all.shex");
-
+        // e.g.
+        // excludes.add("1refbnode_with_spanning_PN_CHARS_BASE1.shex");
         return excludes;
     }
 
