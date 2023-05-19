@@ -19,9 +19,12 @@
 package org.apache.jena.arq.junit.runners;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.jena.arq.junit.manifest.*;
 import org.apache.jena.atlas.io.IndentedWriter;
@@ -156,12 +159,26 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
     }
 
     public static void prepareTests(EarlReport report, RunnerOneManifest level, Manifest manifest, Function<ManifestEntry, Runnable> maker, String prefix) {
+        String testsEnv = System.getenv("TESTS");
+        List<Pattern> selected;
+        if (testsEnv != null) {
+            selected = Arrays.stream(testsEnv.split(";"))
+                    .map(s -> Pattern.compile(s))
+                    .collect(Collectors.toList());
+        } else {
+            selected = null; // Why does this have to be "effectively final"?
+        }
         manifest.entries().forEach(entry->{
             String label = prepareTestLabel(entry, prefix);
-            Runnable runnable = maker.apply(entry);
-            if ( runnable != null ) {
-                Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
-                level.add(r);
+            if (selected == null || selected.stream()
+                    .filter(pattern -> pattern.matcher(label).matches())
+                    .findAny()
+                    .isPresent()) {
+                Runnable runnable = maker.apply(entry);
+                if (runnable != null) {
+                    Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
+                    level.add(r);
+                }
             }
         });
     }
