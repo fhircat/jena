@@ -57,8 +57,8 @@
           "extensionResults": [],
           "name": "0_otherbnode",
           "trait": [
-            "ToldBNode",
-            "Empty"
+            "Empty",
+            "ToldBNode"
           ],
           "comment": "<S1> {  } on { _:abcd <p1> <o1> }",
           "status": "mf:Approved"
@@ -3565,8 +3565,7 @@
             "Import"
           ],
           "comment": "<S1> { <p1> ., <p2> @<S2>? } <S2> { <p3> @<S3> } <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefPlus1_pass-open",
@@ -3598,8 +3597,8 @@
           "extensionResults": [],
           "name": "3circRefPlus1_pass-recursiveData",
           "trait": [
-            "RecursiveData",
             "EachOf",
+            "RecursiveData",
             "ShapeReference"
           ],
           "comment": "<S1> { <p1> ., <p2> @<S2>? } <S2> { <p3> @<S3> } <S3> { <p4> @<S1> } <S4> { <p5> . } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n1> }",
@@ -3617,8 +3616,8 @@
           "extensionResults": [],
           "name": "1iriRef1_pass-iri",
           "trait": [
-            "ShapeReference",
-            "NodeKind"
+            "NodeKind",
+            "ShapeReference"
           ],
           "comment": "<n1> in { <n1> <p1> <n2> . <n2> <p2> \"X\" } as <S1> in <S1> { <p1> IRI @<S2> } <S2> { <p2> . }",
           "status": "mf:Approved"
@@ -3635,8 +3634,8 @@
           "extensionResults": [],
           "name": "1iriRef1_fail-bnode",
           "trait": [
-            "ShapeReference",
-            "NodeKind"
+            "NodeKind",
+            "ShapeReference"
           ],
           "comment": "<n1> in { <n1> <p1> _:n1 . _:n1 <p2> \"X\" } as <S1> in <S1> { <p1> IRI @<S2> } <S2> { <p2> . }",
           "status": "mf:Approved"
@@ -3653,8 +3652,8 @@
           "extensionResults": [],
           "name": "1bnodeRef1_fail-iri",
           "trait": [
-            "ShapeReference",
-            "NodeKind"
+            "NodeKind",
+            "ShapeReference"
           ],
           "comment": "<n1> in { <n1> <p1> <n2> . <n2> <p2> \"X\" } as <S1> in <S1> { <p1> BNODE @<S2> } <S2> { <p2> . }",
           "status": "mf:Approved"
@@ -3671,8 +3670,8 @@
           "extensionResults": [],
           "name": "1bnodeRef1_pass-bnode",
           "trait": [
-            "ShapeReference",
-            "NodeKind"
+            "NodeKind",
+            "ShapeReference"
           ],
           "comment": "<n1> in { <n1> <p1> _:n1 . _:n1 <p2> \"X\" } as <S1> in <S1> { <p1> BNODE @<S2> } <S2> { <p2> . }",
           "status": "mf:Approved"
@@ -3995,8 +3994,8 @@
           "extensionResults": [],
           "name": "1val1STRING_LITERAL1_with_UTF8_boundaries_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> ['...􏿽'] } on { <s1> <p1> '...􏿽' }",
           "status": "mf:Approved"
@@ -4013,8 +4012,8 @@
           "extensionResults": [],
           "name": "1val1STRING_LITERAL1_with_UTF8_boundaries_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> ['...􏿽'] } on { <s1> <p1> '...􏿽999' }",
           "status": "mf:Approved"
@@ -9403,8 +9402,8 @@
           "extensionResults": [],
           "name": "1literalLength_fail-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> LITERAL LENGTH 5 } on { <s1> <p1> _:abcde }",
           "status": "mf:Approved"
@@ -9489,8 +9488,8 @@
           "extensionResults": [],
           "name": "1iriLength_fail-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> IRI LENGTH 19 } on { <s1> <p1> _:abcde }",
           "status": "mf:Approved"
@@ -9592,8 +9591,8 @@
           "extensionResults": [],
           "name": "1bnodeLength_fail-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE LENGTH 5 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -9610,8 +9609,8 @@
           "extensionResults": [],
           "name": "1bnodeLength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE LENGTH 5 } on { <s1> <p1> _:abcde }",
           "status": "mf:Approved"
@@ -9628,8 +9627,8 @@
           "extensionResults": [],
           "name": "1bnodeLength_fail-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE LENGTH 5 } on { <s1> <p1> _:abcdef }",
           "status": "mf:Approved"
@@ -9748,8 +9747,8 @@
           "extensionResults": [],
           "name": "1nonliteralLength_fail-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL LENGTH 19 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -9766,8 +9765,8 @@
           "extensionResults": [],
           "name": "1nonliteralLength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL LENGTH 19 } on { <s1> <p1> _:abcdefghijklmnopqrs }",
           "status": "mf:Approved"
@@ -9784,8 +9783,8 @@
           "extensionResults": [],
           "name": "1nonliteralLength_fail-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL LENGTH 19 } on { <s1> <p1> _:abcdefghijklmnopqrst }",
           "status": "mf:Approved"
@@ -9904,8 +9903,8 @@
           "extensionResults": [],
           "name": "1bnodeMinlength_fail-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MINLENGTH 5 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -9922,8 +9921,8 @@
           "extensionResults": [],
           "name": "1bnodeMinlength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MINLENGTH 5 } on { <s1> <p1> _:abcde }",
           "status": "mf:Approved"
@@ -9940,8 +9939,8 @@
           "extensionResults": [],
           "name": "1bnodeMinlength_pass-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MINLENGTH 5 } on { <s1> <p1> _:abcdef }",
           "status": "mf:Approved"
@@ -10009,8 +10008,8 @@
           "extensionResults": [],
           "name": "1nonliteralMinlength_fail-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MINLENGTH 19 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -10027,8 +10026,8 @@
           "extensionResults": [],
           "name": "1nonliteralMinlength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MINLENGTH 19 } on { <s1> <p1> _:abcdefghijklmnopqrs }",
           "status": "mf:Approved"
@@ -10045,8 +10044,8 @@
           "extensionResults": [],
           "name": "1nonliteralMinlength_pass-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MINLENGTH 19 } on { <s1> <p1> _:abcdefghijklmnopqrst }",
           "status": "mf:Approved"
@@ -10165,8 +10164,8 @@
           "extensionResults": [],
           "name": "1bnodeMaxlength_pass-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MAXLENGTH 5 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -10183,8 +10182,8 @@
           "extensionResults": [],
           "name": "1bnodeMaxlength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MAXLENGTH 5 } on { <s1> <p1> _:abcde }",
           "status": "mf:Approved"
@@ -10201,8 +10200,8 @@
           "extensionResults": [],
           "name": "1bnodeMaxlength_fail-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> BNODE MAXLENGTH 5 } on { <s1> <p1> _:abcdef }",
           "status": "mf:Approved"
@@ -10270,8 +10269,8 @@
           "extensionResults": [],
           "name": "1nonliteralMaxlength_pass-bnode-short",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MAXLENGTH 19 } on { <s1> <p1> _:abcd }",
           "status": "mf:Approved"
@@ -10288,8 +10287,8 @@
           "extensionResults": [],
           "name": "1nonliteralMaxlength_pass-bnode-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MAXLENGTH 19 } on { <s1> <p1> _:abcdefghijklmnopqrs }",
           "status": "mf:Approved"
@@ -10306,8 +10305,8 @@
           "extensionResults": [],
           "name": "1nonliteralMaxlength_fail-bnode-long",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> { <p1> NONLITERAL MAXLENGTH 5 } on { <s1> <p1> _:abcdefghijklmnopqrst }",
           "status": "mf:Approved"
@@ -10494,8 +10493,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_controls_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^^@^A...^_$/ } on { <s1> <p1> '^@^A...^_' }",
           "status": "mf:Approved"
@@ -10512,8 +10511,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_controls_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^^@^A...^_$/ } on { <s1> <p1> '^@^A...^_999' }",
           "status": "mf:Approved"
@@ -10530,8 +10529,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_punctuation_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^ !\"#\\$%&'\\(\\)\\/:;<=>\\?@\\[\\]\\^_`\\{\\|\\}~$/ } on { <s1> <p1> ' !\"#$%&'()/:;<=>?@[]^_`{|}~' }",
           "status": "mf:Approved"
@@ -10548,8 +10547,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_punctuation_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^ !\"#\\$%&'\\(\\)\\/:;<=>\\?@\\[\\]\\^_`\\{\\|\\}~$/ } on { <s1> <p1> ' !\"#$%&'()/:;<=>?@[]^_`{|}~999' }",
           "status": "mf:Approved"
@@ -10566,8 +10565,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_ascii_boundaries_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^^@^I^K^L^N&\\(\\[\\]^?$/ } on { <s1> <p1> '^@^I^K^L^N&([]^?' }",
           "status": "mf:Approved"
@@ -10584,8 +10583,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_ascii_boundaries_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^^@^I^K^L^N&\\(\\[\\]^?$/ } on { <s1> <p1> '^@^I^K^L^N&([]^?999' }",
           "status": "mf:Approved"
@@ -10602,8 +10601,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_UTF8_boundaries_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^...􏿽$/ } on { <s1> <p1> '...􏿽' }",
           "status": "mf:Approved"
@@ -10620,8 +10619,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_UTF8_boundaries_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^...􏿽$/ } on { <s1> <p1> '...􏿽999' }",
           "status": "mf:Approved"
@@ -10638,8 +10637,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\\t\\b\\n\\r\\f\\\\\\u0061\\U0001D4B8$/ } on { <s1> <p1> '\\/\\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10656,8 +10655,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_fail",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\\t\\b\\n\\r\\f\\\\\\u0061\\U0001D4B8$/ } on { <s1> <p1> '\\/\\t\\b\\n\\r\\f\\a𝒸999' }",
           "status": "mf:Approved"
@@ -10674,8 +10673,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_fail_escaped",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\\t\\b\\n\\r\\f\\\\\\u0061\\U0001D4B8$/ } on { <s1> <p1> '\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\u0061\\U0001D4B8' }",
           "status": "mf:Approved"
@@ -10692,8 +10691,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_escaped_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\\\\\\\u0061\\\\U0001D4B8$/ } on { <s1> <p1> '\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\u0061\\U0001D4B8' }",
           "status": "mf:Approved"
@@ -10710,8 +10709,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_escaped_fail_escapes",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\\\\\\\u0061\\\\U0001D4B8$/ } on { <s1> <p1> '\\/\\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10728,8 +10727,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_escaped_fail_escapes_bare",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\\\\\\\u0061\\\\U0001D4B8$/ } on { <s1> <p1> '/\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10746,8 +10745,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_bare_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\t\\n\\r-\\\\a\\U0001D4B8$/ } on { <s1> <p1> '/\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10764,8 +10763,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_bare_fail_escaped",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\t\\n\\r-\\\\a\\U0001D4B8$/ } on { <s1> <p1> '\\\\/\\\\t\\\\b\\\\n\\\\r\\\\f\\\\\\u0061\\U0001D4B8' }",
           "status": "mf:Approved"
@@ -10782,8 +10781,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_pass_bare",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\\t\\b\\n\\r\\f\\\\\\u0061\\U0001D4B8$/ } on { <s1> <p1> '/\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10800,8 +10799,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_REGEXP_escapes_bare_pass_escapes",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\\/\t\\n\\r-\\\\a\\U0001D4B8$/ } on { <s1> <p1> '\\/\\t\\b\\n\\r\\f\\a𝒸' }",
           "status": "mf:Approved"
@@ -10920,8 +10919,8 @@
           "extensionResults": [],
           "name": "1literalPatternabEnd_fail-bnode-match",
           "trait": [
-            "PaternFacet",
-            "LexicalBNode"
+            "LexicalBNode",
+            "PaternFacet"
           ],
           "comment": "<S1> { <p1> LITERAL PATTERN \"bc$\" } on { <s1> <p1> _:bc }",
           "status": "mf:Approved"
@@ -11057,8 +11056,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_meta_pass",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\t(v:[0-9]+.../ } on { <s1> <p1> '\tv:0, ...' }",
           "status": "mf:Approved"
@@ -11075,8 +11074,8 @@
           "extensionResults": [],
           "name": "1literalPattern_with_all_meta_pass-NA",
           "trait": [
-            "OutsideBMP",
-            "NumericEquivalence"
+            "NumericEquivalence",
+            "OutsideBMP"
           ],
           "comment": "<S> { <p1> /^\t(v:[0-9]+.../ } on { <s1> <p1> 'abc\\N/Adef' }",
           "status": "mf:Approved"
@@ -11178,8 +11177,8 @@
           "extensionResults": [],
           "name": "1bnodePattern_pass-bnode-match",
           "trait": [
-            "PaternFacet",
-            "LexicalBNode"
+            "LexicalBNode",
+            "PaternFacet"
           ],
           "comment": "<S1> { <p1> BNODE PATTERN \"bc\" } on { <s1> <p1> _:bc }",
           "status": "mf:Approved"
@@ -11213,8 +11212,8 @@
           "extensionResults": [],
           "name": "1bnodePattern_fail-bnode-long",
           "trait": [
-            "PaternFacet",
-            "LexicalBNode"
+            "LexicalBNode",
+            "PaternFacet"
           ],
           "comment": "<S1> { <p1> BNODE PATTERN \"bc\" } on { <s1> <p1> _:abc }",
           "status": "mf:Approved"
@@ -11333,8 +11332,8 @@
           "extensionResults": [],
           "name": "1nonliteralPattern_pass-bnode-match",
           "trait": [
-            "PaternFacet",
-            "LexicalBNode"
+            "LexicalBNode",
+            "PaternFacet"
           ],
           "comment": "<S1> { <p1> NONLITERAL PATTERN \"bc$\" } on { <s1> <p1> _:bc }",
           "status": "mf:Approved"
@@ -11368,8 +11367,8 @@
           "extensionResults": [],
           "name": "1nonliteralPattern_pass-bnode-long",
           "trait": [
-            "PaternFacet",
-            "LexicalBNode"
+            "LexicalBNode",
+            "PaternFacet"
           ],
           "comment": "<S1> { <p1> NONLITERAL PATTERN \"bc$\" } on { <s1> <p1> _:abc }",
           "status": "mf:Approved"
@@ -12982,8 +12981,8 @@
           "extensionResults": [],
           "name": "1dotOne2dot_pass_p2p3",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 {:p1 .|:p2 .; :p3 .} / { :s1 :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13018,9 +13017,9 @@
           "extensionResults": [],
           "name": "1dotOne2dot-someOf_fail_p1p2p3",
           "trait": [
+            "EachOf",
             "MissedMatchables",
-            "OneOf",
-            "EachOf"
+            "OneOf"
           ],
           "comment": ":S1 {:p1 .|:p2 .; :p3 .} / { :s1 :p1 \"p1-0\"; :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13055,8 +13054,8 @@
           "extensionResults": [],
           "name": "open1dotOneopen2dotcloseclose_pass_p2p3",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 {(:p1 .|(:p2 .; :p3 .))} / { :s1 :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13091,8 +13090,8 @@
           "extensionResults": [],
           "name": "openopen1dotOne1dotclose1dotclose_pass_p1p3",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 { ((:p1 .| :p2 .); :p3 .) } / { <x> :p1 \"p1-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13109,8 +13108,8 @@
           "extensionResults": [],
           "name": "openopen1dotOne1dotclose1dotclose_pass_p2p3",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 { ((:p1 .| :p2 .); :p3 .) } / { <x> :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13145,8 +13144,8 @@
           "extensionResults": [],
           "name": "openopen1dotOne1dotclose1dotclose_fail_p3",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 { ((:p1 .| :p2 .); :p3 .) } / { <x> :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -13163,8 +13162,8 @@
           "extensionResults": [],
           "name": "openopen1dotOne1dotclose1dotclose_fail_p1p2",
           "trait": [
-            "OneOf",
-            "EachOf"
+            "EachOf",
+            "OneOf"
           ],
           "comment": ":S1 { ((:p1 .| :p2 .); :p3 .) } / { <x> :p1 \"p1-0\"; :p2 \"p2-0\" . }",
           "status": "mf:Approved"
@@ -13181,8 +13180,8 @@
           "extensionResults": [],
           "name": "1val1vExprRefIRIREF1_fail-lit-short",
           "trait": [
-            "ValueReference",
-            "LengthFacet"
+            "LengthFacet",
+            "ValueReference"
           ],
           "comment": "<vc1> = LITERAL MINLENGTH 5 <S1> { <p1> @<vc1> } on { <s1> <p1> \"abcd\" }",
           "status": "mf:Approved"
@@ -13199,8 +13198,8 @@
           "extensionResults": [],
           "name": "1val1vExprRefIRIREF1_pass-lit-equal",
           "trait": [
-            "ValueReference",
-            "LengthFacet"
+            "LengthFacet",
+            "ValueReference"
           ],
           "comment": "<vc1> = LITERAL MINLENGTH 5 <S1> { <p1> @<vc1> } on { <s1> <p1> \"abcde\" }",
           "status": "mf:Approved"
@@ -13217,8 +13216,8 @@
           "extensionResults": [],
           "name": "1val1vExprRefbnode1_fail-lit-short",
           "trait": [
-            "ValueReference",
-            "LengthFacet"
+            "LengthFacet",
+            "ValueReference"
           ],
           "comment": "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> @_:vc1 } on { <s1> <p1> \"abcd\" }",
           "status": "mf:Approved"
@@ -13235,8 +13234,8 @@
           "extensionResults": [],
           "name": "1val1vExprRefbnode1_pass-lit-equal",
           "trait": [
-            "ValueReference",
-            "LengthFacet"
+            "LengthFacet",
+            "ValueReference"
           ],
           "comment": "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> @_:vc1 } on { <s1> <p1> \"abcde\" }",
           "status": "mf:Approved"
@@ -15189,8 +15188,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_fail-p1",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-0\" }",
           "status": "mf:Approved"
@@ -15207,8 +15206,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_pass-p1X2",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-n\" }X2",
           "status": "mf:Approved"
@@ -15225,8 +15224,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_fail-p1X3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-n\" }X3",
           "status": "mf:Approved"
@@ -15243,8 +15242,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_fail-p1X4",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-n\" }X4",
           "status": "mf:Approved"
@@ -15261,8 +15260,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_pass-p1p2",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-0\"; <p2> \"p2-0\" }",
           "status": "mf:Approved"
@@ -15279,8 +15278,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_pass-p1p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15297,8 +15296,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_pass-p2p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p2> \"p2-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15315,8 +15314,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard2_fail-p1p2p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2} } / { <s> <p1> \"p1-0\"; <p2> \"p2-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15333,8 +15332,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_fail-p1",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-0\" }",
           "status": "mf:Approved"
@@ -15351,8 +15350,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p1X2",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-n\" }X2",
           "status": "mf:Approved"
@@ -15369,8 +15368,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p1X3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-n\" }X3",
           "status": "mf:Approved"
@@ -15387,8 +15386,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_fail-p1X4",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-n\" }X4",
           "status": "mf:Approved"
@@ -15405,8 +15404,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p1p2",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-0\"; <p2> \"p2-0\" }",
           "status": "mf:Approved"
@@ -15423,8 +15422,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p1p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15441,8 +15440,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p2p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p2> \"p2-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15459,8 +15458,8 @@
           "extensionResults": [],
           "name": "open3Onedotclosecard23_pass-p1p2p3",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> . ){2,3} } / { <s> <p1> \"p1-0\"; <p2> \"p2-0\"; <p3> \"p3-0\" }",
           "status": "mf:Approved"
@@ -15477,8 +15476,8 @@
           "extensionResults": [],
           "name": "open4Onedotclosecard23_fail-p1p2p3p4",
           "trait": [
-            "RepeatedOneOf",
-            "EachOf"
+            "EachOf",
+            "RepeatedOneOf"
           ],
           "comment": "<S1> { ( <p1> .| <p2> .| <p3> .| <p4> . ){2,3} } / { <s> <p1> \"p1-n\"; <p2> \"p2-n\"; <p3> \"p3-n\" ; <p4> \"p4-n\" }",
           "status": "mf:Approved"
@@ -15495,8 +15494,8 @@
           "extensionResults": [],
           "name": "open3Eachdotclosecard23_pass-p1p2p3X3",
           "trait": [
-            "RepeatedGroup",
-            "EachOf"
+            "EachOf",
+            "RepeatedGroup"
           ],
           "comment": "<S1> { ( <p1> .; <p2> .; <p3> . ){2,3} } / { <s> <p1> \"p1-n\"; <p2> \"p2-n\"; <p3> \"p3-n\" }X3",
           "status": "mf:Approved"
@@ -15651,8 +15650,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFExtra1Closed_pass-iri1",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> EXTRA <p1> CLOSED { <p1> . } on { <s1> <p1> <o1> }",
           "status": "mf:Approved"
@@ -15669,8 +15668,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFExtra1Closed_pass-iri2",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> EXTRA <p1> CLOSED { <p1> . } on { <s1> <p1> <o1>, <o2> }",
           "status": "mf:Approved"
@@ -15687,8 +15686,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFExtra1Closed_fail-iri2_higher",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> EXTRA <p1> CLOSED { <p1> . } on { <s1> <p1> <o1>, <o2>; <p2> <o2> }",
           "status": "mf:Approved"
@@ -15705,8 +15704,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFClosedExtra1_pass-iri1",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> CLOSED EXTRA <p1> { <p1> . } on { <s1> <p1> <o1> }",
           "status": "mf:Approved"
@@ -15723,8 +15722,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFClosedExtra1_pass-iri2",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> CLOSED EXTRA <p1> { <p1> . } on { <s1> <p1> <o1>, <o2> }",
           "status": "mf:Approved"
@@ -15741,8 +15740,8 @@
           "extensionResults": [],
           "name": "1val1IRIREFClosedExtra1_fail-iri2_higher",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> CLOSED EXTRA <p1> { <p1> . } on { <s1> <p1> <o1>, <o2>; <p2> <o2> }",
           "status": "mf:Approved"
@@ -15849,10 +15848,10 @@
           "extensionResults": [],
           "name": "1dotOne2dotExtra-someOf_pass_p1p2p3",
           "trait": [
+            "EachOf",
             "Extra",
             "MissedMatchables",
-            "OneOf",
-            "EachOf"
+            "OneOf"
           ],
           "comment": ":S1 EXTRA <p1> <p2> <p3> {:p1 .|:p2 .; :p3 .} / { :s1 :p1 \"p1-0\"; :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -15869,9 +15868,9 @@
           "extensionResults": [],
           "name": "1val1IRIREFExtra1One_pass-iri1",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> { <p0> . | <p1> [<o1>]; <p2> .? } on { <s1> <p1> <o1> }",
           "status": "mf:Approved"
@@ -15888,9 +15887,9 @@
           "extensionResults": [],
           "name": "1val1IRIREFExtra1One_pass-iri2",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> { <p0> . | <p1> [<o1>]; <p2> .? } on { <s1> <p1> <o1>, <o2> }",
           "status": "mf:Approved"
@@ -15907,8 +15906,8 @@
           "extensionResults": [],
           "name": "1dotExtra1_pass-iri1",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> EXTRA <p1> { <p1> . } on { <s1> <p1> <o1> }",
           "status": "mf:Approved"
@@ -15925,8 +15924,8 @@
           "extensionResults": [],
           "name": "1dotExtra1_fail-iri2",
           "trait": [
-            "VapidExtra",
-            "Extra"
+            "Extra",
+            "VapidExtra"
           ],
           "comment": "<S> EXTRA <p1> { <p1> . } on { <s1> <p1> <o1>, <o2> }",
           "status": "mf:Approved"
@@ -15943,9 +15942,9 @@
           "extensionResults": [],
           "name": "3EachdotExtra3_pass-iri1",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> <p2> <p3> { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>; <p2> <o2>; <p3> <o3> }",
           "status": "mf:Approved"
@@ -15962,9 +15961,9 @@
           "extensionResults": [],
           "name": "3Eachdot3Extra_pass-iri1",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> EXTRA <p2> EXTRA <p3> { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>; <p2> <o2>; <p3> <o3> }",
           "status": "mf:Approved"
@@ -15981,9 +15980,9 @@
           "extensionResults": [],
           "name": "3EachdotExtra3NLex_pass-iri1",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "PREFIX ex: <http://a.example/> <S> EXTRA ex:p1 ex:p2 ex:p3 { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>; <p2> <o2>; <p3> <o3> }",
           "status": "mf:Approved"
@@ -16000,9 +15999,9 @@
           "extensionResults": [],
           "name": "3EachdotExtra3_pass-iri2",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> <p2> <p3> { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>, <o1a>; <p2> <o2>, <o2a>; <p3> <o3>, <o3a> }",
           "status": "mf:Approved"
@@ -16019,9 +16018,9 @@
           "extensionResults": [],
           "name": "3Eachdot3Extra_pass-iri2",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "<S> EXTRA <p1> EXTRA <p2> EXTRA <p3> { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>, <o1a>; <p2> <o2>, <o2a>; <p3> <o3>, <o3a> }",
           "status": "mf:Approved"
@@ -16038,9 +16037,9 @@
           "extensionResults": [],
           "name": "3EachdotExtra3NLex_pass-iri2",
           "trait": [
+            "EachOf",
             "Extra",
-            "IriEquivalence",
-            "EachOf"
+            "IriEquivalence"
           ],
           "comment": "PREFIX ex: <http://a.example/> <S> EXTRA ex:p1 ex:p2 ex:p3 { <p1> [<o1>]; <p2> [<o2>]; <p3> [<o3>] } on { <s> <p1> <o1>, <o1a>; <p2> <o2>, <o2a>; <p3> <o3>, <o3a> }",
           "status": "mf:Approved"
@@ -16201,8 +16200,8 @@
           "extensionResults": [],
           "name": "2EachInclude1_pass",
           "trait": [
-            "Include",
-            "EachOf"
+            "EachOf",
+            "Include"
           ],
           "comment": "<S1> { &<S2>; <p1> . } <S2> { <p2> . } on { <n1> <p1> \"X\" ; <p2> \"Y\" }",
           "status": "mf:Approved"
@@ -16219,8 +16218,8 @@
           "extensionResults": [],
           "name": "2EachInclude1-after_pass",
           "trait": [
-            "Include",
-            "EachOf"
+            "EachOf",
+            "Include"
           ],
           "comment": "<S1> { <p1> .; &<S2> } <S2> { <p2> . } on { <n1> <p1> \"X\" ; <p2> \"Y\" }",
           "status": "mf:Approved"
@@ -16732,8 +16731,8 @@
           ],
           "name": "open3EachdotcloseCode1-p1p2p3",
           "trait": [
-            "SemanticAction",
-            "EachOf"
+            "EachOf",
+            "SemanticAction"
           ],
           "comment": "<S1> { ( <p1> .; <p2> .; <p3> . ) %<Test/>{ print(\"group semAct\") %} } / { :s1 :p1 \"p1-0\"; :p2 \"p2-0\"; :p3 \"p3-0\" . }",
           "status": "mf:Approved"
@@ -16918,10 +16917,10 @@
           ],
           "name": "open3Eachdotclosecard23Annot3Code2-p1p2p3X3",
           "trait": [
-            "SemanticAction",
             "Annotation",
+            "EachOf",
             "RepeatedGroup",
-            "EachOf"
+            "SemanticAction"
           ],
           "comment": "<S1> { ( <p1> .; <p2> .; <p3> . ){2,3} // <annot1> \"1\" // <annot2> \"2\" // <annot3> \"3\" %<Test/>{ p(\"...1\") %} %<Test/>{ p(\"...2\") %} } / { <s> <p1> \"p1-n\"; <p2> \"p2-n\"; <p3> \"p3-n\" }X3",
           "status": "mf:Approved"
@@ -16955,8 +16954,8 @@
           "extensionResults": [],
           "name": "0focusIRI_other_fail-bnodeFocusLabel",
           "trait": [
-            "ToldBNode",
-            "Empty"
+            "Empty",
+            "ToldBNode"
           ],
           "comment": "<S> IRI {  } on { _:abcd <p1> <o1> }",
           "status": "mf:Approved"
@@ -16990,8 +16989,8 @@
           "extensionResults": [],
           "name": "0focusIRI_empty_fail-bnodeFocusLabel",
           "trait": [
-            "ToldBNode",
-            "Empty"
+            "Empty",
+            "ToldBNode"
           ],
           "comment": "<S> IRI {  } on { }",
           "status": "mf:Approved"
@@ -17025,8 +17024,8 @@
           "extensionResults": [],
           "name": "0focusBNODE_empty",
           "trait": [
-            "ToldBNode",
-            "Empty"
+            "Empty",
+            "ToldBNode"
           ],
           "comment": "<S> BNODE {  } on _:abcd in { }",
           "status": "mf:Approved"
@@ -17060,8 +17059,8 @@
           "extensionResults": [],
           "name": "0focusBNODE_other",
           "trait": [
-            "ToldBNode",
-            "Empty"
+            "Empty",
+            "ToldBNode"
           ],
           "comment": "<S> BNODE {  } on { _:abcd <p1> <o1> }",
           "status": "mf:Approved"
@@ -17281,8 +17280,8 @@
           "extensionResults": [],
           "name": "1focusvsANDdatatype_fail",
           "trait": [
-            "Unsatisfiable",
-            "FocusConstraint"
+            "FocusConstraint",
+            "Unsatisfiable"
           ],
           "comment": "<S> [<v1> <v2> <v3>] AND <dt1> on {  }",
           "status": "mf:Approved"
@@ -17513,8 +17512,8 @@
           "name": "1focusLength-dot_fail-bnode-short",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S1> LENGTH 19 { <p1> . } on { _:abcd <p1> <o1> }",
@@ -17533,8 +17532,8 @@
           "name": "1focusLength-dot_pass-bnode-equal",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S1> LENGTH 19 { <p1> . } on { _:abcdefghijklmnopqrs <p1> <o1> }",
@@ -17553,8 +17552,8 @@
           "name": "1focusLength-dot_fail-bnode-long",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S1> LENGTH 19 { <p1> . } on { _:abcdefghijklmnopqrst <p1> <o1> }",
@@ -17627,8 +17626,8 @@
           "name": "1focusMinLength-dot_fail-bnode-short",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S1> MINLENGTH 19 { <p1> . } on { _:abcd <p1> <o1> }",
@@ -17647,8 +17646,8 @@
           "name": "1focusMinLength-dot_pass-bnode-equal",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S1> MINLENGTH 19 { <p1> . } on { _:abcdefghijklmnopqrs <p1> <o1> }",
@@ -17740,8 +17739,8 @@
           "name": "1focusMaxLength-dot_pass-bnode-short",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> MAXLENGTH 19 { <p1> . } on { _:abcd <p1> <o1> }",
           "status": "mf:Approved"
@@ -17759,8 +17758,8 @@
           "name": "1focusMaxLength-dot_pass-bnode-equal",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> MAXLENGTH 19 { <p1> . } on { _:abcdefghijklmnopqrs <p1> <o1> }",
           "status": "mf:Approved"
@@ -17778,8 +17777,8 @@
           "name": "1focusMaxLength-dot_fail-bnode-long",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S1> MAXLENGTH 19 { <p1> . } on { _:abcdefghijklmnopqrst <p1> <o1> }",
           "status": "mf:Approved"
@@ -17881,8 +17880,8 @@
           "extensionResults": [],
           "name": "1focusPatternB-dot_fail-bnode-short",
           "trait": [
-            "PaternFacet",
             "LexicalBNode",
+            "PaternFacet",
             "ToldBNode"
           ],
           "comment": "<S1> PATTERN 'abcdefghijklmnopqrs' { <p1> } on { _:abcd <p1> <o1> }",
@@ -17900,8 +17899,8 @@
           "extensionResults": [],
           "name": "1focusPatternB-dot_pass-bnode-match",
           "trait": [
-            "PaternFacet",
             "LexicalBNode",
+            "PaternFacet",
             "ToldBNode"
           ],
           "comment": "<S1> PATTERN 'abcdefghijklmnopqrs' { <p1> } on { _:abcdefghijklmnopqrs <p1> <o1> }",
@@ -17919,8 +17918,8 @@
           "extensionResults": [],
           "name": "1focusPatternB-dot_pass-bnode-long",
           "trait": [
-            "PaternFacet",
             "LexicalBNode",
+            "PaternFacet",
             "ToldBNode"
           ],
           "comment": "<S1> PATTERN 'abcdefghijklmnopqrs' { <p1> } on { _:abcdefghijklmnopqrst <p1> <o1> }",
@@ -17939,8 +17938,8 @@
           "name": "1focusIRILength_dot_fail-bnodeFocusLabel-equal",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S> IRI LENGTH 19 { <p1> . } on <s> in { _:abcdefghijklmnopqrs <p1> <o1> }",
@@ -18012,8 +18011,8 @@
           "extensionResults": [],
           "name": "1focusBNODELength_dot_fail-iriFocusLabel-equal",
           "trait": [
-            "LexicalBNode",
-            "LengthFacet"
+            "LengthFacet",
+            "LexicalBNode"
           ],
           "comment": "<S> BNODE LENGTH 19 { <p1> . } on <s> in { <s1> <p1> <o1> }",
           "status": "mf:Approved"
@@ -18031,8 +18030,8 @@
           "name": "1focusBNODELength_dot_fail-short",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S> BNODE LENGTH 19 { <p1> . } on <s> in { _:abcd <p1> <o1> }",
@@ -18051,8 +18050,8 @@
           "name": "1focusBNODELength_dot_pass",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S> BNODE LENGTH 19 { <p1> . } on <s> in { _:abcdefghijklmnopqrs <p1> <o1> }",
@@ -18071,8 +18070,8 @@
           "name": "1focusBNODELength_dot_fail-long",
           "trait": [
             "FocusConstraint",
-            "LexicalBNode",
             "LengthFacet",
+            "LexicalBNode",
             "ToldBNode"
           ],
           "comment": "<S> BNODE LENGTH 19 { <p1> . } on <s> in { _:abcdefghijklmnopqrst <p1> <o1> }",
@@ -18493,8 +18492,8 @@
           "extensionResults": [],
           "name": "nPlus1",
           "trait": [
-            "Exhaustive",
-            "EachOf"
+            "EachOf",
+            "Exhaustive"
           ],
           "comment": "<S> { :a .*; (:a .+ | :a .); :a . } / { <x> :a 1, 3 }",
           "status": "mf:Approved"
@@ -18596,8 +18595,8 @@
           "extensionResults": [],
           "name": "PTstar",
           "trait": [
-            "Exhaustive",
-            "EachOf"
+            "EachOf",
+            "Exhaustive"
           ],
           "comment": "<S2> {:a @<P>; :a @<T>*} / { <n> :a <pt1>,  <pt2>,  <p>,  <t> }",
           "status": "mf:Approved"
@@ -18648,8 +18647,8 @@
           "extensionResults": [],
           "name": "P2T2",
           "trait": [
-            "Exhaustive",
-            "EachOf"
+            "EachOf",
+            "Exhaustive"
           ],
           "comment": "<S4> {:a @<P>{2}; :a @<T>{2}} / { <n> :a <pt1>,  <pt2>,  <p>,  <t> }",
           "status": "mf:Approved"
@@ -18703,8 +18702,7 @@
             "Import"
           ],
           "comment": "I2 <S1> { <p1> @<S2> } | <S2> { <p2> . } on { <s1> <p1> <n2> . <n2> <p2> \"X\" }",
-          "status": "mf:Approved",
-          "result": "In2_Ip2_In1@In1_Ip1_LX.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#2RefS1-IS2_fail-p2",
@@ -18738,8 +18736,7 @@
             "Import"
           ],
           "comment": "I2 <S2> { <p2> . } | <S1> { <p1> @<S2> }  on { <s1> <p1> <n2> . <n2> <p2> \"X\" }",
-          "status": "mf:Approved",
-          "result": "In2_Ip2_In1@In1_Ip1_LX.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#2RefS1-Icirc",
@@ -18756,8 +18753,7 @@
             "Import"
           ],
           "comment": "I2 <S1> { <p1> @<S2> } | I1 <S2> { <p2> . } on { <s1> <p1> <n2> . <n2> <p2> \"X\" }",
-          "status": "mf:Approved",
-          "result": "In2_Ip2_In1@In1_Ip1_LX.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#2RefS1-Icirc_fail-p2",
@@ -18791,8 +18787,7 @@
             "Import"
           ],
           "comment": "I23 <S1> { <p1> .; <p2> @<S2>? } | <S2> { <p3> @<S3> } <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefS1-IS23_pass-p1",
@@ -18826,8 +18821,7 @@
             "Import"
           ],
           "comment": "I2 <S1> { <p1> .; <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefS3-IS12",
@@ -18844,8 +18838,7 @@
             "Import"
           ],
           "comment": "I2 <S3> { <p4> @<S1> } | <S1> { <p1> .; <p2> @<S2>? } <S2> { <p3> @<S3> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefS123-Icirc",
@@ -18862,8 +18855,7 @@
             "Import"
           ],
           "comment": "I1 <S1> { <p1> .; <p2> @<S2>? } <S2> { <p3> @<S3> } <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefS1-Icirc",
@@ -18880,8 +18872,7 @@
             "Import"
           ],
           "comment": "I2 <S1> { <p1> .; <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | I1 <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#3circRefS1-IS2-IS3-IS3",
@@ -18898,8 +18889,7 @@
             "Import"
           ],
           "comment": "I2 I3 <S1> { <p1> .; <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
-          "status": "mf:Approved",
-          "result": "3circRefPlus1_pass-open.val"
+          "status": "mf:Approved"
         },
         {
           "@id": "#start2RefS1-IstartS2",
@@ -18912,12 +18902,11 @@
           "extensionResults": [],
           "name": "start2RefS1-IstartS2",
           "trait": [
-            "Start",
-            "Import"
+            "Import",
+            "Start"
           ],
           "comment": "I2 start=@<S1> <S1> { <p1> @<S2> } | <S2> { <p2> . } on { <s1> <p1> <n2> . <n2> <p2> \"X\" }",
-          "status": "mf:Proposed",
-          "result": "In2_Ip2_In1@In1_Ip1_LX.val"
+          "status": "mf:Proposed"
         },
         {
           "@id": "#start2RefS2-IstartS1",
@@ -18930,12 +18919,11 @@
           "extensionResults": [],
           "name": "start2RefS2-IstartS1",
           "trait": [
-            "Start",
-            "Import"
+            "Import",
+            "Start"
           ],
           "comment": "I2 start=@<S2> <S2> { <p2> @<S1> } | <S1> { <p1> . } on { <s1> <p2> <n2> . <n2> <p1> \"X\" }",
-          "status": "mf:Proposed",
-          "result": "In2_Ip2_In1@In1_Ip1_LX.val"
+          "status": "mf:Proposed"
         },
         {
           "@id": "#1valExprRef-IV1_fail-lit-short",
@@ -18949,9 +18937,9 @@
           "extensionResults": [],
           "name": "1valExprRef-IV1_fail-lit-short",
           "trait": [
-            "ValueReference",
+            "Import",
             "LengthFacet",
-            "Import"
+            "ValueReference"
           ],
           "comment": "<vc1> = LITERAL MINLENGTH 5 <S1> { <p1> <vc1> } on { <s1> <p1> \"abcd\" }",
           "status": "mf:Approved"
@@ -18968,9 +18956,9 @@
           "extensionResults": [],
           "name": "1valExprRef-IV1_pass-lit-equal",
           "trait": [
-            "ValueReference",
+            "Import",
             "LengthFacet",
-            "Import"
+            "ValueReference"
           ],
           "comment": "<vc1> = LITERAL MINLENGTH 5 <S1> { <p1> <vc1> } on { <s1> <p1> \"abcde\" }",
           "status": "mf:Approved"
@@ -18987,9 +18975,9 @@
           "extensionResults": [],
           "name": "1valExprRefbnode-IV1_fail-lit-short",
           "trait": [
-            "ValueReference",
+            "Import",
             "LengthFacet",
-            "Import"
+            "ValueReference"
           ],
           "comment": "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> _:vc1 } on { <s1> <p1> \"abcd\" }",
           "status": "mf:Approved"
@@ -19006,9 +18994,9 @@
           "extensionResults": [],
           "name": "1valExprRefbnode-IV1_pass-lit-equal",
           "trait": [
-            "ValueReference",
+            "Import",
             "LengthFacet",
-            "Import"
+            "ValueReference"
           ],
           "comment": "_:vc1 = LITERAL MINLENGTH 5 <S1> { <p1> _:vc1 } on { <s1> <p1> \"abcde\" }",
           "status": "mf:Approved"
@@ -19025,9 +19013,9 @@
           "extensionResults": [],
           "name": "2EachInclude1-IS2_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "I2 <S1> { &<S2>; <p1> . } on { <n1> <p1> \"X\" ; <p2> \"Y\" }",
           "status": "mf:Approved"
@@ -19044,9 +19032,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-empty_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> () }",
           "status": "mf:Proposed"
@@ -19063,9 +19051,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-list_Iv1,Iv2,Iv3_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19082,9 +19070,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-list_Iv1,Iv2,Lx_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> (<v1> <v2> \"X\") }",
           "status": "mf:Proposed"
@@ -19101,9 +19089,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-manualList_Iv1,Iv2,Iv3_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19120,9 +19108,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-manualList_extraArc_Iv1,Iv2,Iv3_fail",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19139,9 +19127,9 @@
           "extensionResults": [],
           "name": "1list0PlusDot-manualList_2firsts_Iv1,Iv2,Iv3_fail",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (DOT*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19158,9 +19146,9 @@
           "extensionResults": [],
           "name": "1list0PlusIri-empty_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> () }",
           "status": "mf:Proposed"
@@ -19177,9 +19165,9 @@
           "extensionResults": [],
           "name": "1list0PlusIri-list_Iv1,Iv2,Iv3_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19196,9 +19184,9 @@
           "extensionResults": [],
           "name": "1list0PlusIri-list_Iv1,Iv2,Lx_fail",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> (<v1> <v2> \"X\") }",
           "status": "mf:Proposed"
@@ -19215,9 +19203,9 @@
           "extensionResults": [],
           "name": "1list1PlusIri-empty_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> () }",
           "status": "mf:Proposed"
@@ -19234,9 +19222,9 @@
           "extensionResults": [],
           "name": "1list1PlusIri-list_Iv1,Iv2,Iv3_pass",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> (<v1> <v2> <v3>) }",
           "status": "mf:Proposed"
@@ -19253,9 +19241,9 @@
           "extensionResults": [],
           "name": "1list1PlusIri-list_Iv1,Iv2,Lx_fail",
           "trait": [
-            "Include",
             "EachOf",
-            "Import"
+            "Import",
+            "Include"
           ],
           "comment": "<S1> { <p1> (IRI*) } on { <n1> <p1> (<v1> <v2> \"X\") }",
           "status": "mf:Proposed"
@@ -19305,12 +19293,1092 @@
           "extensionResults": [],
           "name": "recursion_example",
           "trait": [
-            "ShapeMap",
-            "RecursiveData"
+            "RecursiveData",
+            "ShapeMap"
           ],
-          "comment": "<S1> {<p1> @<S1>*}} on { <s1> <p1> <s2> . <s2> <p1> <s3> . <s3> <p1> <s1> }",
+          "comment": "<S1> {<p1> @<S1>*} on { <s1> <p1> <s2> . <s2> <p1> <s3> . <s3> <p1> <s1> }",
           "status": "mf:Proposed",
           "result": "recursion_example_results.json"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_fail-Ref2ExtraP",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_employee-extraP.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_fail-Ref2ExtraP",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Person> <User2> f:name; f:givenName; f:familyName. <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_fail-Ref1ExtraP",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_user-extraP.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_fail-Ref1ExtraP",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Person> <User2> f:name; f:givenName; f:familyName. <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_fail-ReferrerExtraP",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_issue-extraP.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_fail-ReferrerExtraP",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Person> <User2> f:name; f:givenName; f:familyName. <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_fail-Ref1ExtraOR",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_extraOR.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_fail-Ref1ExtraOR",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Person> <User2> f:name; f:givenName; f:familyName. <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_fail-missingRef2",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_no-person.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_fail-missingRef2",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Person> <User2> ... <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_pass-missingOptRef1",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_no-employee.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_pass-missingOptRef1",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... - @<Employee> <User2> ... <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#extends-abstract-multi-empty_pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/extends-abstract-multi-empty.shex",
+            "shape": "http://a.example/IssueShape",
+            "data": "extends-abstract-multi-empty_pass.ttl",
+            "focus": "http://a.example/Issue1"
+          },
+          "extensionResults": [],
+          "name": "extends-abstract-multi-empty_pass",
+          "trait": [
+            "Abstract",
+            "Closed",
+            "Extends",
+            "MultiExtends"
+          ],
+          "comment": "<Issue> C { ... @<Person> ... @<Employee> } ABS <Person> <User> EXT @<Person> ABS <Rep> <Employee> EXT @<Person> EXT @<Rep> on { <Issue1> ... <User2> ... <Thompson.J> ... } ",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendsRepeatedP-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ExtendsRepeatedP.shex",
+            "shape": "http://a.example/#C",
+            "data": "sP123q3.ttl",
+            "focus": "http://a.example/s"
+          },
+          "extensionResults": [],
+          "name": "ExtendsRepeatedP-pass",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "<A> { :p{2}; :q[3] } <B> @<A>AND{ :p+; :q+ } <C> EXT @<B> { :p } on { :s :p 1,2,3; :q 3 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendsRepeatedP-fail_vs",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendsRepeatedP.shex",
+            "shape": "http://a.example/#C",
+            "data": "sP123q99.ttl",
+            "focus": "http://a.example/s"
+          },
+          "extensionResults": [],
+          "name": "ExtendsRepeatedP-fail_vs",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<A> { :p{2}; :q[3] } <B> @<A>AND{ :p+; :q+ } <C> EXT @<B> { :p } on { :s :p 1,2,3; :q 99 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ANDAbstract-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ANDAbstract.shex",
+            "shape": "http://a.example/B",
+            "data": "sAB.ttl",
+            "focus": "http://a.example/sABxxxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ANDAbstract-pass",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABSTRACT <A> /sA/ AND {:p} <B> @<A> AND /s B/ {:p} on { <sABxxxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ANDAbstract-fail_G1pattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ANDAbstract.shex",
+            "shape": "http://a.example/B",
+            "data": "sAB.ttl",
+            "focus": "http://a.example/sAxxxxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ANDAbstract-fail_G1pattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABSTRACT <A> /sA/ AND {:p} <B> @<A> AND /s B/ {:p} on { <sAxxxxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ANDAbstract-fail_pattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ANDAbstract.shex",
+            "shape": "http://a.example/B",
+            "data": "sAB.ttl",
+            "focus": "http://a.example/sxBxxxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ANDAbstract-fail_pattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABSTRACT <A> /sA/ AND {:p} <B> @<A> AND /s B/ {:p} on { <sxBxxxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#AND3G-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/AND3G.shex",
+            "shape": "http://a.example/D",
+            "data": "sABCD.ttl",
+            "focus": "http://a.example/sABCDxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "AND3G-pass",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABS <A> ABS <B> @<A> <C> <D> @<B> AND @<A> on { <sABCDxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#AND3G-fail_G2pattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/AND3G.shex",
+            "shape": "http://a.example/D",
+            "data": "sABCD.ttl",
+            "focus": "http://a.example/sxBCDxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "AND3G-fail_G2pattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABS <A> ABS <B> @<A> <C> <D> @<B> AND @<A> on { <sAxxxxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#AND3G-fail_G1Bpattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/AND3G.shex",
+            "shape": "http://a.example/D",
+            "data": "sABCD.ttl",
+            "focus": "http://a.example/sABxDxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "AND3G-fail_G1Bpattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "ABS <A> ABS <B> @<A> <C> <D> @<B> AND @<A> on { <sxxCxxxxxxxx> <p> 0 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABCDExxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-pass",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABCDExxxxxx> <p> 0, 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_EXTG1",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABCDExxxxx1"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_EXTG1",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABCDExxxxxx> <p> 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_ExtraP",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABCDExxxxx3"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_ExtraP",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABCDExxxxxx> <p> 0, 2, 3 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_G3pattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sxBCDExxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_G3pattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sxBCDExxxxxx> <p> 0, 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_EXTG1ANDG1",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABxDExxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_EXTG1ANDG1",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABxDExxxxxx> <p> 0, 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_EXTG1pattern",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABCxExxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_EXTG1pattern",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABCxExxxxxx> <p> 0, 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendAND3G-fail_G0",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendAND3G.shex",
+            "shape": "http://a.example/E",
+            "data": "sABCDE.ttl",
+            "focus": "http://a.example/sABCDxxxxxxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendAND3G-fail_G0",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "<E> EXTENDS @<D> {:p [2]} on { <sABCDxxxxxxx> <p> 0, 2 }",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABCDEFGxxxx"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-pass",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@Extend3G-15",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t16",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABCDEFGxxx1"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t16",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-16",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t17",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABCDEFGxxx3"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t17",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-17",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t18",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sxBCDEFGxxxx"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t18",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-18",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t19",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABxDEFGxxxx"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t19",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-19",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t20",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABCxEFGxxxx"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t20",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-20",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#Extend3G-t21",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/Extend3G.shex",
+            "shape": "http://a.example/G",
+            "data": "sABCDEFG.ttl",
+            "focus": "http://a.example/sABCDxFGxxxx"
+          },
+          "extensionResults": [],
+          "name": "Extend3G-t21",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@Extend3G-21",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-pass",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-pass",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-22",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t23",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/A",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t23",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-23",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t24",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sxBCDEFGHIJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t24",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-24",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t25",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFxHIJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t25",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-25",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t26",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGxIJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t26",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-26",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t27",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHxJx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t27",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-27",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t28",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIxx"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t28",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-28",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t29",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ0"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t29",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-29",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t30",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ1"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t30",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-30",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t31",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ2"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t31",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-31",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t32",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ3"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t32",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-32",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t33",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ5"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t33",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-33",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t34",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ6"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t34",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-34",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#ExtendANDExtend3GAND3G-t35",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/ExtendANDExtend3GAND3G.shex",
+            "shape": "http://a.example/J",
+            "data": "sABCDEFGHIJ.ttl",
+            "focus": "http://a.example/sABCDEFGHIJ7"
+          },
+          "extensionResults": [],
+          "name": "ExtendANDExtend3GAND3G-t35",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@ExtendANDExtend3GAND3G-35",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-Observation",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Observation",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-Observation",
+          "trait": [
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-36",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-Vital",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Vital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-Vital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-37",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-BP",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#BP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-BP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-38",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-PostureVital",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#PostureVital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-PostureVital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-39",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-ReclinedVital",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#ReclinedVital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-ReclinedVital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-40",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-PostureBP",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#PostureBP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-PostureBP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-41",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-ReclinedBP",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#ReclinedBP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-ReclinedBP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-42",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-Posture",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Posture",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-Posture",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-43",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_lie-Reclined",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Reclined",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#lie"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_lie-Reclined",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-44",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-Observation",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Observation",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-Observation",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-45",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-Vital",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Vital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-Vital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-46",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-BP",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#BP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-BP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-47",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-PostureVital",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#PostureVital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-PostureVital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-48",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-fail_sit-ReclinedVital",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#ReclinedVital",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-fail_sit-ReclinedVital",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-49",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-PostureBP",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#PostureBP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-PostureBP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-50",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-fail_sit-ReclinedBP",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#ReclinedBP",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-fail_sit-ReclinedBP",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-51",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-pass_sit-Posture",
+          "@type": "sht:ValidationTest",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Posture",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-pass_sit-Posture",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-52",
+          "status": "mf:proposed"
+        },
+        {
+          "@id": "#vitals-RESTRICTS-fail_sit-Reclined",
+          "@type": "sht:ValidationFailure",
+          "action": {
+            "schema": "../schemas/vitals-RESTRICTS.shex",
+            "shape": "http://a.example/#Reclined",
+            "data": "vitals.ttl",
+            "focus": "http://a.example/#sit"
+          },
+          "extensionResults": [],
+          "name": "vitals-RESTRICTS-fail_sit-Reclined",
+          "trait": [
+            "Exhaustive",
+            "Extends"
+          ],
+          "comment": "@@vitals-RESTRICTS-53",
+          "status": "mf:proposed"
         }
       ]
     }
