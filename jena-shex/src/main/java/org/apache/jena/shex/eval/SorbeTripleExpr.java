@@ -33,58 +33,65 @@ import java.util.stream.Collectors;
 
 // TODO this class uses several maps with keys being triple expressions. Will probably become incorrect when TripleConstraint's equals is re-introduced
 // TODO comments and explanations needed for the contract of this class
-public class SorbeTripleExpr {
+/*package*/ class SorbeTripleExpr {
 
     private final TripleExpr sourceTripleExpr;
     /*package*/ final TripleExpr sorbe;
-    private List<TripleConstraint> allSorbeTripleConstraints;
-    private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
     private final List<TripleExpr> srcSubExprsWithSemActs;
-    // With every original triple subExpr having semantic actions, maps its triple constraints. Set is necessary here
-    private final Map<TripleExpr, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
-    private final Map<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
-    // With every triple constraint associates its copies
-    private final Map<TripleConstraint, List<TripleConstraint>> tripleConstraintsCopiesMap;
+    // With every triple constraint associates its copies in the sorbe expression. Null if the source triple expr is sorbe
+    private final Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
 
+    private SorbeTripleExpr(TripleExpr sourceTripleExpr, TripleExpr sorbe,
+                            List<TripleExpr> srcSubExprsWithSemActs,
+                            Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap) {
+        this.sourceTripleExpr = sourceTripleExpr;
+        this.sorbe = sorbe;
+        this.srcSubExprsWithSemActs = srcSubExprsWithSemActs;
+        this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
+    }
 
-    public List<TripleConstraint> getAllSorbeTripleConstraints() {
+    /*package*/ static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
+
+        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
+
+        if (isSorbe(tripleExpr))
+            return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
+
+        Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
+        Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap = new HashMap<>();
+
+        SorbeConstructor constructor = new SorbeConstructor(sorbeToSourceMap, tripleConstraintCopiesMap, schema);
+        TripleExpr sorbe = tripleExpr.visit(constructor);
+        return new SorbeTripleExpr(tripleExpr, sorbe, subExprsWithSemActs, tripleConstraintCopiesMap);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Accessors and memoized informations
+    // ---------------------------------------------------------------------------------------------------------
+
+    /*package*/ List<TripleConstraint> getAllSorbeTripleConstraints() {
         if (allSorbeTripleConstraints == null) {
             allSorbeTripleConstraints = new ArrayList<>();
             collectTripleConstraints(sorbe, false, null, allSorbeTripleConstraints);
         }
         return allSorbeTripleConstraints;
     }
+    private List<TripleConstraint> allSorbeTripleConstraints;
 
-    private Map<Node, List<TripleConstraint>> getTripleConstraintsGroupedByPredicate () {
-        if (tripleConstraintsGroupedByPredicate == null) {
-            tripleConstraintsGroupedByPredicate = getAllSorbeTripleConstraints().stream()
-                    .collect(Collectors.groupingBy(TripleConstraint::getPredicate));
+    /*package*/ List<Pair<TripleExpr, Set<Triple>>> getSemActsSubExprsAndTheirMatchedTriples(
+            Map<Triple, TripleConstraint> matching, ValidationContext vCxt) {
+
+        List<Pair<TripleExpr, Set<Triple>>> result = new ArrayList<>();
+
+        for (TripleExpr srcSubExpr : srcSubExprsWithSemActs) {
+            Set<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfSourceSubExpr(srcSubExpr, vCxt);
+            Set<Triple> matchedTriples = matching.entrySet().stream()
+                    .filter(e -> sorbeTripleConstraints.contains(e.getValue()))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
+            result.add(new ImmutablePair<>(srcSubExpr, matchedTriples));
         }
-        return tripleConstraintsGroupedByPredicate;
-    }
-
-    private SorbeTripleExpr(TripleExpr sourceTripleExpr, TripleExpr sorbe,
-                            List<TripleExpr> srcSubExprsWithSemActs,
-                            Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
-                            Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap) {
-        this.sourceTripleExpr = sourceTripleExpr;
-        this.sorbe = sorbe;
-        this.srcSubExprsWithSemActs = srcSubExprsWithSemActs;
-        this.tripleConstraintsCopiesMap = sourceToSorbeMap;
-    }
-
-    /** Computes the entries for the #srcSubExprToSorbeTripleConstraintsMap */
-    private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
-        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr, e -> {
-            Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
-            collectTripleConstraints(srcSubExpr, true, vCxt.getSchema(), sourceTripleConstraintsSet);
-            if (sourceTripleExpr == sorbe)
-                return sourceTripleConstraintsSet;
-            else
-                return sourceTripleConstraintsSet.stream()
-                        .flatMap(tc -> tripleConstraintsCopiesMap.get(tc).stream())
-                        .collect(Collectors.toSet());
-        });
+        return result;
     }
 
     /*package*/ Map<Triple, List<TripleConstraint>> getPredicateBasedPreMatching(Collection<Triple> triples) {
@@ -94,89 +101,47 @@ public class SorbeTripleExpr {
                 t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
     }
 
-    public static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
-
-        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
-
-        if (isSorbe(tripleExpr))
-            return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null, null);
-
-        Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
-        Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap = new HashMap<>();
-
-        class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
-
-            @Override
-            public TripleExpr visit(TripleConstraint tripleConstraint) {
-                TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
-                sorbeToSourceMap.put(copy, tripleConstraint);
-                List<TripleConstraint> knownCopies
-                        = sourceToSorbeMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
-                knownCopies.add(copy);
-                return copy;
-            }
-
-            @Override
-            public TripleExpr visit(TripleExprRef tripleExprRef) {
-                // will set result to a clone of the referenced triple expression
-                return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
-            }
-
-            @Override
-            public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
-
-                Cardinality card = tripleExprCardinality.getCardinality();
-
-                Supplier<TripleExpr> clonedSubExpr = () ->
-                    tripleExprCardinality.getSubExpr().visit(this);
-
-                if (tripleExprCardinality.getSubExpr() instanceof TripleConstraint)
-                    // leave as is, just clone the subexpression
-                    return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
-                if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
-                    // PLUS on an expression that contains the empty word becomes a star
-                    return TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
-                else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
-                        || card.equals(Cardinality.PLUS) || card.equals(IntervalComputation.ZERO_INTERVAL))
-                    // the standard intervals OPT STAR PLUS and ZERO are allowed
-                    return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
-                else {
-                    // non-standard cardinality on non-TripleConstraint -> create clones
-                    int nbClones;
-                    int nbOptClones;
-                    TripleExprCardinality remainingForUnbounded;
-
-                    if (card.max == Cardinality.UNBOUNDED) {
-                        nbClones = card.min - 1;
-                        nbOptClones = 0;
-                        remainingForUnbounded = TripleExprCardinality.create(clonedSubExpr.get(),
-                                Cardinality.PLUS, null);
-                    } else {
-                        nbClones = card.min;
-                        nbOptClones = card.max - card.min;
-                        remainingForUnbounded = null;
-                    }
-
-                    List<TripleExpr> newSubExprs = new ArrayList<>(nbClones + nbOptClones + 1);
-                    for (int i = 0; i < nbClones; i++) {
-                        newSubExprs.add(clonedSubExpr.get());
-                    }
-                    for (int i = 0; i < nbOptClones; i++) {
-                        newSubExprs.add(TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.OPT, null));
-                    }
-                    if (remainingForUnbounded != null)
-                        newSubExprs.add(remainingForUnbounded);
-
-                    return EachOf.create(newSubExprs, null);
-                }
-            }
-        }
-
-        SorbeConstructor constructor = new SorbeConstructor();
-        TripleExpr sorbe = tripleExpr.visit(constructor);
-        return new SorbeTripleExpr(tripleExpr, sorbe, subExprsWithSemActs, sorbeToSourceMap, sourceToSorbeMap);
+    // Returns true if the bag has value 0 for all every triple constraint originating in the subexpression (which must be a sub expression of this sorbe expression)
+    /*package*/ boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr subExpr) {
+        return getSorbeTripleConstraintsOfSorbeSubExpr(subExpr).stream()
+                .allMatch(tc -> bag.get(tc) == 0);
     }
 
+    private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
+        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr, e -> {
+            Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
+            collectTripleConstraints(srcSubExpr, true, vCxt.getSchema(), sourceTripleConstraintsSet);
+            if (sourceTripleExpr == sorbe)
+                return sourceTripleConstraintsSet;
+            else
+                return sourceTripleConstraintsSet.stream()
+                        .flatMap(tc -> tripleConstraintCopiesMap.get(tc).stream())
+                        .collect(Collectors.toSet());
+        });
+    }
+    private final Map<TripleExpr, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
+
+    private Map<Node, List<TripleConstraint>> getTripleConstraintsGroupedByPredicate () {
+        if (tripleConstraintsGroupedByPredicate == null) {
+            tripleConstraintsGroupedByPredicate = getAllSorbeTripleConstraints().stream()
+                    .collect(Collectors.groupingBy(TripleConstraint::getPredicate));
+        }
+        return tripleConstraintsGroupedByPredicate;
+    }
+    private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
+
+    private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
+        return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr, e -> {
+            List<TripleConstraint> tripleConstraints = new ArrayList<>();
+            collectTripleConstraints(sorbeSubExpr, false, null, tripleConstraints);
+            return tripleConstraints;
+        });
+    }
+    private final Map<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
+    
+    // --------------------------------------------------------------------------------------------------
+    // Visitor-based traversals of the expression
+    // --------------------------------------------------------------------------------------------------
 
     private static boolean isSorbe(TripleExpr tripleExpr) {
 
@@ -219,19 +184,7 @@ public class SorbeTripleExpr {
     }
 
 
-    // Returns true if the bag has value 0 for all every triple constraint originating in the subexpression (which must be a sub expression of this sorbe expression)
-    /*package*/ boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr subExpr) {
-        return getSorbeTripleConstraintsOfSorbeSubExpr(subExpr).stream()
-                .allMatch(tc -> bag.get(tc) == 0);
-    }
 
-    private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
-        return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr, e -> {
-            List<TripleConstraint> tripleConstraints = new ArrayList<>();
-            collectTripleConstraints(sorbeSubExpr, false, null, tripleConstraints);
-            return tripleConstraints;
-        });
-    }
 
 
     private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
@@ -275,20 +228,7 @@ public class SorbeTripleExpr {
         return tripleExpr.visit(visitor);
     }
 
-    public List<Pair<TripleExpr, Set<Triple>>> getSemActsSubExprsAndTheirMatchedTriples(Map<Triple, TripleConstraint> matching,
-                                                                                        ValidationContext vCxt) {
-        List<Pair<TripleExpr, Set<Triple>>> result = new ArrayList<>();
 
-        for (TripleExpr srcSubExpr : srcSubExprsWithSemActs) {
-            Set<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfSourceSubExpr(srcSubExpr, vCxt);
-            Set<Triple> matchedTriples = matching.entrySet().stream()
-                    .filter(e -> sorbeTripleConstraints.contains(e.getValue()))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet());
-            result.add(new ImmutablePair<>(srcSubExpr, matchedTriples));
-        }
-        return result;
-    }
 
     private static class CloneWithNullSemanticActionsAndEraseLabels implements TypedTripleExprVisitor<TripleExpr> {
 
@@ -330,6 +270,88 @@ public class SorbeTripleExpr {
             return TripleExprCardinality.create(clonedSubExpr, tripleExprCardinality.getCardinality(), null);
         }
     }
+
+    private static class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
+
+        private final Map<TripleConstraint, TripleConstraint> sorbeToSourceMap;
+        private final Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap;
+        private final ShexSchema schema;
+
+
+        SorbeConstructor(Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
+                         Map<TripleConstraint, List<TripleConstraint>> sourceTosorbeMap,
+                         ShexSchema schema) {
+            this.sorbeToSourceMap = sorbeToSourceMap;
+            this.sourceToSorbeMap = sourceTosorbeMap;
+            this.schema = schema;
+        }
+
+
+        @Override
+        public TripleExpr visit(TripleConstraint tripleConstraint) {
+            TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
+            sorbeToSourceMap.put(copy, tripleConstraint);
+            List<TripleConstraint> knownCopies
+                    = sourceToSorbeMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
+            knownCopies.add(copy);
+            return copy;
+        }
+
+        @Override
+        public TripleExpr visit(TripleExprRef tripleExprRef) {
+            return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
+        }
+
+        @Override
+        public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
+
+            Cardinality card = tripleExprCardinality.getCardinality();
+
+            Supplier<TripleExpr> clonedSubExpr = () ->
+                    tripleExprCardinality.getSubExpr().visit(this);
+
+            if (tripleExprCardinality.getSubExpr() instanceof TripleConstraint)
+                // leave as is, just clone the subexpression
+                return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
+            if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
+                // PLUS on an expression that contains the empty word becomes a star
+                return TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
+            else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
+                    || card.equals(Cardinality.PLUS) || card.equals(IntervalComputation.ZERO_INTERVAL))
+                // the standard intervals OPT STAR PLUS and ZERO are allowed
+                return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
+            else {
+                // non-standard cardinality on non-TripleConstraint -> create clones
+                int nbClones;
+                int nbOptClones;
+                TripleExprCardinality remainingForUnbounded;
+
+                if (card.max == Cardinality.UNBOUNDED) {
+                    nbClones = card.min - 1;
+                    nbOptClones = 0;
+                    remainingForUnbounded = TripleExprCardinality.create(clonedSubExpr.get(),
+                            Cardinality.PLUS, null);
+                } else {
+                    nbClones = card.min;
+                    nbOptClones = card.max - card.min;
+                    remainingForUnbounded = null;
+                }
+
+                List<TripleExpr> newSubExprs = new ArrayList<>(nbClones + nbOptClones + 1);
+                for (int i = 0; i < nbClones; i++) {
+                    newSubExprs.add(clonedSubExpr.get());
+                }
+                for (int i = 0; i < nbOptClones; i++) {
+                    newSubExprs.add(TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.OPT, null));
+                }
+                if (remainingForUnbounded != null)
+                    newSubExprs.add(remainingForUnbounded);
+
+                return EachOf.create(newSubExprs, null);
+            }
+        }
+    }
+
 
     private static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr, ShexSchema schema) {
 
@@ -399,5 +421,4 @@ public class SorbeTripleExpr {
             builder.followTripleExprRefs(schema);
         tripleExpr.visit(builder.build());
     }
-
 }
