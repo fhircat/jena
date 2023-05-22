@@ -106,7 +106,7 @@ import java.util.stream.Collectors;
     /*package*/ boolean isEmptySubbag(Bag bag, TripleExpr sorbeSubExpr) {
         return getSorbeTripleConstraintsOfSorbeSubExpr(sorbeSubExpr).stream()
                 .allMatch(tc -> bag.getCard(tc) == 0);
-            }
+    }
 
     /** With every origin sub-expression having semantic actions, associates the triples that the given matching matches to this sub-expression.
      *
@@ -122,7 +122,7 @@ import java.util.stream.Collectors;
                 .map(originSubExpr -> new ImmutablePair<>(originSubExpr,
                         triplesMatchedInOriginSubExpr(matching, originSubExpr, vCxt)))
                 .collect(Collectors.toList());
-            }
+    }
 
     // ---------------------------------------------------------------------------------------------------------
     // Accessors and memoized informations
@@ -133,9 +133,9 @@ import java.util.stream.Collectors;
         if (allSorbeTripleConstraints == null) {
             allSorbeTripleConstraints = new ArrayList<>();
             AccumulationUtil.accumulateDirectTripleConstraints(sorbe, allSorbeTripleConstraints);
-                }
+        }
         return allSorbeTripleConstraints;
-            }
+    }
     private List<TripleConstraint> allSorbeTripleConstraints;
 
     /** The triple constraints of this SORBE triple expression which origins are in the given origin sub-expression.
@@ -168,7 +168,7 @@ import java.util.stream.Collectors;
                     .collect(Collectors.groupingBy(TripleConstraint::getPredicate));
         }
         return tripleConstraintsGroupedByPredicate;
-                }
+    }
     private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
 
     /** The triple constraints of a sub-expression of this SORBE triple expression. Memorized. */
@@ -178,7 +178,7 @@ import java.util.stream.Collectors;
             AccumulationUtil.accumulateDirectTripleConstraints(sorbeSubExpr, tripleConstraints);
             return tripleConstraints;
         });
-            }
+    }
     private final EMap<TripleExpr, Set<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new EMap<>();
 
     /** The triples that are matched with an origin sub-expression.
@@ -197,7 +197,7 @@ import java.util.stream.Collectors;
                 .filter(e -> sorbeTripleConstraints.contains(e.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
-            }
+    }
 
     // --------------------------------------------------------------------------------------------------
     // Visitor-based traversals of the expression
@@ -242,7 +242,7 @@ import java.util.stream.Collectors;
                 .build();
         tripleExpr.visit(walker);
         return acc.isEmpty();
-                }
+    }
 
     private static boolean containsEmpty (TripleExpr tripleExpr, Function<Node, TripleExpr> tripleExprRefsDefs) {
 
@@ -256,24 +256,24 @@ import java.util.stream.Collectors;
             @Override
             public Boolean visit(TripleExprEmpty tripleExprEmpty) {
                 return true;
-                    }
+            }
 
             @Override
             public Boolean visit(EachOf eachOf) {
                 return eachOf.getTripleExprs().stream()
                         .allMatch(subExpr -> subExpr.visit(this));
-                    }
+            }
 
             @Override
             public Boolean visit(OneOf oneOf) {
                 return oneOf.getTripleExprs().stream()
                         .anyMatch(subExpr -> subExpr.visit(this));
-                    }
+            }
 
             @Override
             public Boolean visit(TripleExprCardinality tripleExprCardinality) {
                 return (tripleExprCardinality.min() == 0) || tripleExprCardinality.getSubExpr().visit(this);
-                    }
+            }
 
             @Override
             public Boolean visit(TripleExprRef tripleExprRef) {
@@ -306,25 +306,25 @@ import java.util.stream.Collectors;
         @Override
         public TripleExpr visit(TripleExprEmpty tripleExprEmpty) {
             return TripleExprEmpty.get();
-            }
+        }
 
-            @Override
+        @Override
         public TripleExpr visit(TripleExprRef tripleExprRef) {
             return TripleExprRef.create(tripleExprRef.getLabel());
-            }
+        }
 
-            @Override
+        @Override
         public TripleExpr visit(TripleConstraint tripleConstraint) {
             return TripleConstraint.create(null, tripleConstraint.getPredicate(),
                     tripleConstraint.isInverse(), tripleConstraint.getValueExpr(), null);
-            }
+        }
 
-            @Override
+        @Override
         public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
             TripleExpr clonedSubExpr = tripleExprCardinality.getSubExpr().visit(this);
             return TripleExprCardinality.create(clonedSubExpr, tripleExprCardinality.getCardinality(), null);
         }
-                }
+    }
 
     private static class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
 
@@ -335,23 +335,23 @@ import java.util.stream.Collectors;
                          ShexSchema schema) {
             this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
-            }
+        }
 
-            @Override
+        @Override
         public TripleExpr visit(TripleConstraint tripleConstraint) {
             TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
             List<TripleConstraint> knownCopies
                     = tripleConstraintCopiesMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
             knownCopies.add(copy);
             return copy;
-                }
+        }
 
         @Override
         public TripleExpr visit(TripleExprRef tripleExprRef) {
             return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
-            }
+        }
 
-            @Override
+        @Override
         public TripleExpr visit(TripleExprCardinality tripleExprCardinality) {
 
             Cardinality card = tripleExprCardinality.getCardinality();
@@ -392,14 +392,14 @@ import java.util.stream.Collectors;
                 }
                 for (int i = 0; i < nbOptClones; i++) {
                     newSubExprs.add(TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.OPT, null));
-            }
+                }
                 if (remainingForUnbounded != null)
                     newSubExprs.add(remainingForUnbounded);
 
                 return EachOf.create(newSubExprs, null);
             }
-            }
         }
+    }
 
 
 
