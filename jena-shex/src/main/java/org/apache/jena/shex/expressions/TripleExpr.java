@@ -44,12 +44,6 @@ public abstract class TripleExpr {
         this.semActs = semActs;
     }
 
-    public boolean testSemanticActions(ValidationContext v, Set<Triple> matchables) {
-        if (this.semActs == null)
-            return true;
-        return v.dispatchTripleExprSemanticAction(this, matchables);
-    }
-
     public abstract void visit(VoidTripleExprVisitor visitor);
 
     public abstract <R> R visit(TypedTripleExprVisitor<R> visitor);
