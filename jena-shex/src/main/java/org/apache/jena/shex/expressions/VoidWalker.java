@@ -1,9 +1,11 @@
 package org.apache.jena.shex.expressions;
 
+import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShexSchema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
 
@@ -14,6 +16,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private final boolean followShapeExprRefs;
     private final boolean followTripleExprRefs;
     private final ShexSchema schema;
+    private final Map<Node, ShapeExpr> shapeExprRefDefMap;
+    private final Map<Node, TripleExpr> tripleExprRefDefMap;
 
     public static class Builder {
         private final List<VoidShapeExprVisitor> _shapeExprProcessors = new ArrayList<>();
@@ -23,6 +27,9 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         private boolean _followShapeExprRefs = false;
         private boolean _followTripleExprRefs = false;
         private ShexSchema _schema = null;
+        private Map<Node, ShapeExpr> _shapeExprRefDefMap = null;
+        private Map<Node, TripleExpr> _tripleExprRefDefMap = null;
+
 
         public Builder processShapeExprsWith(VoidShapeExprVisitor shapeExprProcessor) {
             this._shapeExprProcessors.add(shapeExprProcessor);
@@ -52,6 +59,12 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             return this;
         }
 
+        public Builder followShapeExprRefs(Map<Node, ShapeExpr> shapeExprRefDefMap) {
+            this._followShapeExprRefs = true;
+            this._shapeExprRefDefMap = shapeExprRefDefMap;
+            return this;
+        }
+
         public Builder followTripleExprRefs(ShexSchema schema) {
             this._followTripleExprRefs = true;
             if (this._schema != null && this._schema != schema)
@@ -60,18 +73,26 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             return this;
         }
 
+        public Builder followTripleExprRefs(Map<Node, TripleExpr> tripleExprRefDefMap) {
+            this._followTripleExprRefs = true;
+            this._tripleExprRefDefMap = tripleExprRefDefMap;
+            return this;
+        }
+
         public VoidWalker build() {
             return new VoidWalker(_shapeExprProcessors, _tripleExprProcessors,
                     _traverseShapes, _traverseTripleConstraints,
-                    _followShapeExprRefs, _followTripleExprRefs, _schema);
+                    _followShapeExprRefs, _followTripleExprRefs,
+                    _schema, _shapeExprRefDefMap, _tripleExprRefDefMap);
         }
 
     }
 
     private VoidWalker(List<VoidShapeExprVisitor> shapeExprProcessors, List<VoidTripleExprVisitor> tripleExprProcessors,
-                      boolean traverseShapes, boolean traverseTripleConstraints,
-                      boolean followShapeExprRefs, boolean followTripleExprRefs,
-                      ShexSchema schema) {
+                       boolean traverseShapes, boolean traverseTripleConstraints,
+                       boolean followShapeExprRefs, boolean followTripleExprRefs,
+                       ShexSchema schema,
+                       Map<Node, ShapeExpr> shapeExprRefDefMap, Map<Node, TripleExpr> tripleExprRefDefMap) {
         this.shapeExprProcessors = shapeExprProcessors;
         this.tripleExprProcessors = tripleExprProcessors;
         this.traverseShapes = traverseShapes;
@@ -79,6 +100,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         this.followShapeExprRefs = followShapeExprRefs;
         this.followTripleExprRefs = followTripleExprRefs;
         this.schema = schema;
+        this.shapeExprRefDefMap = shapeExprRefDefMap;
+        this.tripleExprRefDefMap = tripleExprRefDefMap;
     }
 
     private void process(TripleExpr tripleExpr) {
@@ -110,9 +133,12 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     @Override
     public void visit(ShapeExprRef shapeExprRef) {
         process(shapeExprRef);
-        if (followShapeExprRefs)
-            schema.get(shapeExprRef.getLabel()).getShapeExpr().visit(this);
-
+        if (followShapeExprRefs) {
+           ShapeExpr shapeExpr = schema != null
+                   ? schema.get(shapeExprRef.getLabel()).getShapeExpr()
+                   : shapeExprRefDefMap.get(shapeExprRef.getLabel());
+           shapeExpr.visit(this);
+        }
     }
 
     @Override
@@ -158,8 +184,12 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     @Override
     public void visit(TripleExprRef tripleExprRef) {
         process(tripleExprRef);
-        if (followTripleExprRefs)
-            schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
+        if (followTripleExprRefs) {
+            TripleExpr tripleExpr = schema != null
+                    ? schema.getTripleExpr(tripleExprRef.getLabel())
+                    : tripleExprRefDefMap.get(tripleExprRef.getLabel());
+            tripleExpr.visit(this);
+        }
     }
 
     @Override

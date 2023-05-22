@@ -32,6 +32,7 @@ import org.apache.jena.shex.sys.SysShex;
 public class ShexSchema {
 
     private final ShapeDecl startShape;
+    // TODO shapes and shapeMap contain the same information => redundancy : bad idea
     private final List<ShapeDecl> shapes;
     private final Map<Node, ShapeDecl> shapeMap;
     private final Map<Node, TripleExpr> tripleRefs;

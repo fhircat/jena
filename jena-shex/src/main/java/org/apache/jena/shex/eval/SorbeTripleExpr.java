@@ -25,6 +25,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
+import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
 
 import java.util.*;
 import java.util.function.Function;

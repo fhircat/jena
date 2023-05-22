@@ -19,8 +19,6 @@
 package org.apache.jena.shex.eval;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,6 +29,7 @@ import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
+import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class ShapeEval {
@@ -70,18 +69,16 @@ public class ShapeEval {
         Map<Triple, List<TripleConstraint>> preMatching = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
 
         // 2. Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
-        for (Map.Entry<Triple, List<TripleConstraint>> e : preMatching.entrySet()) {
-            Triple triple = e.getKey();
-            List<TripleConstraint> tcs = e.getValue();
-            Iterator<TripleConstraint> it = tcs.iterator();
+        preMatching.forEach((triple, matchingTripleConstraints) -> {
+            Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
             while (it.hasNext()) {
                 TripleConstraint tc = it.next();
                 ShapeExpr valueExpr = tc.getValueExpr();
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                if (! ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
+                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
                     it.remove();
             }
-        }
+        });
 
         // 3. Check whether all non matching triples are allowed by extra
         Iterator<Map.Entry<Triple, List<TripleConstraint>>> it = preMatching.entrySet().iterator();

@@ -1,4 +1,4 @@
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.util;
 
 import org.apache.jena.shex.expressions.*;
 
