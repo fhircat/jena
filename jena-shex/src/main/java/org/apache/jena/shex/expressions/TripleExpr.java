@@ -27,10 +27,13 @@ import java.util.Set;
 public abstract class TripleExpr {
 
     private List<SemAct> semActs;
+    public final int id;
+    private static int nextId = 0;
 
     // TODO semacts are most often empty, it's weird to have the unique constructor requiring semantic actions
     protected TripleExpr(List<SemAct> semActs) {
         this.semActs = semActs;
+        this.id = nextId++;
     }
 
     public List<SemAct> getSemActs() {

@@ -103,7 +103,7 @@ public class ShapeEval {
             Map<Triple, TripleConstraint> matching = mit.next();
 
             Cardinality interval = computeInterval(sorbeTripleExpr,
-                    matchingToBag(matching, sorbeTripleExpr.getAllSorbeTripleConstraints()), vCxt);
+                    Bag.fromMatching(matching, sorbeTripleExpr.getAllSorbeTripleConstraints()), vCxt);
             if (interval.min <= 1 && 1 <= interval.max) {
                 // the triple expression is satisfied by the matching, check semantic actions
                 if (sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
@@ -113,14 +113,6 @@ public class ShapeEval {
         }
         return false;
 
-    }
-
-    public static Map<TripleConstraint, Integer> matchingToBag (Map<Triple, TripleConstraint> matching,
-                                                                List<TripleConstraint> base) {
-        Map<TripleConstraint, Integer> bag = base.stream().collect(Collectors.toMap(Function.identity(), x->0));
-        for (TripleConstraint tc : matching.values())
-            bag.computeIfPresent(tc, (k, old) -> old+1);
-        return bag;
     }
 
     private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {
@@ -138,9 +130,9 @@ public class ShapeEval {
         x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
     }
 
-    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Map<TripleConstraint, Integer> bag,
+    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Bag bag,
                                                 ValidationContext vCxt) {
-        IntervalComputation computation = new IntervalComputation(sorbeTripleExpr, bag, vCxt);
+        IntervalComputation computation = new IntervalComputation(sorbeTripleExpr, bag);
         return sorbeTripleExpr.sorbe.visit(computation);
     }
 

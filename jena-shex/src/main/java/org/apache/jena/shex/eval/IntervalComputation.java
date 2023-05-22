@@ -31,19 +31,17 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
     /*package*/ static Cardinality ZERO_INTERVAL = new Cardinality(0, 0);
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
-    private final Map<TripleConstraint, Integer> bag;
+    private final Bag bag;
     private final SorbeTripleExpr sorbeTripleExpr;
-    private final ValidationContext vCxt;
 
-    public IntervalComputation(SorbeTripleExpr sorbeTripleExpr, Map<TripleConstraint, Integer> bag, ValidationContext vCxt) {
+    public IntervalComputation(SorbeTripleExpr sorbeTripleExpr, Bag bag) {
         this.bag = bag;
         this.sorbeTripleExpr = sorbeTripleExpr;
-        this.vCxt = vCxt;
     }
 
     @Override
     public Cardinality visit(TripleConstraint tripleConstraint) {
-        int nbOcc = bag.get(tripleConstraint);
+        int nbOcc = bag.getCard(tripleConstraint);
         return new Cardinality(nbOcc, nbOcc);
     }
 
@@ -95,7 +93,7 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
             return add(subResult, Cardinality.STAR);
         }
         if (subExpr instanceof TripleConstraint) {
-            int nbOcc = bag.get((TripleConstraint) subExpr);
+            int nbOcc = bag.getCard((TripleConstraint) subExpr);
             return div(nbOcc, card);
         }
         if (card.equals(ZERO_INTERVAL))

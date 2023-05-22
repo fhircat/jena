@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.jena.graph.Node;
 
@@ -69,30 +70,10 @@ public class TripleConstraint extends TripleExpr {
         return visitor.visit(this);
     }
 
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(predicate, reverse, shapeExpr);
-//    }
-//
-//    @Override
-//    public boolean equals(Object obj) {
-//        if ( this == obj )
-//            return true;
-//        if ( obj == null )
-//            return false;
-//        if ( getClass() != obj.getClass() )
-//            return false;
-//        TripleConstraint other = (TripleConstraint)obj;
-//        return /*max == other.max && min == other.min && */Objects.equals(predicate, other.predicate) && reverse == other.reverse
-//               && Objects.equals(shapeExpr, other.shapeExpr);
-//    }
 
-
-    // FIXME incompatible hashCode and equals
     @Override
     public int hashCode() {
-        return System.identityHashCode(this);
+        return Objects.hash(predicate, inverse, valueExpr);
     }
 
     @Override
@@ -104,13 +85,9 @@ public class TripleConstraint extends TripleExpr {
         if ( getClass() != obj.getClass() )
             return false;
         TripleConstraint other = (TripleConstraint)obj;
-        if (!this.predicate.equals(other.predicate) || !this.inverse == other.inverse)
-            return false;
-        if ( valueExpr == null ) {
-            if ( other.valueExpr != null )
-                return false;
-        } else if ( !valueExpr.equals(other.valueExpr) )
-            return false;
-        return true;
+        return Objects.equals(predicate, other.predicate) && inverse == other.inverse
+               && Objects.equals(valueExpr, other.valueExpr);
     }
+
+
 }

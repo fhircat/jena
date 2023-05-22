@@ -38,12 +38,12 @@ import java.util.stream.Collectors;
     private final TripleExpr sourceTripleExpr;
     /*package*/ final TripleExpr sorbe;
     private final List<TripleExpr> srcSubExprsWithSemActs;
-    // With every triple constraint associates its copies in the sorbe expression. Null if the source triple expr is sorbe
-    private final Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
+    // With every triple constraint's id associates its copies in the sorbe expression. Null if the source triple expr is sorbe
+    private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
 
     private SorbeTripleExpr(TripleExpr sourceTripleExpr, TripleExpr sorbe,
                             List<TripleExpr> srcSubExprsWithSemActs,
-                            Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap) {
+                            Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap) {
         this.sourceTripleExpr = sourceTripleExpr;
         this.sorbe = sorbe;
         this.srcSubExprsWithSemActs = srcSubExprsWithSemActs;
@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
 
         Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
-        Map<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap = new HashMap<>();
+        Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap = new HashMap<>();
 
         SorbeConstructor constructor = new SorbeConstructor(sorbeToSourceMap, tripleConstraintCopiesMap, schema);
         TripleExpr sorbe = tripleExpr.visit(constructor);
@@ -102,24 +102,24 @@ import java.util.stream.Collectors;
     }
 
     // Returns true if the bag has value 0 for all every triple constraint originating in the subexpression (which must be a sub expression of this sorbe expression)
-    /*package*/ boolean isEmptySubbag(Map<TripleConstraint, Integer> bag, TripleExpr subExpr) {
+    /*package*/ boolean isEmptySubbag(Bag bag, TripleExpr subExpr) {
         return getSorbeTripleConstraintsOfSorbeSubExpr(subExpr).stream()
-                .allMatch(tc -> bag.get(tc) == 0);
+                .allMatch(tc -> bag.getCard(tc) == 0);
     }
 
     private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
-        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr, e -> {
+        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr.id, e -> {
             Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
             collectTripleConstraints(srcSubExpr, true, vCxt.getSchema(), sourceTripleConstraintsSet);
             if (sourceTripleExpr == sorbe)
                 return sourceTripleConstraintsSet;
             else
                 return sourceTripleConstraintsSet.stream()
-                        .flatMap(tc -> tripleConstraintCopiesMap.get(tc).stream())
+                        .flatMap(tc -> tripleConstraintCopiesMap.get(tc.id).stream())
                         .collect(Collectors.toSet());
         });
     }
-    private final Map<TripleExpr, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
+    private final Map<Integer, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
 
     private Map<Node, List<TripleConstraint>> getTripleConstraintsGroupedByPredicate () {
         if (tripleConstraintsGroupedByPredicate == null) {
@@ -131,14 +131,14 @@ import java.util.stream.Collectors;
     private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
 
     private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
-        return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr, e -> {
+        return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr.id, e -> {
             List<TripleConstraint> tripleConstraints = new ArrayList<>();
             collectTripleConstraints(sorbeSubExpr, false, null, tripleConstraints);
             return tripleConstraints;
         });
     }
-    private final Map<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
-    
+    private final Map<Integer, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
+
     // --------------------------------------------------------------------------------------------------
     // Visitor-based traversals of the expression
     // --------------------------------------------------------------------------------------------------
@@ -274,15 +274,15 @@ import java.util.stream.Collectors;
     private static class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
 
         private final Map<TripleConstraint, TripleConstraint> sorbeToSourceMap;
-        private final Map<TripleConstraint, List<TripleConstraint>> sourceToSorbeMap;
+        private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
         private final ShexSchema schema;
 
 
         SorbeConstructor(Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
-                         Map<TripleConstraint, List<TripleConstraint>> sourceTosorbeMap,
+                         Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap,
                          ShexSchema schema) {
             this.sorbeToSourceMap = sorbeToSourceMap;
-            this.sourceToSorbeMap = sourceTosorbeMap;
+            this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
         }
 
@@ -292,7 +292,7 @@ import java.util.stream.Collectors;
             TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
             sorbeToSourceMap.put(copy, tripleConstraint);
             List<TripleConstraint> knownCopies
-                    = sourceToSorbeMap.computeIfAbsent(tripleConstraint, k -> new ArrayList<>());
+                    = tripleConstraintCopiesMap.computeIfAbsent(tripleConstraint.id, k -> new ArrayList<>());
             knownCopies.add(copy);
             return copy;
         }
