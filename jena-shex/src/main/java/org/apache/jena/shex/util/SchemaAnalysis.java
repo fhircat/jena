@@ -37,12 +37,12 @@ import java.util.function.Predicate;
 public class SchemaAnalysis {
 
     private final Map<Node, ShapeDecl> shapeDeclMap;
-    private final Map<Node, TripleExpr> tripleRefs;
+    private final Map<Node, TripleExpr> tripleRefsMap;
 
 
-    public SchemaAnalysis(Map<Node, ShapeDecl> shapeDeclMap, Map<Node, TripleExpr> tripleRefs) {
+    public SchemaAnalysis(Map<Node, ShapeDecl> shapeDeclMap, Map<Node, TripleExpr> tripleRefsMap) {
         this.shapeDeclMap = shapeDeclMap;
-        this.tripleRefs = tripleRefs;
+        this.tripleRefsMap = tripleRefsMap;
     }
 
     public boolean isCorrect () {
@@ -64,10 +64,11 @@ public class SchemaAnalysis {
     private boolean checkAllReferencesDefined() {
         Set<Node> allTripleExprRefs = new HashSet<>();
         Set<Node> allShapeExprRefs = new HashSet<>();
-        shapeDeclMap.values().forEach(decl -> accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
+        shapeDeclMap.values().forEach(decl ->
+                accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
         shapeDeclMap.values().forEach(decl -> accumulateDirectTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
         allShapeExprRefs.removeAll(shapeDeclMap.keySet());
-        allTripleExprRefs.removeAll(tripleRefs.keySet());
+        allTripleExprRefs.removeAll(tripleRefsMap.keySet());
         // TODO can raise an error with message : the two sets contain the undefined references
         return allShapeExprRefs.isEmpty() && allTripleExprRefs.isEmpty();
     }
@@ -90,7 +91,7 @@ public class SchemaAnalysis {
             return false;
 
         DefaultDirectedGraph<Node, DefaultEdge> texprRedDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        tripleRefs.forEach((label, tripleExpr) -> {
+        tripleRefsMap.forEach((label, tripleExpr) -> {
             texprRedDependencyGraph.addVertex(label);
             acc.clear();
             accumulateDirectTripleExprRefsInTripleExpr(tripleExpr, acc);
@@ -285,7 +286,7 @@ public class SchemaAnalysis {
 
         @Override
         public void visit(TripleExprRef tripleExprRef) {
-            tripleRefs.get(tripleExprRef.getLabel()).visit(this);
+            tripleRefsMap.get(tripleExprRef.getLabel()).visit(this);
         }
 
         @Override

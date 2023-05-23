@@ -88,10 +88,10 @@ public class WriterShExC {
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
         ShapeExpr shapeEx = decl.getShapeExpr();
-        if (shapeEx != null)
-            shexPrinter.printShapeExpression(shapeEx);
-        else
+        if (shapeEx.equals(Shape.newBuilder().shapeExpr(TripleExprEmpty.get()).build()))
             out.print("{}");
+        else
+            shexPrinter.printShapeExpression(shapeEx);
     }
 
     static <X> void printList(IndentedWriter out, List<X> items, String start, String finish, String sep, Consumer<X> action) {

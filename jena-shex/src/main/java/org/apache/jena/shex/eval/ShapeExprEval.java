@@ -46,8 +46,7 @@ public class ShapeExprEval {
         vCxt.startValidate(shapeDecl, dataNode);
         ShapeExpr shapeExpr = shapeDecl.getShapeExpr();
         try {
-            return shapeExpr == null ||
-                    satisfies(shapeExpr, dataNode, vCxt) && shapeExpr.testShapeExprSemanticActions(vCxt, dataNode);
+            return satisfies(shapeExpr, dataNode, vCxt) && shapeExpr.testShapeExprSemanticActions(vCxt, dataNode);
         } finally {
             vCxt.finishValidate(shapeDecl, dataNode);
         }

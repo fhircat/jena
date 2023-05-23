@@ -19,7 +19,9 @@
 package org.apache.jena.shex;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExpr;
+import org.apache.jena.shex.expressions.TripleExprEmpty;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.Objects;
@@ -34,7 +36,9 @@ public class ShapeDecl {
     public ShapeDecl(Node label, boolean bstract, ShapeExpr shapeExpr) {
         this.label = label;
         this.bstract = bstract;
-        this.shapeExpr = shapeExpr;
+        this.shapeExpr = shapeExpr == null
+                ? Shape.newBuilder().shapeExpr(TripleExprEmpty.get()).build()
+                : shapeExpr;
     }
 
     public Node getLabel() {
@@ -85,6 +89,6 @@ public class ShapeDecl {
 
     @Override
     public String toString() {
-        return "ShexShape [label="+label+" expr="+ shapeExpr +"]";
+        return "ShapeDecl [label="+label+" expr="+ shapeExpr +"]";
     }
 }

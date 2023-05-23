@@ -25,6 +25,7 @@ import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.util.SchemaAnalysis;
 
 /**
  * Shex Schema - a collection of shapes.
@@ -44,6 +45,12 @@ public class ShexSchema {
     private final PrefixMap prefixes;
     private final List<String> imports;
     private final List<SemAct> semActs;
+
+    // FIXME validity should be tested before creating the schema; for now only for testing
+    public boolean isValid () {
+        SchemaAnalysis analysis = new SchemaAnalysis(shapeMap, tripleRefs);
+        return analysis.isCorrect();
+    }
 
     public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,
                                     List<ShapeDecl> shapes, List<String> imports, List<SemAct> semActs,

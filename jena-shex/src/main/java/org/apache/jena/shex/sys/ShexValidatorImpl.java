@@ -157,7 +157,7 @@ class ShexValidatorImpl implements ShexValidator{
         ShapeDecl shape = vCxt.getShapeDecl(shapeRef);
         if ( shape == null ) {
             // No such shape.
-            vCxt.getShapeDecl(shapeRef);
+            vCxt.getShapeDecl(shapeRef); // TODO what's this for ? the value is not used, and no exception is raised
             String msg = "No such shape: "+ShexLib.displayStr(shapeRef);
             ReportItem item = new ReportItem(msg, shapeRef);
             vCxt.reportEntry(item);
