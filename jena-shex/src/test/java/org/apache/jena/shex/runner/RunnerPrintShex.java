@@ -40,6 +40,7 @@ public class RunnerPrintShex extends org.apache.jena.shex.runner.AbstractRunnerF
 
     private static Set<String> includes() {
         Set<String> includes = new HashSet<>();
+        includes.add("src/test/files/shexTest/schemas/0Extends1.shex");
         return includes;
     }
 

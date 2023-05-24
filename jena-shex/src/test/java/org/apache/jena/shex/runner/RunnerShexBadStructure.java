@@ -42,7 +42,6 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
 
     private static Set<String> includes() {
         Set<String> includes = new HashSet<>();
-        //includes.add("src/test/files/shexTest/negativeStructure/TwoNegation2.shex");
         return includes;
     }
 
