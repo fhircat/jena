@@ -42,6 +42,7 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
 
     private static Set<String> includes() {
         Set<String> includes = new HashSet<>();
+        //includes.add("src/test/files/shexTest/negativeStructure/TwoNegation2.shex");
         return includes;
     }
 
@@ -59,6 +60,7 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
         InputStream input = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
         try {
             ShexSchema shapes = ShExC.parse(input, filename, null);
+            System.out.println("Loaded " + filename);
             if (shapes.isValid()) {
                 // Should not get here.
                 System.out.print("-- ");

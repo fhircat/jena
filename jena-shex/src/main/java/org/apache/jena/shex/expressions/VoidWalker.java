@@ -1,7 +1,9 @@
 package org.apache.jena.shex.expressions;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.util.UndefinedReferenceException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private final boolean followShapeExprRefs;
     private final boolean followTripleExprRefs;
     private final ShexSchema schema;
-    private final Map<Node, ShapeExpr> shapeExprRefDefMap;
+    private final Map<Node, ShapeDecl> shapeExprRefDefMap;
     private final Map<Node, TripleExpr> tripleExprRefDefMap;
 
     public static class Builder {
@@ -27,7 +29,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         private boolean _followShapeExprRefs = false;
         private boolean _followTripleExprRefs = false;
         private ShexSchema _schema = null;
-        private Map<Node, ShapeExpr> _shapeExprRefDefMap = null;
+        private Map<Node, ShapeDecl> _shapeExprRefDefMap = null;
         private Map<Node, TripleExpr> _tripleExprRefDefMap = null;
 
 
@@ -59,7 +61,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             return this;
         }
 
-        public Builder followShapeExprRefs(Map<Node, ShapeExpr> shapeExprRefDefMap) {
+        public Builder followShapeExprRefs(Map<Node, ShapeDecl> shapeExprRefDefMap) {
             this._followShapeExprRefs = true;
             this._shapeExprRefDefMap = shapeExprRefDefMap;
             return this;
@@ -92,7 +94,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
                        boolean traverseShapes, boolean traverseTripleConstraints,
                        boolean followShapeExprRefs, boolean followTripleExprRefs,
                        ShexSchema schema,
-                       Map<Node, ShapeExpr> shapeExprRefDefMap, Map<Node, TripleExpr> tripleExprRefDefMap) {
+                       Map<Node, ShapeDecl> shapeExprRefDefMap, Map<Node, TripleExpr> tripleExprRefDefMap) {
         this.shapeExprProcessors = shapeExprProcessors;
         this.tripleExprProcessors = tripleExprProcessors;
         this.traverseShapes = traverseShapes;
@@ -130,14 +132,19 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         shapeNot.getShapeExpr().visit(this);
     }
 
+    /**
+     * @throws UndefinedReferenceException If the visited reference is undefined.
+     */
     @Override
     public void visit(ShapeExprRef shapeExprRef) {
         process(shapeExprRef);
         if (followShapeExprRefs) {
-           ShapeExpr shapeExpr = schema != null
-                   ? schema.get(shapeExprRef.getLabel()).getShapeExpr()
+           ShapeDecl shapeDecl = schema != null
+                   ? schema.get(shapeExprRef.getLabel())
                    : shapeExprRefDefMap.get(shapeExprRef.getLabel());
-           shapeExpr.visit(this);
+            if (shapeDecl == null)
+                throw new UndefinedReferenceException(shapeExprRef.getLabel(), "Undefined tripleExprRef " + shapeExprRef.getLabel());
+           shapeDecl.getShapeExpr().visit(this);
         }
     }
 
@@ -181,6 +188,9 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         process(tripleExprEmpty);
     }
 
+    /**
+     * @throws UndefinedReferenceException If the visited reference is undefined.
+     */
     @Override
     public void visit(TripleExprRef tripleExprRef) {
         process(tripleExprRef);
@@ -188,6 +198,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             TripleExpr tripleExpr = schema != null
                     ? schema.getTripleExpr(tripleExprRef.getLabel())
                     : tripleExprRefDefMap.get(tripleExprRef.getLabel());
+            if (tripleExpr == null)
+                throw new UndefinedReferenceException(tripleExprRef.getLabel(), "Undefined tripleExprRef " + tripleExprRef.getLabel());
             tripleExpr.visit(this);
         }
     }

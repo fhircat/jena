@@ -32,8 +32,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-// TODO this class uses several maps with keys being triple expressions. Will probably become incorrect when TripleConstraint's equals is re-introduced
-// TODO comments and explanations needed for the contract of this class
 /*package*/ class SorbeTripleExpr {
 
     private final TripleExpr sourceTripleExpr;

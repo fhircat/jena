@@ -57,7 +57,7 @@ public class ShapeEval {
 
         if (closed && ! non_matchables.isEmpty())
             return false;
-        return  matchesExpr(vCxt, matchables, tripleExpr, extras != null ? extras : Collections.emptySet());
+        return  matchesExpr(vCxt, matchables, tripleExpr, extras);
     }
 
     private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples,

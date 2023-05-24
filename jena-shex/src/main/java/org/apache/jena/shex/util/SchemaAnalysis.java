@@ -24,7 +24,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
+import org.jgrapht.Graphs;
 import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.alg.cycle.SzwarcfiterLauerSimpleCycles;
 import org.jgrapht.alg.cycle.TarjanSimpleCycles;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
@@ -46,30 +48,41 @@ public class SchemaAnalysis {
     }
 
     public boolean isCorrect () {
-        // All references are defined
+
+        if (! checkNoDuplicatedRefLabels())
+            return false;
+
         if (! checkAllReferencesDefined())
             return false;
 
-        // No cyclic references
         if (! checkNoCyclicReferences())
             return false;
 
-        // Stratified negation
         if (! checkStratifiedNegation())
             return false;
 
         return true;
     }
 
+    private boolean checkNoDuplicatedRefLabels () {
+        Set<Node> tripleExprLabels = new HashSet<>(tripleRefsMap.keySet());
+        return shapeDeclMap.keySet().stream().noneMatch(sl -> tripleExprLabels.contains(sl));
+    }
+
+
     private boolean checkAllReferencesDefined() {
         Set<Node> allTripleExprRefs = new HashSet<>();
         Set<Node> allShapeExprRefs = new HashSet<>();
-        shapeDeclMap.values().forEach(decl ->
-                accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
-        shapeDeclMap.values().forEach(decl -> accumulateDirectTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
+        try {
+            shapeDeclMap.values().forEach(decl ->
+                    accumulateAllShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
+            shapeDeclMap.values().forEach(decl ->
+                    accumulateAllTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
+        } catch (UndefinedReferenceException e) {
+            return false;
+        }
         allShapeExprRefs.removeAll(shapeDeclMap.keySet());
         allTripleExprRefs.removeAll(tripleRefsMap.keySet());
-        // TODO can raise an error with message : the two sets contain the undefined references
         return allShapeExprRefs.isEmpty() && allTripleExprRefs.isEmpty();
     }
 
@@ -77,28 +90,22 @@ public class SchemaAnalysis {
         Set<Node> acc = new HashSet<>();
 
         DefaultDirectedGraph<Node, DefaultEdge> shapeRefDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        shapeDeclMap.keySet().forEach(shapeRefDependencyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
-            shapeRefDependencyGraph.addVertex(label);
             acc.clear();
             accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), acc);
-            acc.forEach(referencedLabel -> {
-                shapeRefDependencyGraph.addVertex(referencedLabel);
-                shapeRefDependencyGraph.addEdge(label, referencedLabel);
-            });
+            acc.forEach(referencedLabel -> shapeRefDependencyGraph.addEdge(label, referencedLabel));
         });
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(shapeRefDependencyGraph);
         if (cycleDetector.detectCycles())
             return false;
 
         DefaultDirectedGraph<Node, DefaultEdge> texprRedDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        tripleRefsMap.keySet().forEach(texprRedDependencyGraph::addVertex);
         tripleRefsMap.forEach((label, tripleExpr) -> {
-            texprRedDependencyGraph.addVertex(label);
             acc.clear();
             accumulateDirectTripleExprRefsInTripleExpr(tripleExpr, acc);
-            acc.forEach(referencedLabel -> {
-                texprRedDependencyGraph.addVertex(referencedLabel);
-                texprRedDependencyGraph.addEdge(label, referencedLabel);
-            });
+            acc.forEach(referencedLabel -> texprRedDependencyGraph.addEdge(label, referencedLabel));
         });
         cycleDetector = new CycleDetector<>(texprRedDependencyGraph);
         if (cycleDetector.detectCycles())
@@ -116,6 +123,7 @@ public class SchemaAnalysis {
                 = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
         Predicate<List<Node>> isCycleWithNegation = cycle -> {
+            cycle.add(cycle.get(0));
             Iterator<Node> it = cycle.iterator();
             Node edgeSrc = it.next();
             Node edgeTgt;
@@ -128,25 +136,61 @@ public class SchemaAnalysis {
             return false;
         };
 
+        shapeDeclMap.keySet().forEach(dependencyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
-            dependencyGraph.addVertex(label);
             List<Pair<Node, Boolean>> references = collectReferencesWithSign(decl.getShapeExpr());
             references.forEach(ref -> {
-                dependencyGraph.addVertex(ref.getLeft());
-                DefaultWeightedEdge edge = dependencyGraph.addEdge(label, ref.getLeft());
-                dependencyGraph.setEdgeWeight(edge, ref.getRight() ? NEGDEP : POSDEP);
+                Node referencedLabel = ref.getLeft();
+                boolean isNegated = ref.getRight();
+                DefaultWeightedEdge edge = dependencyGraph.getEdge(label, referencedLabel);
+                if (edge == null)
+                    Graphs.addEdge(dependencyGraph, label, referencedLabel, isNegated ? NEGDEP : POSDEP);
+                else if (dependencyGraph.getEdgeWeight(edge) == POSDEP && isNegated)
+                    dependencyGraph.setEdgeWeight(edge, NEGDEP);
             });
         });
 
-        TarjanSimpleCycles<Node, DefaultWeightedEdge> cycleEnumerationAlgorithm = new TarjanSimpleCycles<>(dependencyGraph);
+        SzwarcfiterLauerSimpleCycles<Node, DefaultWeightedEdge> cycleEnumerationAlgorithm = new SzwarcfiterLauerSimpleCycles<>(dependencyGraph);
         return cycleEnumerationAlgorithm.findSimpleCycles().stream().noneMatch(isCycleWithNegation);
     }
 
     // ------------------------------------------------------------------------------------------------
     // Collectors, based on visitors
     // ------------------------------------------------------------------------------------------------
+
+
+    private static class ShapeExprRefAccumulationVisitor extends ShapeExprAccumulationVisitor<Node> {
+        public ShapeExprRefAccumulationVisitor(Collection<Node> acc) {
+            super(acc);
+        }
+        @Override
+        public void visit(ShapeExprRef shapeExprRef) {
+            accumulate(shapeExprRef.getLabel());
+        }
+    }
+
+    private static class TripleExprRefAccumulationVisitor extends TripleExprAccumulationVisitor<Node> {
+
+        public TripleExprRefAccumulationVisitor(Collection<Node> acc) {
+            super(acc);
+        }
+
+        @Override
+        public void visit(TripleExprRef tripleExprRef) {
+            accumulate(tripleExprRef.getLabel());
+        }
+    };
+
     private void accumulateDirectShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
-        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprAccumulationVisitor<>(acc) {
+        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc);
+        VoidWalker walker = new VoidWalker.Builder()
+                .processShapeExprsWith(seAccVisitor)
+                .build();
+        shapeExpr.visit(walker);
+    }
+
+    private void accumulateAllShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
+        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc) {
             @Override
             public void visit(ShapeExprRef shapeExprRef) {
                 accumulate(shapeExprRef.getLabel());
@@ -154,20 +198,19 @@ public class SchemaAnalysis {
         };
         VoidWalker walker = new VoidWalker.Builder()
                 .processShapeExprsWith(seAccVisitor)
+                .traverseTripleConstraints()
+                .traverseShapes()
                 .build();
         shapeExpr.visit(walker);
     }
 
-    private void accumulateDirectTripleExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
-        TripleExprAccumulationVisitor<Node> teAccVisitor = new TripleExprAccumulationVisitor<>(acc) {
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                accumulate(tripleExprRef.getLabel());
-            }
-        };
+
+    private void accumulateAllTripleExprRefsInShapeExpr(ShapeExpr shapeExpr, Collection<Node> acc) {
+        TripleExprRefAccumulationVisitor teAccVisitor = new TripleExprRefAccumulationVisitor(acc);
         VoidWalker walker = new VoidWalker.Builder()
-                .traverseShapes()
                 .processTripleExprsWith(teAccVisitor)
+                .traverseShapes()
+                .traverseTripleConstraints()
                 .build();
         shapeExpr.visit(walker);
     }
@@ -192,8 +235,8 @@ public class SchemaAnalysis {
         return acc;
     }
 
-    private static final Object SHAPE = new Object();
-    private static final Object NOT = new Object();
+    private static final Object SHAPE = "SHAPE";
+    private static final Object NOT = "NOT";
     private class ReferencesCollector implements VoidTripleExprVisitor, VoidShapeExprVisitor {
 
         private final Deque<Object> context = new ArrayDeque<>();
@@ -213,19 +256,19 @@ public class SchemaAnalysis {
             for (Object o : context) {
                 if (o == NOT)
                     numberNegations++;
-                if (o == SHAPE) {
+                else if (o == SHAPE) {
                     if (numberNegations % 2 != 0)
                         return true;
                     numberNegations = 0;
                 }
             }
-            return false;
+            return numberNegations % 2 != 0;
         }
 
         @Override
         public void visit(ShapeExprRef shapeExprRef) {
             if (isInShape())
-                acc.add(new ImmutablePair<>(shapeExprRef.getLabel(), !isInNegatedContext()));
+                acc.add(new ImmutablePair<>(shapeExprRef.getLabel(), isInNegatedContext()));
             else
                 shapeDeclMap.get(shapeExprRef.getLabel()).getShapeExpr().visit(this);
         }
@@ -240,7 +283,9 @@ public class SchemaAnalysis {
         @Override
         public void visit(Shape shape) {
             context.addLast(SHAPE);
+            context.addLast(shape.getExtras());
             shape.getTripleExpr().visit(this);
+            context.removeLast();
             context.removeLast();
         }
 
@@ -291,8 +336,13 @@ public class SchemaAnalysis {
 
         @Override
         public void visit(TripleConstraint tripleConstraint) {
+            Set<Node> extras = (Set<Node>) context.getLast();
+            boolean predicateIsExtra = extras.contains(tripleConstraint.getPredicate());
+            if (predicateIsExtra)
+                context.addLast("NOT");
             tripleConstraint.getValueExpr().visit(this);
+            if (predicateIsExtra)
+                context.removeLast();
         }
     }
-
 }

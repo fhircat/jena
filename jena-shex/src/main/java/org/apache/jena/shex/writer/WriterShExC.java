@@ -293,7 +293,7 @@ public class WriterShExC {
             TripleExpr tripleExpr = shape.getTripleExpr();
             if ( shape.isClosed() )
                 out.println("CLOSED ");
-            if ( shape.getExtras() != null && ! shape.getExtras().isEmpty() ) {
+            if ( ! shape.getExtras().isEmpty() ) {
                 out.println("EXTRA ");
                 shape.getExtras().forEach(n-> { formatter.format(out, n); out.print(" ");});
             }
