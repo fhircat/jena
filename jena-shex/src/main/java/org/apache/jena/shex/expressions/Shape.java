@@ -38,15 +38,9 @@ public class Shape extends ShapeExpr {
     private Shape(Node label, Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
         this.label = label;
-        if (extras == null)
-            this.extras = Collections.emptySet();
-        else
-            this.extras = extras;
+        this.extras = Objects.requireNonNullElse(extras, Collections.emptySet());
         this.closed = closed;
-        if ( xtends == null || xtends.isEmpty() )
-            this.xtends = null;
-        else
-            this.xtends = xtends;
+        this.xtends = Objects.requireNonNullElse(xtends, Collections.emptyList());
         this.tripleExpr = tripleExpr;
     }
 

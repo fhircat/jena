@@ -27,7 +27,6 @@ import org.apache.jena.shex.expressions.*;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.alg.cycle.SzwarcfiterLauerSimpleCycles;
-import org.jgrapht.alg.cycle.TarjanSimpleCycles;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -61,12 +60,15 @@ public class SchemaAnalysis {
         if (! checkStratifiedNegation())
             return false;
 
+        if (! checkExtendsCorrect())
+            return false;
+
         return true;
     }
 
     private boolean checkNoDuplicatedRefLabels () {
         Set<Node> tripleExprLabels = new HashSet<>(tripleRefsMap.keySet());
-        return shapeDeclMap.keySet().stream().noneMatch(sl -> tripleExprLabels.contains(sl));
+        return shapeDeclMap.keySet().stream().noneMatch(tripleExprLabels::contains);
     }
 
 
@@ -154,6 +156,43 @@ public class SchemaAnalysis {
         return cycleEnumerationAlgorithm.findSimpleCycles().stream().noneMatch(isCycleWithNegation);
     }
 
+    private boolean checkExtendsCorrect () {
+        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = computeTypeHierarchyGraph();
+        CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(typeHierarchyGraph);
+        if (cycleDetector.detectCycles())
+            return false;
+
+        return typeHierarchyGraph.vertexSet().stream()
+                // all labels that extend another label or are extended
+                .filter(label -> typeHierarchyGraph.degreeOf(label) > 0)
+                // must be of the form mainShape AND constraints
+                .allMatch(label -> isMainShapeAndConstraints(shapeDeclMap.get(label).getShapeExpr()));
+    }
+
+    private DefaultDirectedGraph<Node, DefaultEdge> computeTypeHierarchyGraph () {
+        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        shapeDeclMap.keySet().forEach(typeHierarchyGraph::addVertex);
+        shapeDeclMap.forEach((label, decl) -> {
+            List<Shape> accShapes = new ArrayList<>();
+            accumulateShapes(decl.getShapeExpr(), accShapes);
+            for (Shape shape : accShapes)
+                for (ShapeExprRef extended : shape.getExtends())
+                    typeHierarchyGraph.addEdge(label, extended.getLabel());
+        });
+        return typeHierarchyGraph;
+    }
+
+    private boolean checkExtendsOnlyExtendable () {
+        Set<Shape> allShapes = new HashSet<>();
+        shapeDeclMap.forEach((label, decl) -> {
+            accumulateShapes(decl.getShapeExpr(), allShapes);
+        });
+        // FIXME
+        return allShapes.stream().allMatch(shape ->
+                shape.getExtends().stream().allMatch(extendsRef ->
+                        isMainShapeAndConstraints(shapeDeclMap.get(extendsRef.getLabel()).getShapeExpr())));
+    }
+
     // ------------------------------------------------------------------------------------------------
     // Collectors, based on visitors
     // ------------------------------------------------------------------------------------------------
@@ -170,11 +209,9 @@ public class SchemaAnalysis {
     }
 
     private static class TripleExprRefAccumulationVisitor extends TripleExprAccumulationVisitor<Node> {
-
         public TripleExprRefAccumulationVisitor(Collection<Node> acc) {
             super(acc);
         }
-
         @Override
         public void visit(TripleExprRef tripleExprRef) {
             accumulate(tripleExprRef.getLabel());
@@ -183,20 +220,15 @@ public class SchemaAnalysis {
 
     private void accumulateDirectShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
         ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc);
-        VoidWalker walker = new VoidWalker.Builder()
+        VoidWalker walker = VoidWalker.builder()
                 .processShapeExprsWith(seAccVisitor)
                 .build();
         shapeExpr.visit(walker);
     }
 
     private void accumulateAllShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
-        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc) {
-            @Override
-            public void visit(ShapeExprRef shapeExprRef) {
-                accumulate(shapeExprRef.getLabel());
-            }
-        };
-        VoidWalker walker = new VoidWalker.Builder()
+        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc);
+        VoidWalker walker = VoidWalker.builder()
                 .processShapeExprsWith(seAccVisitor)
                 .traverseTripleConstraints()
                 .traverseShapes()
@@ -204,10 +236,9 @@ public class SchemaAnalysis {
         shapeExpr.visit(walker);
     }
 
-
     private void accumulateAllTripleExprRefsInShapeExpr(ShapeExpr shapeExpr, Collection<Node> acc) {
         TripleExprRefAccumulationVisitor teAccVisitor = new TripleExprRefAccumulationVisitor(acc);
-        VoidWalker walker = new VoidWalker.Builder()
+        VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(teAccVisitor)
                 .traverseShapes()
                 .traverseTripleConstraints()
@@ -216,13 +247,8 @@ public class SchemaAnalysis {
     }
 
     private void accumulateDirectTripleExprRefsInTripleExpr (TripleExpr tripleExpr, Collection<Node> acc) {
-        TripleExprAccumulationVisitor<Node> teAccVisitor = new TripleExprAccumulationVisitor<>(acc) {
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                accumulate(tripleExprRef.getLabel());
-            }
-        };
-        VoidWalker walker = new VoidWalker.Builder()
+        TripleExprAccumulationVisitor<Node> teAccVisitor = new TripleExprRefAccumulationVisitor(acc);
+        VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(teAccVisitor)
                 .build();
         tripleExpr.visit(walker);
@@ -233,6 +259,45 @@ public class SchemaAnalysis {
         ReferencesCollector rc = new ReferencesCollector(acc);
         shapeExpr.visit(rc);
         return acc;
+    }
+
+    private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
+        Shape mainShape;
+        List<ShapeExpr> constraints;
+
+        if (shapeExpr instanceof Shape) {
+            mainShape = (Shape) shapeExpr;
+            constraints = Collections.emptyList();
+        } else if (! (shapeExpr instanceof ShapeAnd))
+            return false;
+        else {
+            ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
+
+            if (!(shapeAnd.getShapeExprs().get(0) instanceof Shape))
+                return false;
+            mainShape = (Shape) (shapeAnd.getShapeExprs().get(0));
+            constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
+        }
+        List<Shape> shapesInConstraints = new ArrayList<>();
+        constraints.forEach(se -> accumulateShapes(se, shapesInConstraints));
+        if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
+            return false;
+        // TODO check that the predicates of the constraints are included in the predicates of the main shape
+        return true;
+    }
+
+    private void accumulateShapes (ShapeExpr shapeExpr, Collection<Shape> acc) {
+        ShapeExprAccumulationVisitor<Shape> seVisitor = new ShapeExprAccumulationVisitor<>(acc) {
+            @Override
+            public void visit(Shape shape) {
+                accumulate(shape);
+            }
+        };
+        VoidWalker walker = VoidWalker.builder()
+                .processShapeExprsWith(seVisitor)
+                .followShapeExprRefs(shapeDeclMap)
+                .build();
+        shapeExpr.visit(walker);
     }
 
     private static final Object SHAPE = "SHAPE";

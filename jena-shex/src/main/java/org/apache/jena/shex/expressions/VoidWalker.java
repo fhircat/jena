@@ -21,6 +21,11 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private final Map<Node, ShapeDecl> shapeExprRefDefMap;
     private final Map<Node, TripleExpr> tripleExprRefDefMap;
 
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
         private final List<VoidShapeExprVisitor> _shapeExprProcessors = new ArrayList<>();
         private final List<VoidTripleExprVisitor> _tripleExprProcessors = new ArrayList<>();
@@ -32,6 +37,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         private Map<Node, ShapeDecl> _shapeExprRefDefMap = null;
         private Map<Node, TripleExpr> _tripleExprRefDefMap = null;
 
+        private Builder () {}
 
         public Builder processShapeExprsWith(VoidShapeExprVisitor shapeExprProcessor) {
             this._shapeExprProcessors.add(shapeExprProcessor);

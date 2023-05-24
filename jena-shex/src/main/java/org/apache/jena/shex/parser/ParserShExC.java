@@ -370,7 +370,8 @@ public class ParserShExC extends LangParserBase {
 
     protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, boolean closed, List<ShapeExprRef> xtends, List<SemAct> semActs) {
         if ( tripleExpr == null )
-            return;
+            tripleExpr = TripleExprEmpty.get();
+            //return;
             // XXX [Print] Below causes "{ ; }"
             //tripleExpr = TripleExprNone.get();
         Shape shape = Shape.newBuilder()

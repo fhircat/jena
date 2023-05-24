@@ -175,7 +175,7 @@ import java.util.stream.Collectors;
             }
         };
 
-        VoidWalker walker = new VoidWalker.Builder()
+        VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(step)
                 .build();
         tripleExpr.visit(walker);
@@ -394,7 +394,7 @@ import java.util.stream.Collectors;
             }
         };
 
-        VoidWalker walker = new VoidWalker.Builder()
+        VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(accumulator)
                 .followTripleExprRefs(schema)
                 .build();
@@ -414,7 +414,7 @@ import java.util.stream.Collectors;
         };
 
 
-        VoidWalker.Builder builder = new VoidWalker.Builder();
+        VoidWalker.Builder builder = VoidWalker.builder();
         builder.processTripleExprsWith(step);
         if (followTripleExprRefs)
             builder.followTripleExprRefs(schema);

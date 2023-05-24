@@ -153,7 +153,7 @@ public class ShapeEval {
             }
         };
 
-        VoidWalker walker = new VoidWalker.Builder()
+        VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(fwdPredAccumulator)
                 .processTripleExprsWith(invPredaccumulator)
                 .followTripleExprRefs(schema)

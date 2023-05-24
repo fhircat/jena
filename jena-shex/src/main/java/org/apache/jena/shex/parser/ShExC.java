@@ -207,7 +207,7 @@ public class ShExC {
         VoidShapeExprVisitor checker = new CheckFacets();
         if (shExpr != null) {
             // TODO the checker should be a NodeConstraintComponentVisitor => need to add node constraint components visitor to walkers
-            VoidWalker walker = new VoidWalker.Builder()
+            VoidWalker walker = VoidWalker.builder()
                     .processShapeExprsWith(checker)
                     .traverseShapes()
                     .traverseTripleConstraints()

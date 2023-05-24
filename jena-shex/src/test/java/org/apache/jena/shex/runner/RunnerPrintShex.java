@@ -64,6 +64,7 @@ public class RunnerPrintShex extends org.apache.jena.shex.runner.AbstractRunnerF
 
     public static void testShexPrint(String FN) {
         ShexSchema schema = Shex.readSchema(FN);
+        System.out.println(FN);
         IndentedLineBuffer out = new IndentedLineBuffer();
 
         String label = FN;
