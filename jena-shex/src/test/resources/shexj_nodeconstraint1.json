@@ -1,0 +1,31 @@
+{
+  "type": "NodeConstraint",
+  "values": [
+    {
+      "value": "preliminary"
+    },
+    {
+      "value": "final"
+    }
+  ]
+}
+
+
+{
+  "type": "NodeConstraint",
+  "components": [
+    {
+      "type": "valueConstraint",
+      "valuesetRange":[
+        {
+          "type":"valuesetItem",
+          "literal": "preliminary"
+        },
+        {
+          "type":"valuesetItem",
+          "literal": "final"
+        }
+      ]
+    }
+  ]
+}

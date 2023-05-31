@@ -19,6 +19,7 @@
 package org.apache.jena.shex.expressions;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -27,12 +28,16 @@ import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 import org.apache.jena.sparql.util.NodeUtils;
 
 public class ValueSetRange {
-    public ValueSetItem item;
-    public ArrayList<ValueSetItem> exclusions;
+    public ValueSetItem item; //TODO Hum... do we want these to be public fields? Better to add getters and setters
+    public List<ValueSetItem> exclusions;
     public ValueSetRange(String iriStr, String lang, Node literal, boolean isStem) {
         // [shex] collapse. Subclass?
         this.item = new ValueSetItem(iriStr, lang, literal, isStem);
         this.exclusions = new ArrayList<>();
+    }
+
+    public void setExclusions(List<ValueSetItem> exclusions) {
+        this.exclusions = exclusions;
     }
 
     public String type() {
