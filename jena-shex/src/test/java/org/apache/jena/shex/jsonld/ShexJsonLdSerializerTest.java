@@ -15,21 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.util;
+package org.apache.jena.shex.jsonld;
 
+import org.apache.jena.shex.ShexSchema;
+import org.junit.Test;
 
-import org.apache.jena.graph.Node;
+import java.io.InputStream;
 
-public class UndefinedReferenceException extends RuntimeException {
+import static org.junit.Assert.*;
 
-    private final Node undefinedLabel;
+public class ShexJsonLdSerializerTest {
 
-    public UndefinedReferenceException(Node undefinedRefLabel, String message) {
-        super(message);
-        undefinedLabel = undefinedRefLabel;
+    @Test
+    public void testSerialize() {
+        InputStream inputStream = ShexJsonldDeserializerTest.class.getResourceAsStream("/shexj_schema1.json");
+        ShexJsonldDeserializer shexJson = new ShexJsonldDeserializer();
+        ShexSchema schema = null;
+        try {
+            schema = shexJson.deserializeSchema(inputStream);
+            assertNotNull(schema);
+        } catch(Exception e) {
+            fail(e.getMessage());
+        }
+        ShexJsonLdSerializer serializer = new ShexJsonLdSerializer();
+        serializer.serialize(schema);
     }
 
-    public Node getUndefinedLabel () {
-        return undefinedLabel;
-    }
 }
