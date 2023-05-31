@@ -274,18 +274,18 @@ public class ParserShExC extends LangParserBase {
         return pop(tripleExprStack, idx);
     }
 
-    private void finishTripleOp(int idx, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> action) {
+    private void finishTripleOp(int idx, List<SemAct> semActs, Function<List<TripleExpr>, TripleExpr> action) {
         if ( action == null )
             return ;
         List<TripleExpr> args = finishTripleOp(idx);
         if ( args == null )
             return ;
-        processTripleExprArgs(args, semActs, action);
+        processTripleExprArgs(args, action);
     }
 
-    private void processTripleExprArgs(List<TripleExpr> args, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> action) {
+    private void processTripleExprArgs(List<TripleExpr> args, Function<List<TripleExpr>, TripleExpr> action) {
         if ( action != null ) {
-            TripleExpr tExpr = action.apply(args, semActs);
+            TripleExpr tExpr = action.apply(args);
             if ( tExpr != null )
                 push(tripleExprStack, tExpr);
         }
@@ -402,7 +402,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected TripleExpr finishTripleExpression(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, (list, semActs2) -> { return firstOrCreateTripleExpr(list, semActs2, OneOf::create); });
+        finishTripleOp(idx, semActs, (list) -> { return firstOrCreateTripleExpr(list, semActs, OneOf::create); });
         TripleExpr tripleExpr = pop(tripleExprStack);
         finish("TripleExpression");
         return tripleExpr;
@@ -416,7 +416,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishTripleExpressionClause(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, (list, semActs2) -> { return firstOrCreateTripleExpr(list, semActs2, EachOf::create); });
+        finishTripleOp(idx, semActs, (list) -> { return firstOrCreateTripleExpr(list, semActs, EachOf::create); });
         finish("TripleExpressionClause");
     }
 
