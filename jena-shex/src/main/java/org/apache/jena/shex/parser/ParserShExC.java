@@ -309,8 +309,14 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeOr(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeOr::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeOr::create); });
         finish(inline, "ShapeOr");
+    }
+
+    public static ShapeExpr firstOrCreateShapeExpr(List<ShapeExpr> subExprs, Function<List<ShapeExpr>, ShapeExpr> create) {
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return create.apply(subExprs);
     }
 
     protected int startShapeAnd(Inline inline) {
@@ -319,7 +325,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeAnd(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeAnd::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeAnd::create); });
         finish(inline, "ShapeAnd");
     }
 
@@ -352,7 +358,7 @@ public class ParserShExC extends LangParserBase {
 
     protected void finishShapeAtom(Inline inline, int idx) {
         //Gather NodeConstraints parts, Kind, datatype and facets, together.
-        finishShapeOp(idx, ShapeAnd::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeAnd::create); });
         finish(inline, "ShapeAtom");
     }
 

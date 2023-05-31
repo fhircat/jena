@@ -126,8 +126,8 @@ public class Shape extends ShapeExpr {
         }
 
         public Builder xtends(List<ShapeExprRef> extendsList) {
-            if ( xtends == null )
-                xtends = new ArrayList<>();
+            if ( this.xtends == null )
+                this.xtends = new ArrayList<>();
             this.xtends.addAll(extendsList);
             return this;
         }

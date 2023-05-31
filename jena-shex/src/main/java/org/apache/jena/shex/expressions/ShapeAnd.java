@@ -27,11 +27,9 @@ public class ShapeAnd extends ShapeExpr {
 
     // Could pull out ShapeExpressionN
 
-    public static ShapeExpr create(List<ShapeExpr> subExprs) {
-        if ( subExprs.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( subExprs.size() == 1 )
-            return subExprs.get(0);
+    public static ShapeAnd create(List<ShapeExpr> subExprs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("ShapeAnd requires two or more conjuncts");
         return new ShapeAnd(subExprs);
     }
 
