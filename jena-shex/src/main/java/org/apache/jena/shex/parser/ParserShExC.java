@@ -303,6 +303,12 @@ public class ParserShExC extends LangParserBase {
         finish(inline, "ShapeExpression");
     }
 
+    public static ShapeExpr firstOrCreateShapeExpr(List<ShapeExpr> subExprs, Function<List<ShapeExpr>, ShapeExpr> create) {
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return create.apply(subExprs);
+    }
+
     protected int startShapeOr(Inline inline) {
         start(inline, "ShapeOr");
         return startShapeOp();
@@ -311,12 +317,6 @@ public class ParserShExC extends LangParserBase {
     protected void finishShapeOr(Inline inline, int idx) {
         finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeOr::create); });
         finish(inline, "ShapeOr");
-    }
-
-    public static ShapeExpr firstOrCreateShapeExpr(List<ShapeExpr> subExprs, Function<List<ShapeExpr>, ShapeExpr> create) {
-        if ( subExprs.size() == 1 )
-            return subExprs.get(0);
-        return create.apply(subExprs);
     }
 
     protected int startShapeAnd(Inline inline) {
@@ -390,13 +390,19 @@ public class ParserShExC extends LangParserBase {
         finish("ShapeDefinition");
     }
 
+    public static TripleExpr firstOrCreateTripleExpr(List<TripleExpr> subExprs, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> create) {
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return create.apply(subExprs, semActs);
+    }
+
     protected int startTripleExpression() {
         start("TripleExpression");
         return startTripleOp();
     }
 
     protected TripleExpr finishTripleExpression(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, OneOf::create);
+        finishTripleOp(idx, semActs, (list, semActs2) -> { return firstOrCreateTripleExpr(list, semActs2, OneOf::create); });
         TripleExpr tripleExpr = pop(tripleExprStack);
         finish("TripleExpression");
         return tripleExpr;
@@ -410,7 +416,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishTripleExpressionClause(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, EachOf::create);
+        finishTripleOp(idx, semActs, (list, semActs2) -> { return firstOrCreateTripleExpr(list, semActs2, EachOf::create); });
         finish("TripleExpressionClause");
     }
 
