@@ -146,12 +146,7 @@ public class PrettyPrinter {
 
         @Override
         public void visit(Shape shape) {
-            out.print("Shape");
-            if (shape.getLabel() != null) {
-                out.print(" ");
-                nFmt.format(out, shape.getLabel());
-            }
-            out.println();
+            out.println("Shape");
             out.incIndent();
             List<? extends ShapeExpr> xtends = shape.getExtends();
             if (xtends != null && xtends.size() > 0) {
