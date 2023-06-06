@@ -20,17 +20,14 @@ package org.apache.jena.shex.eval;
 
 import java.util.*;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
-import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.shex.util.AccumulationUtil;
-import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class ShapeEval {
@@ -46,25 +43,25 @@ public class ShapeEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    // TODO why are some methods static and others not ?
-    /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
-                                                        Node node, Set<Node> extras, boolean closed) {
+    public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr,
+                                            Set<Node> extraPredicates, boolean closed,
+                                            ValidationContext vCxt) {
         Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(tripleExpr, vCxt::getTripleExpr);
         Set<Node> forwardPredicates  = predicates.getLeft();
         Set<Node> backwardPredicates = predicates.getRight();
 
-        Set<Triple> matchables = new HashSet<>();
-        Set<Triple> non_matchables = new HashSet<>();
-        arcsOut(matchables, non_matchables, vCxt.getData(), node, forwardPredicates);
-        arcsIn(matchables, vCxt.getData(), node, backwardPredicates);
+        Set<Triple> accMatchables = new HashSet<>();
+        Set<Triple> accNonMatchables = new HashSet<>();
+        arcsOut(vCxt.getGraph(), dataNode, forwardPredicates, accMatchables, accNonMatchables);
+        arcsIn(vCxt.getGraph(), dataNode, backwardPredicates, accMatchables);
 
-        if (closed && ! non_matchables.isEmpty())
+        if (closed && ! accNonMatchables.isEmpty())
             return false;
-        return  matchesExpr(vCxt, matchables, tripleExpr, extras);
+        return  matchesExpr(accMatchables, tripleExpr, extraPredicates, vCxt);
     }
 
-    private static boolean matchesExpr(ValidationContext vCxt, Set<Triple> triples,
-                                       TripleExpr tripleExpr, Set<Node> extras) {
+    private static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
+                                       ValidationContext vCxt) {
 
         SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbeHandler().getSorbe(tripleExpr, vCxt.getSchema());
 
@@ -89,7 +86,7 @@ public class ShapeEval {
             Map.Entry<Triple, List<TripleConstraint>> e = it.next();
             if (e.getValue().isEmpty()) {
                 // the triple satisfies none of the triple constraints
-                if (! extras.contains(e.getKey().getPredicate()))
+                if (! extraPredicates.contains(e.getKey().getPredicate()))
                     // should satisfy extra
                     return false;
                 // remove the triple as it should not participate in the satisfaction of the triple expression
@@ -103,7 +100,7 @@ public class ShapeEval {
             Map<Triple, TripleConstraint> matching = mit.next();
 
             Cardinality interval = computeInterval(sorbeTripleExpr,
-                    Bag.fromMatching(matching, sorbeTripleExpr.getAllSorbeTripleConstraints()), vCxt);
+                    Bag.fromMatching(matching, sorbeTripleExpr.getAllSorbeTripleConstraints()));
             if (interval.min <= 1 && 1 <= interval.max) {
                 // the triple expression is satisfied by the matching, check semantic actions
                 if (sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
@@ -115,23 +112,23 @@ public class ShapeEval {
 
     }
 
-    private static void arcsOut(Set<Triple> matchables, Set<Triple> non_matchables, Graph graph, Node node, Set<Node> predicates) {
-        ExtendedIterator<Triple> x = G.find(graph, node, null, null);
+    private static void arcsOut(Graph graph, Node dataNode, Set<Node> predicates,
+                                Set<Triple> accMatchables, Set<Triple> accNonMatchables) {
+        ExtendedIterator<Triple> x = G.find(graph, dataNode, null, null);
         x.forEach(t -> {
             if (predicates.contains(t.getPredicate()))
-                matchables.add(t);
+                accMatchables.add(t);
             else
-                non_matchables.add(t);
+                accNonMatchables.add(t);
         });
     }
 
-    private static void arcsIn(Set<Triple> neigh, Graph graph, Node node, Set<Node> predicates) {
-        ExtendedIterator<Triple> x = G.find(graph, null, null, node);
-        x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(neigh::add);
+    private static void arcsIn(Graph graph, Node dataNode, Set<Node> predicates, Set<Triple> acc) {
+        ExtendedIterator<Triple> x = G.find(graph, null, null, dataNode);
+        x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(acc::add);
     }
 
-    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Bag bag,
-                                                ValidationContext vCxt) {
+    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Bag bag) {
         IntervalComputation computation = new IntervalComputation(sorbeTripleExpr, bag);
         return sorbeTripleExpr.sorbe.visit(computation);
     }

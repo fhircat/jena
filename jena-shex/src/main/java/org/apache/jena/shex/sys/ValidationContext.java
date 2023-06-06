@@ -41,9 +41,7 @@ public class ValidationContext {
     private final SorbeHandler sorbeHandler;
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
-    // <data node, shape decl>
-    // TODO possible efficiency problem. ShapeDecl's equals goes recursively through the structure of the expression, so each time we test whether there is a loop, we execute equals again and again. Possible solution: stack only the ref, not the whole shape decl
-    private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
+    private Deque<ValidationStackElement> validationStack = new ArrayDeque<>();
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
@@ -58,7 +56,7 @@ public class ValidationContext {
     }
 
     private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema schema,
-                              Deque<Pair<Node, ShapeDecl>> progress,
+                              Deque<ValidationStackElement> progress,
                               Map<String, SemanticActionPlugin> semActPluginIndex,
                               SorbeHandler sorbeHandler) {
         this.parentCtx = parentCtx;
@@ -66,7 +64,7 @@ public class ValidationContext {
         this.schema = schema;
         this.semActPluginIndex = semActPluginIndex;
         if (progress != null)
-            this.inProgress.addAll(progress);
+            this.validationStack.addAll(progress);
         this.sorbeHandler = sorbeHandler;
     }
 
@@ -98,7 +96,7 @@ public class ValidationContext {
         return schema.get(label);
     }
 
-    public Graph getData() {
+    public Graph getGraph() {
         return data;
     }
 
@@ -110,16 +108,22 @@ public class ValidationContext {
      */
     public ValidationContext create() {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.schema, this.inProgress, this.semActPluginIndex, this.sorbeHandler);
+        return new ValidationContext(this, this.data, this.schema, this.validationStack, this.semActPluginIndex, this.sorbeHandler);
     }
 
     public void startValidate(ShapeDecl shape, Node data) {
-        inProgress.push(Pair.create(data, shape));
+        validationStack.push(new ValidationStackElement(data, shape));
     }
 
-    // Return true if done or in-progress (i.e. don't walk further)
-    public boolean cycle(ShapeDecl shapeDecl, Node data) {
-        return inProgress.stream().anyMatch(p -> p.equalElts(data, shapeDecl));
+    public void finishValidate(ShapeDecl shape, Node data) {
+        // TODO this check seems to be a debugging functionality, remove it ?
+        if (! validationStack.pop().equals(new ValidationStackElement(data, shape)))
+            throw new InternalErrorException("Eval stack error");
+    }
+
+    public boolean cycle(Node dataNode, ShapeDecl shapeDecl) {
+        ValidationStackElement el = new ValidationStackElement(dataNode, shapeDecl);
+        return validationStack.stream().anyMatch(p -> p.equals(el));
     }
 
     public boolean dispatchStartSemanticAction(ShexSchema schema, ValidationContext vCxt) {
@@ -156,12 +160,6 @@ public class ValidationContext {
         });
     }
 
-    public void finishValidate(ShapeDecl shape, Node data) {
-        Pair<Node, ShapeDecl> x = inProgress.pop();
-        if (x.equalElts(data, shape))
-            return;
-        throw new InternalErrorException("Eval stack error");
-    }
 
     /**
      * Update other with "this" state
@@ -200,4 +198,36 @@ public class ValidationContext {
     public ShexReport generateReport() {
         return reportBuilder.build();
     }
+
+    private static class ValidationStackElement extends Pair<Node, ShapeDecl> {
+
+        public ValidationStackElement(Node dataNode, ShapeDecl shapeDecl) {
+            super(dataNode, shapeDecl);
+        }
+
+        public ShapeDecl getShapeDecl () {
+            return getRight();
+        }
+
+        public Node getDataNode () {
+            return getLeft();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getDataNode(), getShapeDecl().getLabel());
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if ( getClass() != other.getClass() )
+                return false;
+            ValidationStackElement e = (ValidationStackElement) other;
+            return Objects.equals(getDataNode(), e.getDataNode())
+                    && Objects.equals(getShapeDecl().getLabel(), e.getShapeDecl().getLabel());
+        }
+
+
+    }
+
 }

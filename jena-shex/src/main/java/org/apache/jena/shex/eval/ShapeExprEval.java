@@ -89,7 +89,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef) {
             ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
-            if ( vCxt.cycle(shapeDecl, dataNode) )
+            if ( vCxt.cycle(dataNode, shapeDecl) )
                 return true;
             else
                 return satisfies(shapeDecl, dataNode, vCxt);
@@ -103,8 +103,8 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape) {
-            return ShapeEval.matchesTripleExpr(vCxt, shape.getTripleExpr(), dataNode,
-                    shape.getExtras(), shape.isClosed());
+            return ShapeEval.matchesTripleExpr(dataNode, shape.getTripleExpr(), shape.getExtras(), shape.isClosed(), vCxt
+            );
         }
 
         @Override

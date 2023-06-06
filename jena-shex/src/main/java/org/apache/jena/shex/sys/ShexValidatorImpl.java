@@ -120,7 +120,7 @@ class ShexValidatorImpl implements ShexValidator{
 
     // Execute validation if the focus node is in the scope of the shapeRecord.
     private static boolean validateOneShapeRecord(ValidationContext vCxt, ShexRecord shapeRecord, Node focusNode) {
-        Collection<Node> focusNodes = focusNodes(vCxt.getData(), shapeRecord);
+        Collection<Node> focusNodes = focusNodes(vCxt.getGraph(), shapeRecord);
         if ( focusNodes == null )
             throw new InternalErrorException("Shex shape mapping has no node and no pattern");
         if ( ! focusNodes.contains(focusNode) )
