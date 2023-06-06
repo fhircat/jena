@@ -396,7 +396,7 @@ import java.util.stream.Collectors;
 
         VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(accumulator)
-                .followTripleExprRefs(schema)
+                .followTripleExprRefs(schema::getTripleExpr)
                 .build();
         tripleExpr.visit(walker);
         return result;
@@ -417,7 +417,7 @@ import java.util.stream.Collectors;
         VoidWalker.Builder builder = VoidWalker.builder();
         builder.processTripleExprsWith(step);
         if (followTripleExprRefs)
-            builder.followTripleExprRefs(schema);
+            builder.followTripleExprRefs(schema::getTripleExpr);
         tripleExpr.visit(builder.build());
     }
 }

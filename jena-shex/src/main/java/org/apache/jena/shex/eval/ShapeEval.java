@@ -29,6 +29,7 @@ import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ValidationContext;
+import org.apache.jena.shex.util.AccumulationUtil;
 import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
@@ -46,7 +47,7 @@ public class ShapeEval {
 
     /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
-        Pair<Set<Node>, Set<Node>> predicates = collectPredicates(tripleExpr, vCxt.getSchema());
+        Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(tripleExpr, vCxt.getSchema()::getTripleExpr);
         Set<Node> forwardPredicates  = predicates.getLeft();
         Set<Node> backwardPredicates = predicates.getRight();
 
@@ -133,33 +134,5 @@ public class ShapeEval {
         return sorbeTripleExpr.sorbe.visit(computation);
     }
 
-    private static Pair<Set<Node>, Set<Node>> collectPredicates (TripleExpr tripleExpr, ShexSchema schema) {
-
-        Set<Node> fwdPredicates = new HashSet<>();
-        Set<Node> invPredicates = new HashSet<>();
-        TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(fwdPredicates) {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                if (! tripleConstraint.isInverse())
-                    accumulate(tripleConstraint.getPredicate());
-            }
-        };
-        TripleExprAccumulationVisitor<Node> invPredaccumulator = new TripleExprAccumulationVisitor<>(invPredicates) {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                if (tripleConstraint.isInverse())
-                    accumulate(tripleConstraint.getPredicate());
-                super.visit(tripleConstraint);
-            }
-        };
-
-        VoidWalker walker = VoidWalker.builder()
-                .processTripleExprsWith(fwdPredAccumulator)
-                .processTripleExprsWith(invPredaccumulator)
-                .followTripleExprRefs(schema)
-                .build();
-        tripleExpr.visit(walker);
-        return new ImmutablePair<>(fwdPredicates, invPredicates);
-    }
 
 }

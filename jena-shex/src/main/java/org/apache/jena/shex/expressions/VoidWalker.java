@@ -20,12 +20,11 @@ package org.apache.jena.shex.expressions;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.util.UndefinedReferenceException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 
 public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
 
@@ -35,9 +34,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private final boolean traverseTripleConstraints;
     private final boolean followShapeExprRefs;
     private final boolean followTripleExprRefs;
-    private final ShexSchema schema;
-    private final Map<Node, ShapeDecl> shapeExprRefDefMap;
-    private final Map<Node, TripleExpr> tripleExprRefDefMap;
+    private final Function<Node, TripleExpr> tripleExprDereferencer;
+    private final Function<Node, ShapeDecl> shapeDeclDereferencer;
 
 
     public static Builder builder() {
@@ -51,9 +49,8 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
         private boolean _traverseTripleConstraints = false;
         private boolean _followShapeExprRefs = false;
         private boolean _followTripleExprRefs = false;
-        private ShexSchema _schema = null;
-        private Map<Node, ShapeDecl> _shapeExprRefDefMap = null;
-        private Map<Node, TripleExpr> _tripleExprRefDefMap = null;
+        private Function<Node, TripleExpr> _tripleExprDereferencer = null;
+        private Function<Node, ShapeDecl> _shapeExprDereferencer = null;
 
         private Builder () {}
 
@@ -77,31 +74,15 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             return this;
         }
 
-        public Builder followShapeExprRefs(ShexSchema schema) {
+        public Builder followShapeExprRefs(Function<Node, ShapeDecl> shapeExprDereferencer) {
             this._followShapeExprRefs = true;
-            if (this._schema != null && this._schema != schema)
-                throw new IllegalArgumentException("A different schema already specified.");
-            this._schema = schema;
+            this._shapeExprDereferencer = shapeExprDereferencer;
             return this;
         }
 
-        public Builder followShapeExprRefs(Map<Node, ShapeDecl> shapeExprRefDefMap) {
-            this._followShapeExprRefs = true;
-            this._shapeExprRefDefMap = shapeExprRefDefMap;
-            return this;
-        }
-
-        public Builder followTripleExprRefs(ShexSchema schema) {
+        public Builder followTripleExprRefs(Function<Node, TripleExpr> _tripleExprDereferencer) {
             this._followTripleExprRefs = true;
-            if (this._schema != null && this._schema != schema)
-                throw new IllegalArgumentException("A different schema already specified.");
-            this._schema = schema;
-            return this;
-        }
-
-        public Builder followTripleExprRefs(Map<Node, TripleExpr> tripleExprRefDefMap) {
-            this._followTripleExprRefs = true;
-            this._tripleExprRefDefMap = tripleExprRefDefMap;
+            this._tripleExprDereferencer = _tripleExprDereferencer;
             return this;
         }
 
@@ -109,7 +90,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
             return new VoidWalker(_shapeExprProcessors, _tripleExprProcessors,
                     _traverseShapes, _traverseTripleConstraints,
                     _followShapeExprRefs, _followTripleExprRefs,
-                    _schema, _shapeExprRefDefMap, _tripleExprRefDefMap);
+                    _shapeExprDereferencer, _tripleExprDereferencer);
         }
 
     }
@@ -117,25 +98,24 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     private VoidWalker(List<VoidShapeExprVisitor> shapeExprProcessors, List<VoidTripleExprVisitor> tripleExprProcessors,
                        boolean traverseShapes, boolean traverseTripleConstraints,
                        boolean followShapeExprRefs, boolean followTripleExprRefs,
-                       ShexSchema schema,
-                       Map<Node, ShapeDecl> shapeExprRefDefMap, Map<Node, TripleExpr> tripleExprRefDefMap) {
+                       Function<Node, ShapeDecl> shapeDeclDereferencer,
+                       Function<Node, TripleExpr> tripleExprDereferencer) {
         this.shapeExprProcessors = shapeExprProcessors;
         this.tripleExprProcessors = tripleExprProcessors;
         this.traverseShapes = traverseShapes;
         this.traverseTripleConstraints = traverseTripleConstraints;
         this.followShapeExprRefs = followShapeExprRefs;
         this.followTripleExprRefs = followTripleExprRefs;
-        this.schema = schema;
-        this.shapeExprRefDefMap = shapeExprRefDefMap;
-        this.tripleExprRefDefMap = tripleExprRefDefMap;
+        this.shapeDeclDereferencer = shapeDeclDereferencer;
+        this.tripleExprDereferencer = tripleExprDereferencer;
     }
 
     private void process(TripleExpr tripleExpr) {
-        tripleExprProcessors.forEach(v -> tripleExpr.visit(v));
+        tripleExprProcessors.forEach(tripleExpr::visit);
     }
 
     private void process(ShapeExpr shapeExpr) {
-        shapeExprProcessors.forEach(v -> shapeExpr.visit(v));
+        shapeExprProcessors.forEach(shapeExpr::visit);
     }
 
     @Override
@@ -163,9 +143,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     public void visit(ShapeExprRef shapeExprRef) {
         process(shapeExprRef);
         if (followShapeExprRefs) {
-           ShapeDecl shapeDecl = schema != null
-                   ? schema.get(shapeExprRef.getLabel())
-                   : shapeExprRefDefMap.get(shapeExprRef.getLabel());
+           ShapeDecl shapeDecl = shapeDeclDereferencer.apply(shapeExprRef.getLabel());
             if (shapeDecl == null)
                 throw new UndefinedReferenceException(shapeExprRef.getLabel(), "Undefined tripleExprRef " + shapeExprRef.getLabel());
            shapeDecl.getShapeExpr().visit(this);
@@ -219,9 +197,7 @@ public class VoidWalker implements VoidTripleExprVisitor, VoidShapeExprVisitor {
     public void visit(TripleExprRef tripleExprRef) {
         process(tripleExprRef);
         if (followTripleExprRefs) {
-            TripleExpr tripleExpr = schema != null
-                    ? schema.getTripleExpr(tripleExprRef.getLabel())
-                    : tripleExprRefDefMap.get(tripleExprRef.getLabel());
+            TripleExpr tripleExpr = tripleExprDereferencer.apply(tripleExprRef.getLabel());
             if (tripleExpr == null)
                 throw new UndefinedReferenceException(tripleExprRef.getLabel(), "Undefined tripleExprRef " + tripleExprRef.getLabel());
             tripleExpr.visit(this);

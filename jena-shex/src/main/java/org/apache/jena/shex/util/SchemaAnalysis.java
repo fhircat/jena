@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.apache.jena.shex.util;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -182,17 +180,6 @@ public class SchemaAnalysis {
         return typeHierarchyGraph;
     }
 
-    private boolean checkExtendsOnlyExtendable () {
-        Set<Shape> allShapes = new HashSet<>();
-        shapeDeclMap.forEach((label, decl) -> {
-            accumulateShapes(decl.getShapeExpr(), allShapes);
-        });
-        // FIXME
-        return allShapes.stream().allMatch(shape ->
-                shape.getExtends().stream().allMatch(extendsRef ->
-                        isMainShapeAndConstraints(shapeDeclMap.get(extendsRef.getLabel()).getShapeExpr())));
-    }
-
     // ------------------------------------------------------------------------------------------------
     // Collectors, based on visitors
     // ------------------------------------------------------------------------------------------------
@@ -282,7 +269,18 @@ public class SchemaAnalysis {
         constraints.forEach(se -> accumulateShapes(se, shapesInConstraints));
         if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
             return false;
-        // TODO check that the predicates of the constraints are included in the predicates of the main shape
+        Pair<Set<Node>, Set<Node>> mainShapePredicates = AccumulationUtil.collectPredicates(mainShape.getTripleExpr(),
+                tripleRefsMap::get);
+        Set<Node> mainShapeFwdPredicates = mainShapePredicates.getLeft();
+        Set<Node> mainShapeInvPredicates = mainShapePredicates.getRight();
+        if (shapesInConstraints.stream().anyMatch(shape -> {
+            Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(shape.getTripleExpr(),
+                    tripleRefsMap::get);
+            return mainShapeFwdPredicates.containsAll(predicates.getLeft())
+                    && mainShapeInvPredicates.containsAll(predicates.getRight());
+        }))
+            return false;
+
         return true;
     }
 
@@ -295,7 +293,7 @@ public class SchemaAnalysis {
         };
         VoidWalker walker = VoidWalker.builder()
                 .processShapeExprsWith(seVisitor)
-                .followShapeExprRefs(shapeDeclMap)
+                .followShapeExprRefs(shapeDeclMap::get)
                 .build();
         shapeExpr.visit(walker);
     }
