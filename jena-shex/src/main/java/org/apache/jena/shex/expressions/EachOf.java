@@ -25,11 +25,9 @@ import org.apache.jena.atlas.lib.InternalErrorException;
 
 public class EachOf extends TripleExpr {
 
-    public static TripleExpr create(List<TripleExpr> subExprs, List<SemAct> semActs) {
-        if ( subExprs.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( subExprs.size() == 1 )
-            return subExprs.get(0);
+    public static EachOf create(List<TripleExpr> subExprs, List<SemAct> semActs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("EachOf requires two or more disjuncts");
         return new EachOf(subExprs, semActs);
     }
 

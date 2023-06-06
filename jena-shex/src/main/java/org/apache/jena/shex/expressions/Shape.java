@@ -27,17 +27,14 @@ public class Shape extends ShapeExpr {
     // [shex] This is the inlineShapeDefinition
     // Can we combine with a top-level ShexShape?
 
-    private Node label;
     private Set<Node> extras;
     private List<ShapeExprRef> xtends;
     private boolean closed;
     private TripleExpr tripleExpr;
     public static Builder newBuilder() { return new Builder(); }
 
-    // TODO why a Shape has a label while the other shape expressions do not ?
-    private Shape(Node label, Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
+    private Shape(Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
-        this.label = label;
         this.extras = Objects.requireNonNullElse(extras, Collections.emptySet());
         this.closed = closed;
         this.xtends = Objects.requireNonNullElse(xtends, Collections.emptyList());
@@ -45,10 +42,6 @@ public class Shape extends ShapeExpr {
     }
 
     public TripleExpr getTripleExpr() { return tripleExpr; }
-
-    public Node getLabel() {
-        return label;
-    }
 
     public Set<Node> getExtras() {
         return extras;
@@ -75,7 +68,6 @@ public class Shape extends ShapeExpr {
     @Override
     public String toString() {
         return new StringJoiner(", ", Shape.class.getSimpleName() + "[", "]")
-                .add("label=" + label)
                 .add("extras=" + extras)
                 .add("closed=" + closed)
                 .add("extends=" + xtends)
@@ -85,7 +77,7 @@ public class Shape extends ShapeExpr {
 
     @Override
     public int hashCode() {
-        return Objects.hash(closed, label, tripleExpr);
+        return Objects.hash(closed, tripleExpr);
     }
 
     @Override
@@ -97,11 +89,10 @@ public class Shape extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         Shape other = (Shape)obj;
-        return closed == other.closed && Objects.equals(label, other.label) && tripleExpr.equals(other.tripleExpr);
+        return closed == other.closed && tripleExpr.equals(other.tripleExpr);
     }
 
     public static class Builder {
-        private Node label;
         private Set<Node> extras = null;
         private List<ShapeExprRef> xtends = null;
         private List<SemAct> semActs;
@@ -109,8 +100,6 @@ public class Shape extends ShapeExpr {
         private TripleExpr tripleExpr = null;
 
         Builder() {}
-
-        public Builder label(Node label) { this.label = label ; return this; }
 
         public Builder extras(List<Node> extrasList) {
             if ( extras == null )
@@ -120,8 +109,8 @@ public class Shape extends ShapeExpr {
         }
 
         public Builder xtends(List<ShapeExprRef> extendsList) {
-            if ( xtends == null )
-                xtends = new ArrayList<>();
+            if ( this.xtends == null )
+                this.xtends = new ArrayList<>();
             this.xtends.addAll(extendsList);
             return this;
         }
@@ -140,7 +129,7 @@ public class Shape extends ShapeExpr {
 
         public Shape build() {
             boolean isClosed = (closed == null) ? false : closed.get();
-            return new Shape(label, extras, isClosed, xtends, tripleExpr, semActs);
+            return new Shape(extras, isClosed, xtends, tripleExpr, semActs);
         }
     }
 }

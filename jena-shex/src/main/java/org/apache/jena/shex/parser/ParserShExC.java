@@ -274,18 +274,18 @@ public class ParserShExC extends LangParserBase {
         return pop(tripleExprStack, idx);
     }
 
-    private void finishTripleOp(int idx, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> action) {
+    private void finishTripleOp(int idx, List<SemAct> semActs, Function<List<TripleExpr>, TripleExpr> action) {
         if ( action == null )
             return ;
         List<TripleExpr> args = finishTripleOp(idx);
         if ( args == null )
             return ;
-        processTripleExprArgs(args, semActs, action);
+        processTripleExprArgs(args, action);
     }
 
-    private void processTripleExprArgs(List<TripleExpr> args, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> action) {
+    private void processTripleExprArgs(List<TripleExpr> args, Function<List<TripleExpr>, TripleExpr> action) {
         if ( action != null ) {
-            TripleExpr tExpr = action.apply(args, semActs);
+            TripleExpr tExpr = action.apply(args);
             if ( tExpr != null )
                 push(tripleExprStack, tExpr);
         }
@@ -303,13 +303,19 @@ public class ParserShExC extends LangParserBase {
         finish(inline, "ShapeExpression");
     }
 
+    public static ShapeExpr firstOrCreateShapeExpr(List<ShapeExpr> subExprs, Function<List<ShapeExpr>, ShapeExpr> create) {
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return create.apply(subExprs);
+    }
+
     protected int startShapeOr(Inline inline) {
         start(inline, "ShapeOr");
         return startShapeOp();
     }
 
     protected void finishShapeOr(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeOr::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeOr::create); });
         finish(inline, "ShapeOr");
     }
 
@@ -319,7 +325,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishShapeAnd(Inline inline, int idx) {
-        finishShapeOp(idx, ShapeAnd::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeAnd::create); });
         finish(inline, "ShapeAnd");
     }
 
@@ -352,7 +358,7 @@ public class ParserShExC extends LangParserBase {
 
     protected void finishShapeAtom(Inline inline, int idx) {
         //Gather NodeConstraints parts, Kind, datatype and facets, together.
-        finishShapeOp(idx, ShapeAnd::create);
+        finishShapeOp(idx, (list) -> { return firstOrCreateShapeExpr(list, ShapeAnd::create); });
         finish(inline, "ShapeAtom");
     }
 
@@ -371,7 +377,6 @@ public class ParserShExC extends LangParserBase {
     protected void finishShapeDefinition(TripleExpr tripleExpr, List<Node> extras, boolean closed, List<ShapeExprRef> xtends, List<SemAct> semActs) {
         if ( tripleExpr == null )
             tripleExpr = TripleExprEmpty.get();
-            //return;
             // XXX [Print] Below causes "{ ; }"
             //tripleExpr = TripleExprNone.get();
         Shape shape = Shape.newBuilder()
@@ -379,9 +384,16 @@ public class ParserShExC extends LangParserBase {
                 .closed(closed)
                 .extras(extras)
                 .semActs(semActs)
+                .xtends(xtends)
                 .shapeExpr(tripleExpr).build();
         push(shapeExprStack, shape);
         finish("ShapeDefinition");
+    }
+
+    public static TripleExpr firstOrCreateTripleExpr(List<TripleExpr> subExprs, List<SemAct> semActs, BiFunction<List<TripleExpr>, List<SemAct>, TripleExpr> create) {
+        if ( subExprs.size() == 1 )
+            return subExprs.get(0);
+        return create.apply(subExprs, semActs);
     }
 
     protected int startTripleExpression() {
@@ -390,7 +402,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected TripleExpr finishTripleExpression(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, OneOf::create);
+        finishTripleOp(idx, semActs, (list) -> { return firstOrCreateTripleExpr(list, semActs, OneOf::create); });
         TripleExpr tripleExpr = pop(tripleExprStack);
         finish("TripleExpression");
         return tripleExpr;
@@ -404,7 +416,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     protected void finishTripleExpressionClause(int idx, List<SemAct> semActs) {
-        finishTripleOp(idx, semActs, EachOf::create);
+        finishTripleOp(idx, semActs, (list) -> { return firstOrCreateTripleExpr(list, semActs, EachOf::create); });
         finish("TripleExpressionClause");
     }
 

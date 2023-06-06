@@ -29,6 +29,7 @@ import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.vocabulary.XSD;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
 
@@ -145,15 +146,29 @@ public class PrettyPrinter {
 
         @Override
         public void visit(Shape shape) {
-            out.print("Shape");
-            if (shape.getLabel() != null) {
-                out.print(" ");
-                nFmt.format(out, shape.getLabel());
-            }
-            out.println();
+            out.println("Shape");
             out.incIndent();
+            List<? extends ShapeExpr> xtends = shape.getExtends();
+            if (xtends != null && xtends.size() > 0) {
+                out.println("EXTENDS");
+                out.incIndent();
+                visitShapeExprSubExprs(xtends);
+                out.decIndent();
+            }
             if (shape.isClosed())
                 out.println("CLOSED");
+            Set<Node> extras = shape.getExtras();
+            if (extras != null && extras.size() > 0) {
+                out.println("EXTRA");
+                int idx = 0;
+                out.incIndent();
+                for (Node extra : extras) {
+                    idx++;
+                    out.printf("%d - ", idx);
+                    out.println(extra);
+                }
+                out.decIndent();
+            }
             out.println("TripleExpression");
             out.incIndent();
             if (shape.getTripleExpr() != null)
@@ -302,7 +317,7 @@ public class PrettyPrinter {
             out.println(" ]");
         }
 
-        private void visitShapeExprSubExprs(List<ShapeExpr> subExpressions) {
+        private void visitShapeExprSubExprs(List<? extends ShapeExpr> subExpressions) {
             int idx = 0;
             for (ShapeExpr shExpr : subExpressions) {
                 idx++;

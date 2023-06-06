@@ -25,11 +25,9 @@ import org.apache.jena.atlas.lib.InternalErrorException;
 
 public class ShapeOr extends ShapeExpr {
 
-    public static ShapeExpr create(List<ShapeExpr> subExprs) {
-        if ( subExprs.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( subExprs.size() == 1 )
-            return subExprs.get(0);
+    public static ShapeOr create(List<ShapeExpr> subExprs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("ShapeOr requires two or more disjuncts");
         return new ShapeOr(subExprs);
     }
 
