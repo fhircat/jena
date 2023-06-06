@@ -100,14 +100,14 @@ public class SchemaAnalysis {
         if (cycleDetector.detectCycles())
             return false;
 
-        DefaultDirectedGraph<Node, DefaultEdge> texprRedDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        tripleRefsMap.keySet().forEach(texprRedDependencyGraph::addVertex);
+        DefaultDirectedGraph<Node, DefaultEdge> texprRefDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        tripleRefsMap.keySet().forEach(texprRefDependencyGraph::addVertex);
         tripleRefsMap.forEach((label, tripleExpr) -> {
             acc.clear();
             accumulateDirectTripleExprRefsInTripleExpr(tripleExpr, acc);
-            acc.forEach(referencedLabel -> texprRedDependencyGraph.addEdge(label, referencedLabel));
+            acc.forEach(referencedLabel -> texprRefDependencyGraph.addEdge(label, referencedLabel));
         });
-        cycleDetector = new CycleDetector<>(texprRedDependencyGraph);
+        cycleDetector = new CycleDetector<>(texprRefDependencyGraph);
         if (cycleDetector.detectCycles())
             return false;
 
@@ -121,20 +121,6 @@ public class SchemaAnalysis {
 
         DefaultDirectedWeightedGraph<Node, DefaultWeightedEdge> dependencyGraph
                 = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
-
-        Predicate<List<Node>> isCycleWithNegation = cycle -> {
-            cycle.add(cycle.get(0));
-            Iterator<Node> it = cycle.iterator();
-            Node edgeSrc = it.next();
-            Node edgeTgt;
-            while (it.hasNext()) {
-                edgeTgt = it.next();
-                if (dependencyGraph.getEdgeWeight(dependencyGraph.getEdge(edgeSrc, edgeTgt)) == NEGDEP)
-                    return true;
-                edgeSrc = edgeTgt;
-            }
-            return false;
-        };
 
         shapeDeclMap.keySet().forEach(dependencyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
@@ -150,7 +136,22 @@ public class SchemaAnalysis {
             });
         });
 
-        SzwarcfiterLauerSimpleCycles<Node, DefaultWeightedEdge> cycleEnumerationAlgorithm = new SzwarcfiterLauerSimpleCycles<>(dependencyGraph);
+        Predicate<List<Node>> isCycleWithNegation = cycle -> {
+            cycle.add(cycle.get(0));
+            Iterator<Node> it = cycle.iterator();
+            Node edgeSrc = it.next();
+            Node edgeTgt;
+            while (it.hasNext()) {
+                edgeTgt = it.next();
+                if (dependencyGraph.getEdgeWeight(dependencyGraph.getEdge(edgeSrc, edgeTgt)) == NEGDEP)
+                    return true;
+                edgeSrc = edgeTgt;
+            }
+            return false;
+        };
+
+        SzwarcfiterLauerSimpleCycles<Node, DefaultWeightedEdge> cycleEnumerationAlgorithm
+                = new SzwarcfiterLauerSimpleCycles<>(dependencyGraph);
         return cycleEnumerationAlgorithm.findSimpleCycles().stream().noneMatch(isCycleWithNegation);
     }
 
@@ -161,7 +162,7 @@ public class SchemaAnalysis {
             return false;
 
         return typeHierarchyGraph.vertexSet().stream()
-                // all labels that extend another label or are extended
+                // every label that extend another label or is extended
                 .filter(label -> typeHierarchyGraph.degreeOf(label) > 0)
                 // must be of the form mainShape AND constraints
                 .allMatch(label -> isMainShapeAndConstraints(shapeDeclMap.get(label).getShapeExpr()));
@@ -179,6 +180,43 @@ public class SchemaAnalysis {
         });
         return typeHierarchyGraph;
     }
+
+    private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
+        Shape mainShape;
+        List<ShapeExpr> constraints;
+
+        if (shapeExpr instanceof Shape) {
+            mainShape = (Shape) shapeExpr;
+            constraints = Collections.emptyList();
+        } else if (! (shapeExpr instanceof ShapeAnd))
+            return false;
+        else {
+            ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
+
+            if (!(shapeAnd.getShapeExprs().get(0) instanceof Shape))
+                return false;
+            mainShape = (Shape) (shapeAnd.getShapeExprs().get(0));
+            constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
+        }
+        List<Shape> shapesInConstraints = new ArrayList<>();
+        constraints.forEach(se -> accumulateShapes(se, shapesInConstraints));
+        if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
+            return false;
+        Pair<Set<Node>, Set<Node>> mainShapePredicates = AccumulationUtil.collectPredicates(mainShape.getTripleExpr(),
+                tripleRefsMap::get);
+        Set<Node> mainShapeFwdPredicates = mainShapePredicates.getLeft();
+        Set<Node> mainShapeInvPredicates = mainShapePredicates.getRight();
+        if (shapesInConstraints.stream().anyMatch(shape -> {
+            Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(shape.getTripleExpr(),
+                    tripleRefsMap::get);
+            return mainShapeFwdPredicates.containsAll(predicates.getLeft())
+                    && mainShapeInvPredicates.containsAll(predicates.getRight());
+        }))
+            return false;
+
+        return true;
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Collectors, based on visitors
@@ -246,42 +284,6 @@ public class SchemaAnalysis {
         ReferencesCollector rc = new ReferencesCollector(acc);
         shapeExpr.visit(rc);
         return acc;
-    }
-
-    private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
-        Shape mainShape;
-        List<ShapeExpr> constraints;
-
-        if (shapeExpr instanceof Shape) {
-            mainShape = (Shape) shapeExpr;
-            constraints = Collections.emptyList();
-        } else if (! (shapeExpr instanceof ShapeAnd))
-            return false;
-        else {
-            ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
-
-            if (!(shapeAnd.getShapeExprs().get(0) instanceof Shape))
-                return false;
-            mainShape = (Shape) (shapeAnd.getShapeExprs().get(0));
-            constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
-        }
-        List<Shape> shapesInConstraints = new ArrayList<>();
-        constraints.forEach(se -> accumulateShapes(se, shapesInConstraints));
-        if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
-            return false;
-        Pair<Set<Node>, Set<Node>> mainShapePredicates = AccumulationUtil.collectPredicates(mainShape.getTripleExpr(),
-                tripleRefsMap::get);
-        Set<Node> mainShapeFwdPredicates = mainShapePredicates.getLeft();
-        Set<Node> mainShapeInvPredicates = mainShapePredicates.getRight();
-        if (shapesInConstraints.stream().anyMatch(shape -> {
-            Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(shape.getTripleExpr(),
-                    tripleRefsMap::get);
-            return mainShapeFwdPredicates.containsAll(predicates.getLeft())
-                    && mainShapeInvPredicates.containsAll(predicates.getRight());
-        }))
-            return false;
-
-        return true;
     }
 
     private void accumulateShapes (ShapeExpr shapeExpr, Collection<Shape> acc) {
