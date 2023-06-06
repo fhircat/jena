@@ -42,6 +42,7 @@ public class ValidationContext {
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
     // <data node, shape decl>
+    // TODO possible efficiency problem. ShapeDecl's equals goes recursively through the structure of the expression, so each time we test whether there is a loop, we execute equals again and again. Possible solution: stack only the ref, not the whole shape decl
     private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
@@ -117,12 +118,12 @@ public class ValidationContext {
     }
 
     // Return true if done or in-progress (i.e. don't walk further)
-    public boolean cycle(ShapeDecl shape, Node data) {
-        return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
+    public boolean cycle(ShapeDecl shapeDecl, Node data) {
+        return inProgress.stream().anyMatch(p -> p.equalElts(data, shapeDecl));
     }
 
     public boolean dispatchStartSemanticAction(ShexSchema schema, ValidationContext vCxt) {
-        return !schema.getSemActs().stream().anyMatch(semAct -> {
+        return schema.getSemActs().stream().noneMatch(semAct -> {
             String semActIri = semAct.getIri();
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
@@ -136,11 +137,10 @@ public class ValidationContext {
     }
 
     public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
-        return !se.getSemActs().stream().anyMatch(semAct -> {
+        return se.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateShapeExpr(semAct, se, focus))
-                    return true;
+                return !semActPlugin.evaluateShapeExpr(semAct, se, focus);
             }
             return false;
         });
@@ -150,8 +150,7 @@ public class ValidationContext {
         return te.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateTripleExpr(semAct, te, matchables))
-                    return true;
+                return !semActPlugin.evaluateTripleExpr(semAct, te, matchables);
             }
             return false;
         });

@@ -35,6 +35,7 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class ShapeEval {
 
+    // TODO remove debug code
     static boolean DEBUG = false;
     static boolean DEBUG_eachOf = DEBUG;
     static boolean DEBUG_cardinalityOf = DEBUG;
@@ -45,9 +46,10 @@ public class ShapeEval {
         DEBUG_cardinalityOf = debug;
     }
 
+    // TODO why are some methods static and others not ?
     /*package*/ public static boolean matchesTripleExpr(ValidationContext vCxt, TripleExpr tripleExpr,
                                                         Node node, Set<Node> extras, boolean closed) {
-        Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(tripleExpr, vCxt.getSchema()::getTripleExpr);
+        Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(tripleExpr, vCxt::getTripleExpr);
         Set<Node> forwardPredicates  = predicates.getLeft();
         Set<Node> backwardPredicates = predicates.getRight();
 

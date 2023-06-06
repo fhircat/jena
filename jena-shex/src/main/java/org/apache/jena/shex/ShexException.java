@@ -20,5 +20,6 @@ package org.apache.jena.shex;
 
 public class ShexException extends RuntimeException {
     public ShexException(String msg) { super(msg); }
+    // TODO not used
     public ShexException(String msg, Throwable th) { super(msg, th); }
 }
