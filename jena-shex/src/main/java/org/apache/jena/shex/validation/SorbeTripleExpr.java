@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 
     /*package*/ static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
 
-        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
+        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema::getTripleExpr);
 
         if (isSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
@@ -181,11 +181,7 @@ import java.util.stream.Collectors;
         return acc.isEmpty();
     }
 
-
-
-
-
-    private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
+    private static boolean containsEmpty (TripleExpr tripleExpr, Function<Node, TripleExpr> tripleExprRefDef) {
 
         class CheckContainsEmpty implements TypedTripleExprVisitor<Boolean> {
 
@@ -218,7 +214,7 @@ import java.util.stream.Collectors;
 
             @Override
             public Boolean visit(TripleExprRef tripleExprRef) {
-                return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
+                return tripleExprRefDef.apply(tripleExprRef.getLabel()).visit(this);
             }
         }
 
@@ -275,7 +271,6 @@ import java.util.stream.Collectors;
         private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
         private final ShexSchema schema;
 
-
         SorbeConstructor(Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
                          Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap,
                          ShexSchema schema) {
@@ -283,7 +278,6 @@ import java.util.stream.Collectors;
             this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
         }
-
 
         @Override
         public TripleExpr visit(TripleConstraint tripleConstraint) {
@@ -311,7 +305,7 @@ import java.util.stream.Collectors;
             if (tripleExprCardinality.getSubExpr() instanceof TripleConstraint)
                 // leave as is, just clone the subexpression
                 return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
-            if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
+            if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema::getTripleExpr))
                 // PLUS on an expression that contains the empty word becomes a star
                 return TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
             else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
@@ -351,7 +345,8 @@ import java.util.stream.Collectors;
     }
 
 
-    private static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr, ShexSchema schema) {
+    private static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr,
+                                                               Function<Node, TripleExpr> tripleExprRefDef) {
 
         List<TripleExpr> result = new ArrayList<>();
 
@@ -395,7 +390,7 @@ import java.util.stream.Collectors;
 
         VoidWalker walker = VoidWalker.builder()
                 .processTripleExprsWith(accumulator)
-                .followTripleExprRefs(schema::getTripleExpr)
+                .followTripleExprRefs(tripleExprRefDef)
                 .build();
         tripleExpr.visit(walker);
         return result;

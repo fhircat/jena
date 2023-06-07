@@ -62,7 +62,7 @@ public class ShapeEval {
     private static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
                                        ValidationContext vCxt) {
 
-        SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbeHandler().getSorbe(tripleExpr, vCxt.getSchema());
+        SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(tripleExpr);
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = sorbeTripleExpr.getPredicateBasedPreMatching(triples);

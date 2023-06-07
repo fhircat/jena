@@ -38,10 +38,10 @@ public class ValidationContext {
     // TODO Generation of reports is not tested
     private final ShexSchema schema;
     private final Graph data;
-    private final SorbeHandler sorbeHandler;
     private ValidationContext parentCtx = null;
-    private Map<String, SemanticActionPlugin> semActPluginIndex;
-    private Deque<ValidationStackElement> validationStack = new ArrayDeque<>();
+    private final Map<String, SemanticActionPlugin> semActPluginIndex;
+    private final SorbeFactory sorbeFactory;
+    private final Deque<ValidationStackElement> validationStack;
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
@@ -52,28 +52,24 @@ public class ValidationContext {
     }
 
     public ValidationContext(Graph data, ShexSchema schema, Map<String, SemanticActionPlugin> semActPluginIndex) {
-        this(null, data, schema, null, semActPluginIndex, new SorbeHandler());
+            this(null, data, schema, new ArrayDeque<>(), semActPluginIndex, new SorbeFactory(schema));
     }
 
     private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema schema,
                               Deque<ValidationStackElement> progress,
                               Map<String, SemanticActionPlugin> semActPluginIndex,
-                              SorbeHandler sorbeHandler) {
+                              SorbeFactory sorbeFactory) {
         this.parentCtx = parentCtx;
         this.data = data;
         this.schema = schema;
         this.semActPluginIndex = semActPluginIndex;
-        if (progress != null)
-            this.validationStack.addAll(progress);
-        this.sorbeHandler = sorbeHandler;
+        this.validationStack = new ArrayDeque<>();
+        this.validationStack.addAll(progress); // TODO copying the stack ?
+        this.sorbeFactory = sorbeFactory;
     }
 
     public ValidationContext getParent() {
         return parentCtx;
-    }
-
-    public SorbeHandler getSorbeHandler() {
-        return sorbeHandler;
     }
 
     public ValidationContext getRoot() {
@@ -108,7 +104,8 @@ public class ValidationContext {
      */
     public ValidationContext create() {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.schema, this.validationStack, this.semActPluginIndex, this.sorbeHandler);
+        return new ValidationContext(this, this.data, this.schema,
+                this.validationStack, this.semActPluginIndex, this.sorbeFactory);
     }
 
     public void startValidate(ShapeDecl shape, Node data) {
@@ -203,6 +200,10 @@ public class ValidationContext {
         return reportBuilder.build();
     }
 
+    public SorbeTripleExpr getSorbe(TripleExpr tripleExpr) {
+        return sorbeFactory.getSorbe(tripleExpr);
+    }
+
     private static class ValidationStackElement extends Pair<Node, ShapeDecl> {
 
         public ValidationStackElement(Node dataNode, ShapeDecl shapeDecl) {
@@ -230,8 +231,20 @@ public class ValidationContext {
             return Objects.equals(getDataNode(), e.getDataNode())
                     && Objects.equals(getShapeDecl().getLabel(), e.getShapeDecl().getLabel());
         }
-
-
     }
 
+
+    private static class SorbeFactory {
+
+        private final Map<Integer, SorbeTripleExpr> sourceToSorbeMap = new HashMap<>();
+        private final ShexSchema schema;
+
+        private SorbeFactory(ShexSchema schema) {
+            this.schema = schema;
+        }
+
+        SorbeTripleExpr getSorbe (TripleExpr tripleExpr) {
+            return sourceToSorbeMap.computeIfAbsent(tripleExpr.id, e -> SorbeTripleExpr.create(tripleExpr, schema));
+        }
+    }
 }
