@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.TripleConstraint;

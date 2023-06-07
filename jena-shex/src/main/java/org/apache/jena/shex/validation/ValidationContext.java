@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.sys;
+package org.apache.jena.shex.validation;
 
 import java.util.*;
 
@@ -26,10 +26,10 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.eval.SorbeHandler;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.sys.ReportItem;
 
 /**
  * Context for a validation and collector of the results.
@@ -141,6 +141,8 @@ public class ValidationContext {
     }
 
     public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
+        if (se.getSemActs() == null)
+            return true;
         return se.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
@@ -151,6 +153,8 @@ public class ValidationContext {
     }
 
     public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
+        if (te.getSemActs() == null)
+            return true;
         return te.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {

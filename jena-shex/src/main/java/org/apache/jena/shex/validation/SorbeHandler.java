@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.TripleExpr;

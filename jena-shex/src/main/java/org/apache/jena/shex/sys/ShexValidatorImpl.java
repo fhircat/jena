@@ -26,7 +26,8 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.eval.ShapeExprEval;
+import org.apache.jena.shex.validation.ShapeExprEval;
+import org.apache.jena.shex.validation.ValidationContext;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 class ShexValidatorImpl implements ShexValidator{

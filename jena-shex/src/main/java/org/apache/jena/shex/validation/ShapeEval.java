@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import java.util.*;
 
@@ -26,7 +26,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.shex.util.AccumulationUtil;
 import org.apache.jena.util.iterator.ExtendedIterator;
 

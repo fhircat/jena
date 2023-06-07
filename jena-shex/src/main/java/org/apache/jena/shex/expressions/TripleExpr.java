@@ -18,11 +18,7 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.sys.ValidationContext;
-
 import java.util.List;
-import java.util.Set;
 
 public abstract class TripleExpr {
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -26,7 +26,6 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
@@ -46,7 +45,7 @@ public class ShapeExprEval {
         vCxt.startValidate(shapeDecl, dataNode);
         ShapeExpr shapeExpr = shapeDecl.getShapeExpr();
         try {
-            return satisfies(shapeExpr, dataNode, vCxt) && shapeExpr.testShapeExprSemanticActions(vCxt, dataNode);
+            return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
         } finally {
             vCxt.finishValidate(shapeDecl, dataNode);
         }

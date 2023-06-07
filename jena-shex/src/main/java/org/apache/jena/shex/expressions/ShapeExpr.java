@@ -18,9 +18,6 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.shex.sys.ValidationContext;
-
 import java.util.List;
 
 // TODO are annotations allowed for shape expressions ? If yes, we should add them
@@ -36,12 +33,6 @@ public abstract class ShapeExpr {
 
     public List<SemAct> getSemActs() {
         return semActs;
-    }
-
-    public boolean testShapeExprSemanticActions(ValidationContext v, Node focus) {
-        if (this.semActs == null)
-            return true;
-        return v.dispatchShapeExprSemanticAction(this, focus);
     }
 
     public abstract void visit(VoidShapeExprVisitor visitor);

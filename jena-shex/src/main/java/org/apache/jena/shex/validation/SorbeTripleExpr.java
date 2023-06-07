@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,7 +24,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
 
 import java.util.*;
