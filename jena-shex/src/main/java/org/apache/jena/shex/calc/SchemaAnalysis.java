@@ -31,6 +31,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class SchemaAnalysis {
@@ -124,7 +125,8 @@ public class SchemaAnalysis {
 
         shapeDeclMap.keySet().forEach(dependencyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
-            List<Pair<Node, Boolean>> references = collectReferencesWithSign(decl.getShapeExpr());
+            List<Pair<Node, Boolean>> references = collectReferencesWithSign(decl.getShapeExpr(),
+                    shapeDeclMap::get, tripleRefsMap::get);
             references.forEach(ref -> {
                 Node referencedLabel = ref.getLeft();
                 boolean isNegated = ref.getRight();
@@ -173,7 +175,7 @@ public class SchemaAnalysis {
         shapeDeclMap.keySet().forEach(typeHierarchyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
             List<Shape> accShapes = new ArrayList<>();
-            accumulateShapes(decl.getShapeExpr(), accShapes);
+            AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
             for (Shape shape : accShapes)
                 for (ShapeExprRef extended : shape.getExtends())
                     typeHierarchyGraph.addEdge(label, extended.getLabel());
@@ -199,7 +201,8 @@ public class SchemaAnalysis {
             constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
         }
         List<Shape> shapesInConstraints = new ArrayList<>();
-        constraints.forEach(se -> accumulateShapes(se, shapesInConstraints));
+        constraints.forEach(se ->
+                AccumulationUtil.accumulateShapesFollowShapeExprRefs(se, shapeDeclMap::get, shapesInConstraints));
         if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
             return false;
         Pair<Set<Node>, Set<Node>> mainShapePredicates = AccumulationUtil.collectPredicates(mainShape.getTripleExpr(),
@@ -217,141 +220,118 @@ public class SchemaAnalysis {
         return true;
     }
 
+    /** Collects all references to other shape expressions together with a boolean indicating whether the reference appears in negated context, as required for the dependency graph to determine stratification. */
+    private static List<Pair<Node, Boolean>> collectReferencesWithSign (ShapeExpr shapeExpr,
+                                                                        Function<Node, ShapeDecl> shapeExprRefsDefs,
+                                                                        Function<Node, TripleExpr> tripleExprRefsDefs) {
 
-    // ------------------------------------------------------------------------------------------------
-    // Collectors, based on visitors
-    // ------------------------------------------------------------------------------------------------
+        final Object SHAPE = "SHAPE";
+        final Object NOT = "NOT";
+        final List<Pair<Node, Boolean>> acc = new ArrayList<>();
+        class ReferencesCollector implements VoidTripleExprVisitor, VoidShapeExprVisitor {
 
+            private final Deque<Object> context = new ArrayDeque<>();
+            private boolean isInShape () {
+                return context.contains(SHAPE);
+            }
 
-    private List<Pair<Node, Boolean>> collectReferencesWithSign (ShapeExpr shapeExpr) {
-        List<Pair<Node, Boolean>> acc = new ArrayList<>();
-        ReferencesCollector rc = new ReferencesCollector(acc);
-        shapeExpr.visit(rc);
-        return acc;
-    }
+            private boolean isInNegatedContext () {
+                // context is negated if there is an odd number of NOT between two SHAPE (or before the first SHAPE)
+                int numberNegations = 0;
+                for (Object o : context) {
+                    if (o == NOT)
+                        numberNegations++;
+                    else if (o == SHAPE) {
+                        if (numberNegations % 2 != 0)
+                            return true;
+                        numberNegations = 0;
+                    }
+                }
+                return numberNegations % 2 != 0;
+            }
 
-    private void accumulateShapes (ShapeExpr shapeExpr, Collection<Shape> acc) {
-        ShapeExprAccumulationVisitor<Shape> seVisitor = new ShapeExprAccumulationVisitor<>(acc) {
+            @Override
+            public void visit(ShapeExprRef shapeExprRef) {
+                if (isInShape())
+                    acc.add(new ImmutablePair<>(shapeExprRef.getLabel(), isInNegatedContext()));
+                else
+                    shapeExprRefsDefs.apply(shapeExprRef.getLabel()).getShapeExpr().visit(this);
+            }
+
+            @Override
+            public void visit(ShapeNot shapeNot) {
+                context.addLast(NOT);
+                shapeNot.getShapeExpr().visit(this);
+                context.removeLast();
+            }
+
             @Override
             public void visit(Shape shape) {
-                accumulate(shape);
-            }
-        };
-        ExpressionWalker walker = ExpressionWalker.builder()
-                .processShapeExprsWith(seVisitor)
-                .followShapeExprRefs(shapeDeclMap::get)
-                .build();
-        shapeExpr.visit(walker);
-    }
-
-    private static final Object SHAPE = "SHAPE";
-    private static final Object NOT = "NOT";
-    private class ReferencesCollector implements VoidTripleExprVisitor, VoidShapeExprVisitor {
-
-        private final Deque<Object> context = new ArrayDeque<>();
-        private final List<Pair<Node, Boolean>> acc;
-
-        private ReferencesCollector(List<Pair<Node, Boolean>> acc) {
-            this.acc = acc;
-        }
-
-        private boolean isInShape () {
-            return context.contains(SHAPE);
-        }
-
-        private boolean isInNegatedContext () {
-            // context is negated if there is an odd number of NOT between two SHAPE (or before the first SHAPE)
-            int numberNegations = 0;
-            for (Object o : context) {
-                if (o == NOT)
-                    numberNegations++;
-                else if (o == SHAPE) {
-                    if (numberNegations % 2 != 0)
-                        return true;
-                    numberNegations = 0;
-                }
-            }
-            return numberNegations % 2 != 0;
-        }
-
-        @Override
-        public void visit(ShapeExprRef shapeExprRef) {
-            if (isInShape())
-                acc.add(new ImmutablePair<>(shapeExprRef.getLabel(), isInNegatedContext()));
-            else
-                shapeDeclMap.get(shapeExprRef.getLabel()).getShapeExpr().visit(this);
-        }
-
-        @Override
-        public void visit(ShapeNot shapeNot) {
-            context.addLast(NOT);
-            shapeNot.getShapeExpr().visit(this);
-            context.removeLast();
-        }
-
-        @Override
-        public void visit(Shape shape) {
-            context.addLast(SHAPE);
-            context.addLast(shape.getExtras());
-            shape.getTripleExpr().visit(this);
-            context.removeLast();
-            context.removeLast();
-        }
-
-        @Override
-        public void visit(ShapeAnd shapeAnd) {
-            shapeAnd.getShapeExprs().forEach(e -> e.visit(this));
-        }
-
-        @Override
-        public void visit(ShapeOr shapeOr) {
-            shapeOr.getShapeExprs().forEach(e -> e.visit(this));
-        }
-
-        @Override
-        public void visit(ShapeExternal shapeExternal) {
-            // do nothing
-        }
-
-        @Override
-        public void visit(NodeConstraint nodeConstraint) {
-            // do nothing
-        }
-
-        @Override
-        public void visit(TripleExprCardinality tripleExprCardinality) {
-            tripleExprCardinality.getSubExpr().visit(this);
-        }
-
-        @Override
-        public void visit(EachOf eachOf) {
-            eachOf.getTripleExprs().forEach(e -> e.visit(this));
-        }
-
-        @Override
-        public void visit(OneOf oneOf) {
-            oneOf.getTripleExprs().forEach(e -> e.visit(this));
-        }
-
-        @Override
-        public void visit(TripleExprEmpty tripleExprEmpty) {
-            // do nothing
-        }
-
-        @Override
-        public void visit(TripleExprRef tripleExprRef) {
-            tripleRefsMap.get(tripleExprRef.getLabel()).visit(this);
-        }
-
-        @Override
-        public void visit(TripleConstraint tripleConstraint) {
-            Set<Node> extras = (Set<Node>) context.getLast();
-            boolean predicateIsExtra = extras.contains(tripleConstraint.getPredicate());
-            if (predicateIsExtra)
-                context.addLast("NOT");
-            tripleConstraint.getValueExpr().visit(this);
-            if (predicateIsExtra)
+                context.addLast(SHAPE);
+                context.addLast(shape.getExtras());
+                shape.getTripleExpr().visit(this);
                 context.removeLast();
+                context.removeLast();
+            }
+
+            @Override
+            public void visit(ShapeAnd shapeAnd) {
+                shapeAnd.getShapeExprs().forEach(e -> e.visit(this));
+            }
+
+            @Override
+            public void visit(ShapeOr shapeOr) {
+                shapeOr.getShapeExprs().forEach(e -> e.visit(this));
+            }
+
+            @Override
+            public void visit(ShapeExternal shapeExternal) {
+                // do nothing
+            }
+
+            @Override
+            public void visit(NodeConstraint nodeConstraint) {
+                // do nothing
+            }
+
+            @Override
+            public void visit(TripleExprCardinality tripleExprCardinality) {
+                tripleExprCardinality.getSubExpr().visit(this);
+            }
+
+            @Override
+            public void visit(EachOf eachOf) {
+                eachOf.getTripleExprs().forEach(e -> e.visit(this));
+            }
+
+            @Override
+            public void visit(OneOf oneOf) {
+                oneOf.getTripleExprs().forEach(e -> e.visit(this));
+            }
+
+            @Override
+            public void visit(TripleExprEmpty tripleExprEmpty) {
+                // do nothing
+            }
+
+            @Override
+            public void visit(TripleExprRef tripleExprRef) {
+                tripleExprRefsDefs.apply(tripleExprRef.getLabel()).visit(this);
+            }
+
+            @Override
+            public void visit(TripleConstraint tripleConstraint) {
+                Set<Node> extras = (Set<Node>) context.getLast();
+                boolean predicateIsExtra = extras.contains(tripleConstraint.getPredicate());
+                if (predicateIsExtra)
+                    context.addLast("NOT");
+                tripleConstraint.getValueExpr().visit(this);
+                if (predicateIsExtra)
+                    context.removeLast();
+            }
         }
+        ReferencesCollector rc = new ReferencesCollector();
+        shapeExpr.visit(rc);
+        return acc;
     }
 }

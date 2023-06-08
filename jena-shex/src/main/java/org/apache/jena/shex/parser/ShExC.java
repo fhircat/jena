@@ -207,7 +207,6 @@ public class ShExC {
         ShapeExpr shExpr = shape.getShapeExpr();
         VoidShapeExprVisitor checker = new CheckFacets();
         if (shExpr != null) {
-            // TODO the checker should be a NodeConstraintComponentVisitor => need to add node constraint components visitor to walkers
             ExpressionWalker walker = ExpressionWalker.builder()
                     .processShapeExprsWith(checker)
                     .traverseShapes()
