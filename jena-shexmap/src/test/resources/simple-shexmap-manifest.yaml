@@ -1,0 +1,33 @@
+- schemaLabel: clinical observation all refs
+  schema: | 
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      
+      start = @<ObservationShape>
+      
+      <ObservationShape> {               # An Observation has:
+        :status ["preliminary" "final"]; #   status in this value set
+        :subject @<PatientShape>         #   a subject matching <PatientShape>.
+      }
+    
+      <PatientShape> {                   # A Patient has:
+        :name xsd:string+;                #   one or more names
+        :birthdate xsd:date?              #   and an optional birthdate.
+      }
+  dataLabel: with birthdate
+  data: | 
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  
+    <Obs1>
+      :status    "final" ;
+      :subject   <Patient2>;
+      :effectiveDate "2023-01-01"^^xsd:date .
+    
+    <Patient2>
+      :name "Bob" ;
+      :birthdate "1999-12-31"^^xsd:date .
+  queryMap: |
+    {FOCUS <http://hl7.org/fhir/status> _}@START
+  status: conformant
+
