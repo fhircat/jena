@@ -26,6 +26,8 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ShexLib;
+import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 

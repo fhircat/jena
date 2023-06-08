@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.expressions;
+package org.apache.jena.shex.calc;
 
 import org.apache.jena.shex.expressions.*;
 
-public interface TypedTripleExprVisitor<R> {
-    R visit(TripleExprCardinality tripleExprCardinality);
-    R visit(EachOf eachOf);
-    R visit(OneOf oneOf);
-    R visit(TripleExprEmpty tripleExprEmpty);
-    R visit(TripleExprRef tripleExprRef);
-    R visit(TripleConstraint tripleConstraint);
+public interface VoidTripleExprVisitor {
+    public default void visit(TripleExprCardinality tripleExprCardinality) {}
+    public default void visit(EachOf eachOf) {}
+    public default void visit(OneOf oneOf) {}
+    public default void visit(TripleExprEmpty tripleExprEmpty) {}
+    public default void visit(TripleExprRef tripleExprRef) {}
+    public default void visit(TripleConstraint tripleConstraint) {}
 }

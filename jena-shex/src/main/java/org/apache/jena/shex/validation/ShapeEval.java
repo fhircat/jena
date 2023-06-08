@@ -26,7 +26,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.util.AccumulationUtil;
+import org.apache.jena.shex.calc.AccumulationUtil;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
 public class ShapeEval {

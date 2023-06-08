@@ -26,6 +26,9 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
+import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 import org.apache.jena.vocabulary.XSD;
 
 import java.util.List;

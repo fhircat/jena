@@ -33,12 +33,13 @@ import org.apache.jena.riot.system.*;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.calc.ExpressionWalker;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.parser.javacc.ParseException;
 import org.apache.jena.shex.parser.javacc.ShExJavacc;
 import org.apache.jena.shex.parser.javacc.TokenMgrError;
-import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
 import org.apache.jena.sparql.expr.nodevalue.XSDFuncOp;
 import org.apache.jena.sparql.util.Context;
 
@@ -207,7 +208,7 @@ public class ShExC {
         VoidShapeExprVisitor checker = new CheckFacets();
         if (shExpr != null) {
             // TODO the checker should be a NodeConstraintComponentVisitor => need to add node constraint components visitor to walkers
-            VoidWalker walker = VoidWalker.builder()
+            ExpressionWalker walker = ExpressionWalker.builder()
                     .processShapeExprsWith(checker)
                     .traverseShapes()
                     .traverseTripleConstraints()

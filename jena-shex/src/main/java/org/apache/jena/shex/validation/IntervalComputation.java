@@ -19,6 +19,7 @@
 package org.apache.jena.shex.validation;
 
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
 
 class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 

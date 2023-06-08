@@ -23,8 +23,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.calc.ExpressionWalker;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
+import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
 
 import java.util.*;
 import java.util.function.Function;
@@ -174,7 +176,7 @@ import java.util.stream.Collectors;
             }
         };
 
-        VoidWalker walker = VoidWalker.builder()
+        ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(step)
                 .build();
         tripleExpr.visit(walker);
@@ -388,7 +390,7 @@ import java.util.stream.Collectors;
             }
         };
 
-        VoidWalker walker = VoidWalker.builder()
+        ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(accumulator)
                 .followTripleExprRefs(tripleExprRefDef)
                 .build();
@@ -408,7 +410,7 @@ import java.util.stream.Collectors;
         };
 
 
-        VoidWalker.Builder builder = VoidWalker.builder();
+        ExpressionWalker.Builder builder = ExpressionWalker.builder();
         builder.processTripleExprsWith(step);
         if (followTripleExprRefs)
             builder.followTripleExprRefs(schema::getTripleExpr);

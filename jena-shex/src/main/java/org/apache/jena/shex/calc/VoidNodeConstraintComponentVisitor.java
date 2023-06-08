@@ -16,16 +16,24 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.expressions;
+package org.apache.jena.shex.calc;
 
-public interface TypedNodeConstraintComponentVisitor<R> {
+import org.apache.jena.shex.expressions.*;
 
-    R visit(NodeKindConstraint nodeKindCstr);
-    R visit(DatatypeConstraint datatypeCstr);
-    R visit(NumLengthConstraint numLengthCstr);
-    R visit(NumRangeConstraint numRangeCstr);
-    R visit(StrRegexConstraint strRegexCstr);
-    R visit(StrLengthConstraint strLengthCstr);
-    R visit(ValueConstraint valueCstr);
+/** Visitor for NodeConstraintComponents. */
+// TODO not covered by tests
+public interface VoidNodeConstraintComponentVisitor {
+
+    public default void visit(NodeKindConstraint nodeKindCstr) {}
+
+    public default void visit(DatatypeConstraint datatypeCstr) {}
+
+    public default void visit(NumLengthConstraint numLengthCstr) {}
+    public default void visit(NumRangeConstraint numRangeCstr) {}
+
+    public default void visit(StrRegexConstraint strRegexCstr) {}
+    public default void visit(StrLengthConstraint strLengthCstr) {}
+
+    public default void visit(ValueConstraint valueCstr) {}
 
 }

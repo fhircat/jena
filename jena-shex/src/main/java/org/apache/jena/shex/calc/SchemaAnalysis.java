@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.util;
+package org.apache.jena.shex.calc;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -75,9 +75,9 @@ public class SchemaAnalysis {
         Set<Node> allShapeExprRefs = new HashSet<>();
         try {
             shapeDeclMap.values().forEach(decl ->
-                    accumulateAllShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
+                    AccumulationUtil.accumulateAllShapeExprRefsInShapeExpr(decl.getShapeExpr(), allShapeExprRefs));
             shapeDeclMap.values().forEach(decl ->
-                    accumulateAllTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
+                    AccumulationUtil.accumulateAllTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
         } catch (UndefinedReferenceException e) {
             return false;
         }
@@ -93,7 +93,7 @@ public class SchemaAnalysis {
         shapeDeclMap.keySet().forEach(shapeRefDependencyGraph::addVertex);
         shapeDeclMap.forEach((label, decl) -> {
             acc.clear();
-            accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), acc);
+            AccumulationUtil.accumulateDirectShapeExprRefsInShapeExpr(decl.getShapeExpr(), acc);
             acc.forEach(referencedLabel -> shapeRefDependencyGraph.addEdge(label, referencedLabel));
         });
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(shapeRefDependencyGraph);
@@ -104,7 +104,7 @@ public class SchemaAnalysis {
         tripleRefsMap.keySet().forEach(texprRefDependencyGraph::addVertex);
         tripleRefsMap.forEach((label, tripleExpr) -> {
             acc.clear();
-            accumulateDirectTripleExprRefsInTripleExpr(tripleExpr, acc);
+            AccumulationUtil.accumulateDirectTripleExprRefsInTripleExpr(tripleExpr, acc);
             acc.forEach(referencedLabel -> texprRefDependencyGraph.addEdge(label, referencedLabel));
         });
         cycleDetector = new CycleDetector<>(texprRefDependencyGraph);
@@ -223,62 +223,6 @@ public class SchemaAnalysis {
     // ------------------------------------------------------------------------------------------------
 
 
-    private static class ShapeExprRefAccumulationVisitor extends ShapeExprAccumulationVisitor<Node> {
-        public ShapeExprRefAccumulationVisitor(Collection<Node> acc) {
-            super(acc);
-        }
-        @Override
-        public void visit(ShapeExprRef shapeExprRef) {
-            accumulate(shapeExprRef.getLabel());
-        }
-    }
-
-    private static class TripleExprRefAccumulationVisitor extends TripleExprAccumulationVisitor<Node> {
-        public TripleExprRefAccumulationVisitor(Collection<Node> acc) {
-            super(acc);
-        }
-        @Override
-        public void visit(TripleExprRef tripleExprRef) {
-            accumulate(tripleExprRef.getLabel());
-        }
-    };
-
-    private void accumulateDirectShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
-        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc);
-        VoidWalker walker = VoidWalker.builder()
-                .processShapeExprsWith(seAccVisitor)
-                .build();
-        shapeExpr.visit(walker);
-    }
-
-    private void accumulateAllShapeExprRefsInShapeExpr (ShapeExpr shapeExpr, Collection<Node> acc) {
-        ShapeExprAccumulationVisitor<Node> seAccVisitor = new ShapeExprRefAccumulationVisitor(acc);
-        VoidWalker walker = VoidWalker.builder()
-                .processShapeExprsWith(seAccVisitor)
-                .traverseTripleConstraints()
-                .traverseShapes()
-                .build();
-        shapeExpr.visit(walker);
-    }
-
-    private void accumulateAllTripleExprRefsInShapeExpr(ShapeExpr shapeExpr, Collection<Node> acc) {
-        TripleExprRefAccumulationVisitor teAccVisitor = new TripleExprRefAccumulationVisitor(acc);
-        VoidWalker walker = VoidWalker.builder()
-                .processTripleExprsWith(teAccVisitor)
-                .traverseShapes()
-                .traverseTripleConstraints()
-                .build();
-        shapeExpr.visit(walker);
-    }
-
-    private void accumulateDirectTripleExprRefsInTripleExpr (TripleExpr tripleExpr, Collection<Node> acc) {
-        TripleExprAccumulationVisitor<Node> teAccVisitor = new TripleExprRefAccumulationVisitor(acc);
-        VoidWalker walker = VoidWalker.builder()
-                .processTripleExprsWith(teAccVisitor)
-                .build();
-        tripleExpr.visit(walker);
-    }
-
     private List<Pair<Node, Boolean>> collectReferencesWithSign (ShapeExpr shapeExpr) {
         List<Pair<Node, Boolean>> acc = new ArrayList<>();
         ReferencesCollector rc = new ReferencesCollector(acc);
@@ -293,7 +237,7 @@ public class SchemaAnalysis {
                 accumulate(shape);
             }
         };
-        VoidWalker walker = VoidWalker.builder()
+        ExpressionWalker walker = ExpressionWalker.builder()
                 .processShapeExprsWith(seVisitor)
                 .followShapeExprRefs(shapeDeclMap::get)
                 .build();

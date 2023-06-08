@@ -16,14 +16,18 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.expressions;
+package org.apache.jena.shex.calc;
 
-public interface TypedShapeExprVisitor<R> {
-    R visit(ShapeAnd shapeAnd);
-    R visit(ShapeOr shapeOr);
-    R visit(ShapeNot shapeNot);
-    R visit(ShapeExprRef shapeExprRef);
-    R visit(ShapeExternal shapeExternal);
-    R visit(Shape shape);
-    R visit(NodeConstraint nodeConstraint);
+import org.apache.jena.shex.expressions.*;
+
+public interface TypedNodeConstraintComponentVisitor<R> {
+
+    R visit(NodeKindConstraint nodeKindCstr);
+    R visit(DatatypeConstraint datatypeCstr);
+    R visit(NumLengthConstraint numLengthCstr);
+    R visit(NumRangeConstraint numRangeCstr);
+    R visit(StrRegexConstraint strRegexCstr);
+    R visit(StrLengthConstraint strLengthCstr);
+    R visit(ValueConstraint valueCstr);
+
 }

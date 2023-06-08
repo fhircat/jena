@@ -26,6 +26,8 @@ import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 
+import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.vocabulary.XSD;
 
 public class DatatypeConstraint extends NodeConstraintComponent {

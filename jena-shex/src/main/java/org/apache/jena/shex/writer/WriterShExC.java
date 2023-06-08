@@ -33,6 +33,9 @@ import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
+import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 
 /** Print in ShExC format */
 public class WriterShExC {

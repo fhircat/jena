@@ -25,7 +25,7 @@ import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.SysShex;
-import org.apache.jena.shex.util.SchemaAnalysis;
+import org.apache.jena.shex.calc.SchemaAnalysis;
 
 /**
  * Shex Schema - a collection of shapes.
