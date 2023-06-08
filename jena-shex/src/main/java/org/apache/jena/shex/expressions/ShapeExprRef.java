@@ -20,54 +20,36 @@ package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
 
 /** Shape expression that redirects. */
 public class ShapeExprRef extends ShapeExpr {
-    private final Node ref;
+    private final Node label;
 
-    public ShapeExprRef(Node ref) {
-        super(null);
-        this.ref = ref;
+    public static ShapeExprRef create(Node label) {
+        return new ShapeExprRef(label);
     }
 
-    public Node getRef() { return ref; }
-
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ShapeDecl shape = vCxt.getShape(ref);
-        if ( shape == null )
-            return false;
-        if ( vCxt.cycle(shape, data) )
-            return true;
-        return shape.satisfies(vCxt, data);
+    private ShapeExprRef(Node ref) {
+        super();
+        this.label = ref;
     }
 
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("ShapeRef: ");
-        out.print(ShexLib.displayStr(ref));
-        out.println();
-    }
+    public Node getLabel() { return label; }
 
     @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public String toString() {
-        return "ShapeExprRef [ref="+ref+"]";
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ref);
+        return Objects.hash(label);
     }
 
     @Override
@@ -79,6 +61,6 @@ public class ShapeExprRef extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         ShapeExprRef other = (ShapeExprRef)obj;
-        return Objects.equals(ref, other.ref);
+        return Objects.equals(label, other.label);
     }
 }

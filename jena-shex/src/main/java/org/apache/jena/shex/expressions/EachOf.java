@@ -21,39 +21,40 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.riot.out.NodeFormatter;
 
-public class EachOf extends TripleExpression {
+public class EachOf extends TripleExpr {
 
-    public static TripleExpression create(List<TripleExpression> acc, List<SemAct> semActs) {
-        if ( acc.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( acc.size() == 1 )
-            return acc.get(0);
-        return new EachOf(acc, semActs);
+    public static EachOf create(List<TripleExpr> subExprs, List<SemAct> semActs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("EachOf requires two or more disjuncts");
+        return new EachOf(subExprs, semActs);
     }
 
-    private List<TripleExpression> tripleExpressions;
+    private List<TripleExpr> tripleExprs;
 
-    private EachOf(List<TripleExpression> expressions, List<SemAct> semActs) {
+    private EachOf(List<TripleExpr> subExprs, List<SemAct> semActs) {
         super(semActs);
-        this.tripleExpressions = expressions;
+        this.tripleExprs = subExprs;
     }
 
-    public List<TripleExpression> expressions() {
-        return tripleExpressions;
+    public List<TripleExpr> getTripleExprs() {
+        return tripleExprs;
     }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public int hashCode() {
-        return Objects.hash(3, tripleExpressions);
+        return Objects.hash(3, tripleExprs);
     }
 
     @Override
@@ -65,31 +66,7 @@ public class EachOf extends TripleExpression {
         if ( getClass() != obj.getClass() )
             return false;
         EachOf other = (EachOf)obj;
-        return Objects.equals(tripleExpressions, other.tripleExpressions);
+        return Objects.equals(tripleExprs, other.tripleExprs);
     }
 
-    @Override
-        public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-    //        iOut.println("EachOf");
-    //        iOut.incIndent();
-    //        expressions().forEach(tExpr->tExpr.print(iOut, nFmt));
-    //        iOut.decIndent();
-    //        iOut.println("/EachOf");
-
-            iOut.println("EachOf");
-            iOut.incIndent();
-            int idx = 0;
-            for ( TripleExpression tExpr : tripleExpressions ) {
-                idx++;
-                iOut.printf("%d : ", idx);
-                tExpr.print(iOut, nFmt);
-            }
-            iOut.decIndent();
-            iOut.println("/EachOf");
-        }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName()+"["+expressions()+"]";
-    }
 }

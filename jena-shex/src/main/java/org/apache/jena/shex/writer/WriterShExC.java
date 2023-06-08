@@ -73,6 +73,9 @@ public class WriterShExC {
     private static void print(IndentedWriter out, NodeFormatter formatter, ShapeDecl decl, boolean printNL) {
         if (printNL)
             out.println();
+        if ( decl.isAbstract() ) {
+            out.print("ABSTRACT ");
+        }
         if ( decl.getLabel() != null ) {
 
             Node n = decl.getLabel();
@@ -84,11 +87,11 @@ public class WriterShExC {
         }
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
-        ShapeExpr shapeEx = decl.getShapeExpression();
-        if (shapeEx != null)
-            shexPrinter.printShapeExpression(shapeEx);
-        else
+        ShapeExpr shapeEx = decl.getShapeExpr();
+        if (shapeEx.equals(Shape.newBuilder().shapeExpr(TripleExprEmpty.get()).build()))
             out.print("{}");
+        else
+            shexPrinter.printShapeExpression(shapeEx);
     }
 
     static <X> void printList(IndentedWriter out, List<X> items, String start, String finish, String sep, Consumer<X> action) {
@@ -150,7 +153,7 @@ public class WriterShExC {
         }
     }
 
-    private static class PrinterShExC implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintVisitor {
+    private static class PrinterShExC implements VoidShapeExprVisitor, VoidTripleExprVisitor, VoidNodeConstraintComponentVisitor {
         final IndentedWriter out;
         final NodeFormatter formatter;
 
@@ -163,12 +166,12 @@ public class WriterShExC {
             shapeExpr.visit(this);
         }
 
-        private void printTripleExpression(TripleExpression tripleExpr) {
+        private void printTripleExpression(TripleExpr tripleExpr) {
             tripleExpr.visit(this);
             out.print(" ;");
         }
 
-        private void printTripleExpressionNoSep(TripleExpression tripleExpr) {
+        private void printTripleExpressionNoSep(TripleExpr tripleExpr) {
             tripleExpr.visit(this);
         }
 
@@ -221,13 +224,13 @@ public class WriterShExC {
                 out.print(".");
                 return;
             }
-            item.print(out, formatter);
+            PrettyPrinter.print(item, out, formatter);
         }
 
         @Override
-        public void visit(ShapeAnd shape) {
-            List<ShapeExpr> shapes = shape.expressions();
-            printList(out, shape.expressions(), null, null, " AND",
+        public void visit(ShapeAnd shapeAnd) {
+            List<ShapeExpr> shapes = shapeAnd.getShapeExprs();
+            printList(out, shapeAnd.getShapeExprs(), null, null, " AND",
                       x->{
                           // Avoid flattening S1 AND ( S2 AND S3 )
                           boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
@@ -240,9 +243,9 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeOr shape) {
-            List<ShapeExpr> shapes = shape.expressions();
-            printList(out, shape.expressions(), null, null, " OR",
+        public void visit(ShapeOr shapeOr) {
+            List<ShapeExpr> shapes = shapeOr.getShapeExprs();
+            printList(out, shapeOr.getShapeExprs(), null, null, " OR",
                       x->{
                           // Avoid flattening S1 OR ( S2 OR S3 )
                           boolean needParens = ( x instanceof ShapeAnd || x instanceof ShapeOr);
@@ -255,9 +258,9 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(ShapeNot shape) {
+        public void visit(ShapeNot shapeNot) {
             out.print("NOT ");
-            ShapeExpr shExpr = shape.subShape();
+            ShapeExpr shExpr = shapeNot.getShapeExpr();
             boolean needParens = true;
 
             if ( shExpr instanceof Shape)
@@ -268,31 +271,38 @@ public class WriterShExC {
             if ( needParens ) {
                 out.print("( ");
             }
-            printShapeExpression(shape.subShape());
+            printShapeExpression(shapeNot.getShapeExpr());
             if ( needParens ) {
                 out.print(" ) ");
             }
         }
 
         @Override
-        public void visit(ShapeExprRef shape) {
+        public void visit(ShapeExprRef shapeExprRef) {
             out.print("@");
-            printNode(shape.getRef());
+            printNode(shapeExprRef.getLabel());
         }
 
         @Override
-        public void visit(ShapeExternal shape) {
+        public void visit(ShapeExternal shapeExternal) {
             out.println("EXTERNAL");
         }
 
         @Override
         public void visit(Shape shape) {
-            TripleExpression tripleExpr = shape.getTripleExpr();
+            TripleExpr tripleExpr = shape.getTripleExpr();
             if ( shape.isClosed() )
                 out.println("CLOSED ");
-            if ( shape.getExtras() != null && ! shape.getExtras().isEmpty() ) {
+            if ( ! shape.getExtras().isEmpty() ) {
                 out.println("EXTRA ");
                 shape.getExtras().forEach(n-> { formatter.format(out, n); out.print(" ");});
+            }
+            if ( shape.getExtends() != null && ! shape.getExtends().isEmpty() ) {
+                shape.getExtends().forEach(n-> {
+                    out.println("EXTENDS @");
+                    formatter.format(out, n.getLabel());
+                    out.print(" ");
+                });
             }
             out.println("{");
             out.incIndent();
@@ -304,87 +314,88 @@ public class WriterShExC {
         }
 
         @Override
-        public void visit(StrRegexConstraint constraint) {
+        public void visit(StrRegexConstraint strRegexCstr) {
             out.print("/");
             //[LAYOUT] Escapes
-            String pattern = constraint.getPattern();
+            String pattern = strRegexCstr.getPatternString();
             regexStringEsc(out, pattern);
             out.print("/");
-            if ( constraint.getFlagsStr() != null ) {
-                out.print(constraint.getFlagsStr());
+            if ( strRegexCstr.getFlagsStr() != null ) {
+                out.print(strRegexCstr.getFlagsStr());
             }
         }
 
         @Override
-        public void visit(StrLengthConstraint constraint) {
+        public void visit(StrLengthConstraint strLengthCstr) {
             //stringLength       ::=      "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-            out.print(constraint.getLengthType().label().toUpperCase(Locale.ROOT));
+            out.print(strLengthCstr.getLengthType().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            out.print(Integer.toString(constraint.getLength()));
+            out.print(Integer.toString(strLengthCstr.getLength()));
         }
 
         @Override
-        public void visit(DatatypeConstraint constraint) {
-            formatter.formatURI(out, constraint.getDatatypeURI());
+        public void visit(DatatypeConstraint datatypeCstr) {
+            formatter.formatURI(out, datatypeCstr.getDatatypeURI());
         }
 
         @Override
-        public void visit(NodeKindConstraint constraint) {
-            out.print(constraint.getNodeKind().label().toUpperCase(Locale.ROOT));
+        public void visit(NodeKindConstraint nodeKindCstr) {
+            out.print(nodeKindCstr.getNodeKind().label().toUpperCase(Locale.ROOT));
         }
 
         // [30]        numericFacet       ::=      numericRange numericLiteral | numericLength INTEGER
 
         @Override
-        public void visit(NumLengthConstraint constraint) {
+        public void visit(NumLengthConstraint numLengthCstr) {
             // [32]        numericLength      ::=      "TOTALDIGITS" | "FRACTIONDIGITS"
-            out.print(constraint.getLengthType().label().toUpperCase(Locale.ROOT));
+            out.print(numLengthCstr.getLengthType().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            out.print(Integer.toString(constraint.getLength()));
+            out.print(Integer.toString(numLengthCstr.getLength()));
         }
 
         @Override
-        public void visit(NumRangeConstraint constraint) {
+        public void visit(NumRangeConstraint numRangeCstr) {
             // [31]        numericRange       ::=      "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
-            out.print(constraint.getRangeKind().label().toUpperCase(Locale.ROOT));
+            out.print(numRangeCstr.getRangeKind().label().toUpperCase(Locale.ROOT));
             out.print(" ");
-            printNode(constraint.getValue());
+            printNode(numRangeCstr.getValue());
         }
 
         @Override
-        public void visit(ValueConstraint constraint) {
+        public void visit(ValueConstraint valueCstr) {
             // [49]        valueSetValue      ::=      iriRange | literalRange | languageRange | exclusion+
             out.print("[ ");
-            constraint.forEach(valueSetRange->{
+            valueCstr.forEach(valueSetRange->{
                 printValueSetItem(valueSetRange.item());
                 valueSetRange.exclusions(vsItem->{
                     out.print(" -");
                     printValueSetItem(vsItem);
                 });
+                out.print(" ");
             });
-            out.print(" ]");
+            out.print("]");
         }
 
-        @Override public void visit(TripleExprCardinality tripleExpr) {
+        @Override public void visit(TripleExprCardinality tripleExprCardinality) {
             out.incIndent();
             out.print("( ");
-            printTripleExpressionNoSep(tripleExpr.target());
+            printTripleExpressionNoSep(tripleExprCardinality.getSubExpr());
             out.print(" )");
-            String x = tripleExpr.cardinalityString();
+            String x = tripleExprCardinality.cardinalityString();
             out.print(x);
             out.decIndent();
         }
 
-        @Override public void visit(EachOf tripleExpr) {
-            printList(out, tripleExpr.expressions(), "(", ")", null, tExpr->{
+        @Override public void visit(EachOf eachOf) {
+            printList(out, eachOf.getTripleExprs(), "(", ")", null, tExpr->{
                 out.incIndent();
                 printTripleExpression(tExpr);
                 out.decIndent();
             });
             out.println();
         }
-        @Override public void visit(OneOf tripleExpr) {
-            printList(out, tripleExpr.expressions(), "(", ")", "|", tExpr->{
+        @Override public void visit(OneOf oneOf) {
+            printList(out, oneOf.getTripleExprs(), "(", ")", "|", tExpr->{
                     out.incIndent();
                     printTripleExpression(tExpr);
                     out.decIndent();
@@ -392,32 +403,32 @@ public class WriterShExC {
            out.println();
         }
 
-        @Override public void visit(TripleExprNone tripleExpr) { /* Nothing */ }
+        @Override public void visit(TripleExprEmpty tripleExprEmpty) { /* Nothing */ }
 
-        @Override public void visit(TripleExprRef tripleExpr) {
+        @Override public void visit(TripleExprRef tripleExprRef) {
             out.print("&");
-            printNode(tripleExpr.ref());
+            printNode(tripleExprRef.getLabel());
         }
 
-        @Override public void visit(TripleConstraint tripleExpr) {
-            Node predicate = tripleExpr.getPredicate();
+        @Override public void visit(TripleConstraint tripleConstraint) {
+            Node predicate = tripleConstraint.getPredicate();
             //formatter.format(w, node);
-            if ( tripleExpr.reverse() )
+            if ( tripleConstraint.isInverse() )
                 out.print("^");
             printNode(predicate);
             out.print(" ");
-            printShapeExpression(tripleExpr.getShapeExpression());
-            String x =  tripleExpr.cardinalityString();
+            printShapeExpression(tripleConstraint.getValueExpr());
+            /*String x =  tripleExpr.cardinalityString();
             if ( x != null && ! x.isEmpty() ) {
                 out.print(" ");
                 out.print(x);
-            }
+            }*/
         }
 
         @Override
         public void visit(NodeConstraint nodeConstraint) {
-            if (!nodeConstraint.components().isEmpty()) {
-                printList(out, nodeConstraint.components(), null, null, null,
+            if (!nodeConstraint.getComponents().isEmpty()) {
+                printList(out, nodeConstraint.getComponents(), null, null, null,
                           nc->{
                               out.incIndent();
                               printNodeConstraint(nc);

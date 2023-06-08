@@ -52,28 +52,21 @@ public class ShexTests {
         //Sx.TRACE : true if there are inclusions
         //includes.add("#1val1IRIREFExtra1_pass-iri2");
         //includes.add("#start2RefS1-IstartS2");
+        //includes.add("#1dot_pass-noOthers");
 
         VERBOSE = ! includes.isEmpty();
 
         // --- Exclusions - development
 
-        // # External
-        excludes.add("#shapeExtern_pass");
-        excludes.add("#shapeExtern_fail");
-        excludes.add("#shapeExternRef_pass");
-        excludes.add("#shapeExternRef_fail");
-
-        // ## semantic actions
-        // SemanticAction trait supported
-        // OrderedSemanticActions trait supported
-        excludeTraits.add(ShexT.tExternalSemanticAction); // add external parser
-
-        // ## annotations + semantic actions
-        excludes.add("#open3Eachdotclosecard23Annot3Code2-p1p2p3X3");
-
-        // ---- Exclusions
         // BNodes tests we don't support (testing labels, cross file references)
-        excludes.addAll(bNodeLabeltests());
+        excludeTraits.add(ShexT.tExtends); // TODO: implement EXTENDS
+        excludeTraits.add(ShexT.tCrossFileBNodeShapeLabel);
+        excludeTraits.add(ShexT.tRefBNodeShapeLabel);
+        excludeTraits.add(ShexT.tLexicalBNode);
+        excludeTraits.add(ShexT.tToldBNode);
+        // need to invoke a 2nd parser to external Shapes and SemActs
+        excludeTraits.add(ShexT.tExternalShape);
+        excludeTraits.add(ShexT.tExternalSemanticAction);
 
         // Syntax exclusions - may be needed here.
         //    //---- Exclusions
@@ -97,95 +90,13 @@ public class ShexTests {
         if ( ShexTests.VERBOSE ) {
             System.err.println("Validation");
             System.err.println("  inclusions    = "+includes.size());
-            System.err.println("  exclusions    = "+(excludes.size()-bNodeLabeltests().size()));
-            System.err.println("  bNode labels  = "+bNodeLabeltests().size());
+            System.err.println("  exclusions    = "+excludes.size());
             System.err.println();
             dumpTest = ! includes.isEmpty();
         }
 
         if ( ! includes.isEmpty() )
             Sx2.TRACE = true;
-    }
-
-    private static Collection<String> bNodeLabeltests() {
-        // jena-shex operates on post-parsing files.
-        //
-        // Tests that assume that
-        // + blank node labels are preserved after parsing.
-        // + the same label in different files is the same blank node.
-        // which is not true. In Jena, blank nodes are global.
-        // and different between parsing two files. (this is required by RDF).
-
-        Set<String> bNodeLabelTests = new HashSet<>();
-
-        // ### facet (bnodes)
-        bNodeLabelTests.add("#1focusLength-dot_fail-bnode-short");
-        bNodeLabelTests.add("#1focusLength-dot_pass-bnode-equal");
-        bNodeLabelTests.add("#1focusLength-dot_fail-bnode-long");
-
-        bNodeLabelTests.add("#1focusMinLength-dot_pass-bnode-equal");
-        bNodeLabelTests.add("#1focusMinLength-dot_pass-bnode-long");
-        bNodeLabelTests.add("#1focusMaxLength-dot_pass-bnode-short");
-        bNodeLabelTests.add("#1focusMaxLength-dot_pass-bnode-equal");
-        bNodeLabelTests.add("#1focusPatternB-dot_pass-bnode-match");
-        bNodeLabelTests.add("#1focusPatternB-dot_pass-bnode-long");
-        bNodeLabelTests.add("#1focusBNODELength_dot_pass");
-
-        bNodeLabelTests.add("#1bnodeLength_pass-bnode-equal");
-        bNodeLabelTests.add("#1bnodeLength_fail-bnode-short");
-        bNodeLabelTests.add("#1bnodeLength_pass-bnode-equal");
-        bNodeLabelTests.add("#1bnodeLength_fail-bnode-long");
-        bNodeLabelTests.add("#1bnodeLength_fail-lit-equal");
-        bNodeLabelTests.add("#1bnodeLength_fail-iri-equal");
-
-        bNodeLabelTests.add("#1nonliteralLength_fail-bnode-short");
-        bNodeLabelTests.add("#1nonliteralLength_pass-bnode-equal");
-        bNodeLabelTests.add("#1nonliteralLength_fail-bnode-long");
-
-        bNodeLabelTests.add("#1bnodeMinlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1bnodeMinlength_pass-bnode-long");
-        bNodeLabelTests.add("#1nonliteralMinlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1nonliteralMinlength_pass-bnode-long");
-        bNodeLabelTests.add("#1bnodeMaxlength_pass-bnode-short");
-        bNodeLabelTests.add("#1bnodeMaxlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1nonliteralMaxlength_pass-bnode-short");
-        bNodeLabelTests.add("#1nonliteralMaxlength_pass-bnode-equal");
-
-        bNodeLabelTests.add("#1bnodePattern_pass-bnode-match");
-        bNodeLabelTests.add("#1bnodePattern_fail-bnode-short");
-        bNodeLabelTests.add("#1bnodePattern_fail-bnode-long");
-
-        bNodeLabelTests.add("#1bnodeMinlength_fail-bnode-short");
-        bNodeLabelTests.add("#1bnodeMinlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1bnodeMinlength_pass-bnode-long");
-
-        bNodeLabelTests.add("#1bnodePattern_pass-bnode-match");
-        bNodeLabelTests.add("#1bnodePattern_fail-bnode-long");
-
-        bNodeLabelTests.add("#1nonliteralPattern_pass-bnode-match");
-        bNodeLabelTests.add("#1nonliteralPattern_pass-bnode-long");
-
-        bNodeLabelTests.add("#1nonliteralMinlength_fail-bnode-short");
-        bNodeLabelTests.add("#1nonliteralMinlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1nonliteralMinlength_pass-bnode-long");
-
-        bNodeLabelTests.add("#1bnodeMaxlength_pass-bnode-short");
-        bNodeLabelTests.add("#1bnodeMaxlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1bnodeMaxlength_fail-bnode-long");
-
-        bNodeLabelTests.add("#1nonliteralMaxlength_pass-bnode-short");
-        bNodeLabelTests.add("#1nonliteralMaxlength_pass-bnode-equal");
-        bNodeLabelTests.add("#1nonliteralMaxlength_fail-bnode-long");
-
-        bNodeLabelTests.add("#1valExprRefbnode-IV1_pass-lit-equal");
-
-        bNodeLabelTests.add("#1focusBNODE_dot_fail-iriFocusLabel-equal");
-        bNodeLabelTests.add("#1focusBNODE_dot_pass");
-
-        bNodeLabelTests.add("#bnode1dot_fail-missing");
-        bNodeLabelTests.add("#bnode1dot_pass-others_lexicallyEarlier");
-
-        return bNodeLabelTests;
     }
 
     /** Create a Shex test - or return null for "unrecognized" */
@@ -313,6 +224,7 @@ public class ShexTests {
 
     private static boolean runTestExclusionsInclusions(ManifestEntry entry) {
         String fragment = fragment(entry);
+
         if ( fragment != null ) {
             // Includes, if present.
             if ( includes.contains(fragment) )
@@ -386,7 +298,7 @@ public class ShexTests {
 
     private static void setup() {
         // Setup StreamManager.
-        String places[] = { "src/test/files/spec/schemas/", "src/test/files/spec/validation/" };
+        String places[] = { "src/test/files/shexTest/schemas/", "src/test/files/spec/validation/" };
 
 
         for ( String dir : places ) {

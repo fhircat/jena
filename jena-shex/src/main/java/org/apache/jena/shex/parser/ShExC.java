@@ -203,23 +203,30 @@ public class ShExC {
     }
 
     private static void validatePhase2(ShexSchema shapes, ShapeDecl shape) {
-        ShapeExpr shExpr = shape.getShapeExpression();
-        ShapeExprVisitor checker = new CheckFacets();
-        if (shExpr != null)
-            ShexLib.walk(shExpr, checker, null, null);
+        ShapeExpr shExpr = shape.getShapeExpr();
+        VoidShapeExprVisitor checker = new CheckFacets();
+        if (shExpr != null) {
+            // TODO the checker should be a NodeConstraintComponentVisitor => need to add node constraint components visitor to walkers
+            VoidWalker walker = new VoidWalker.Builder()
+                    .processShapeExprsWith(checker)
+                    .traverseShapes()
+                    .traverseTripleConstraints()
+                    .build();
+            shExpr.visit(walker);
+        }
     }
 
-    private static class CheckFacets implements ShapeExprVisitor {
+    private static class CheckFacets implements VoidShapeExprVisitor {
         @Override
-        public void visit(NodeConstraint nc) {
-            if ( nc == null )
+        public void visit(NodeConstraint nodeConstraint) {
+            if ( nodeConstraint == null )
                 return;
             // XXX [NodeConstraint]
             DatatypeConstraint dtConstraint = null;
             Set<StrLengthKind> x = new HashSet<>(3);
-            for ( NodeConstraintComponent expr: nc.components() ) {
+            for ( NodeConstraintComponent expr: nodeConstraint.getComponents() ) {
                 // Visitor!
-                if ( expr instanceof StrLengthConstraint ) {
+                if ( expr instanceof StrLengthConstraint) {
                     StrLengthConstraint constraint = (StrLengthConstraint)expr;
                     StrLengthKind lenType = constraint.getLengthType();
                     if ( x.contains(lenType) )
@@ -237,7 +244,7 @@ public class ShExC {
                 }
 
                 if ( dtConstraint != null ) {
-                    if ( expr instanceof NumLengthConstraint || expr instanceof NumRangeConstraint ) {
+                    if ( expr instanceof NumLengthConstraint || expr instanceof NumRangeConstraint) {
                         RDFDatatype rdfDT = dtConstraint.getRDFDatatype();
                         if ( ! ( rdfDT instanceof XSDDatatype ) ) {
                             String msg = format("Numeric facet: Not a numeric: <%s> ", dtConstraint.getDatatypeURI());

@@ -127,11 +127,12 @@ void statement() : {}
 
 // ----
 
-void shapeExprDecl() : { Node n;}
+void shapeExprDecl() : { boolean bstract = false; Node n;}
 {
     { startShapeExprDecl(); }
+    ( <ABSTRACT> { bstract = true; } )?
     n = shapeExprLabel()
-    { shapeExprDecl(n, token.beginLine, token.beginColumn); }
+    { shapeExprDecl(n, bstract, token.beginLine, token.beginColumn); }
     (shapeExpression() | <EXTERNAL> { shapeExternal(); })
     { finishShapeExprDecl(); }
 }
@@ -235,15 +236,21 @@ void inlineShapeAtom() : { int idx; }
 
 void shapeOrRef() : { int idx; }
 {
-    shapeDefinition() | shapeRef()
+    shapeDefinition() | pushShapeRef()
 }
 
 void inlineShapeOrRef() : { int idx; }
 {
-    inlineShapeDefinition() | shapeRef()
+    inlineShapeDefinition() | pushShapeRef()
 }
 
-void shapeRef() : { Token t ; Node ref; }
+void pushShapeRef() : { Token t ; ShapeExprRef ref; }
+{
+    ( ref = shapeRef() )
+    { shapeReference(ref); }
+}
+
+ShapeExprRef shapeRef() : { Token t ; Node ref; }
 {
     ( t = <ATPNAME_LN>
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
@@ -251,7 +258,7 @@ void shapeRef() : { Token t ; Node ref; }
        { ref = resolve_AT_PName(t.image, t.beginLine, t.beginColumn) ; }
     | <AT> ref = shapeExprLabel()
     )
-    { shapeReference(ref); }
+    { return ShapeExprRef.create(ref); }
 }
 
 void litInlineNodeConstraint() : { int idx; } {
@@ -356,34 +363,41 @@ String numericLength() : { Token t; }
 
 // "{ ... }"
 void shapeDefinition() :
-{ boolean closed = false; TripleExpression tripleExpr = null;
+{ boolean closed = false; TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
   List<SemAct> semActs;
 }
 {
     { startShapeDefinition(); }
- 	(extraPropertySet(extras) | <CLOSED> { closed = true; } )*
+ 	( extraPropertySet(extras) | extendsShapeRefList(xtends) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
     (annotation())*
     semActs = semanticActions()
-    { finishShapeDefinition(tripleExpr, extras, closed, semActs); }
+    { finishShapeDefinition(tripleExpr, extras, closed, xtends, semActs); }
 }
 
 void inlineShapeDefinition() :
 { boolean closed = false ;
-  TripleExpression tripleExpr = null;
+  TripleExpr tripleExpr = null;
   List<Node> extras = new ArrayList<Node>();
+  List<ShapeExprRef> xtends = new ArrayList<ShapeExprRef>();
 }
 {
     { startShapeDefinition(); }
-   	( extraPropertySet(extras) | <CLOSED> { closed = true; } )*
+   	( extraPropertySet(extras) | extendsShapeRefList(xtends) | <CLOSED> { closed = true; } )*
     <LBRACE> (tripleExpr = tripleExpression())? <RBRACE>
-    { finishShapeDefinition(tripleExpr, extras, closed, null); }
+    { finishShapeDefinition(tripleExpr, extras, closed, xtends, null); }
 }
 
 void extraPropertySet(List<Node> extras) : { Node p; }
 {
    	<EXTRA> (p = predicate() { extras.add(p); })+
+}
+
+void extendsShapeRefList(List<ShapeExprRef> xtends) : { ShapeExprRef r; }
+{
+   	<EXTENDS> (r = shapeRef() { xtends.add(r); })
 }
 
 // Original:
@@ -426,7 +440,7 @@ void extraPropertySet(List<Node> extras) : { Node p; }
 // }
 
 // ---- Improvement for LL(1)
-TripleExpression tripleExpression() : { int idx; }
+TripleExpr tripleExpression() : { int idx; }
 {
   { idx = startTripleExpression(); }
   tripleExpressionClause() (<VBAR> tripleExpressionClause())*
@@ -468,7 +482,7 @@ void unaryTripleExpr() : { Node n = null; }
     { finishUnaryTripleExpr(); }
 }
 
-void bracketedTripleExpr(Node label): { TripleExpression tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs; }
+void bracketedTripleExpr(Node label): { TripleExpr tripleExpr = null; Cardinality cardinality = null; List<SemAct> semActs; }
 {
     { startBracketedTripleExpr(); }
    	<LPAREN> tripleExpr = tripleExpression() <RPAREN>
@@ -544,7 +558,7 @@ void valueExclusion() : { String iriStr = null; String lang = null; Node lit = n
 {
     <MINUS>
     { startValueExclusion(); }
-    ( iriStr = iri()
+        ( iriStr = iri()
     | lit = literal()
     | <LANGTAG> { lang = token.image; }
     )
@@ -961,6 +975,8 @@ TOKEN [IGNORE_CASE] :
 
 | <CLOSED           : "closed" >
 | <EXTRA            : "extra" >
+| <ABSTRACT         : "abstract" >
+| <EXTENDS          : "extends" >
 
 // Works but slow.
 //| <CODE             : "{" (~[ "%","\\"] | "\\" ["%","\\"] )* "%" "}" >

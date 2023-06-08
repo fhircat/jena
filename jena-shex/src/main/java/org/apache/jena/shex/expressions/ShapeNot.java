@@ -20,63 +20,36 @@ package org.apache.jena.shex.expressions;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
-
 public class ShapeNot extends ShapeExpr {
 
-//    public static ShapeExpression create(List<ShapeExpression> args) {
-//        if ( args.size() == 0 )
-//            return null;
-//        if ( args.size() != 1 )
-//            throw new InternalErrorException("ShapeExprNOT.create");
-//        ShapeExpression shapeExpr = args.get(0);
-//        return new ShapeExpressionNOT(shapeExpr);
-//    }
-    private final ShapeExpr other;
+    public static ShapeExpr create (ShapeExpr subExpr) {
+        return new ShapeNot(subExpr);
+    }
 
-    public ShapeNot(ShapeExpr shapeExpr) {
-        super(null);
-        this.other = shapeExpr;
+    private final ShapeExpr shapeExpr;
+
+    private ShapeNot(ShapeExpr shapeExpr) {
+        super();
+        this.shapeExpr = shapeExpr;
+    }
+
+    public ShapeExpr getShapeExpr() {
+        return shapeExpr;
     }
 
     @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ValidationContext vCxt2 = vCxt.create();
-        boolean innerSatisfies = other.satisfies(vCxt2, data);
-        if ( ! innerSatisfies )
-            return true;
-        ReportItem item = new ReportItem("NOT: Term reject because it conforms", data);
-        vCxt.reportEntry(item);
-        return false;
-    }
-
-    public ShapeExpr subShape() {
-        return other;
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("NOT ");
-        other.print(out, nFmt);
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprNOT["+other+"]";
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(other);
+        return Objects.hash(shapeExpr);
     }
 
     @Override
@@ -88,6 +61,6 @@ public class ShapeNot extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         ShapeNot other = (ShapeNot)obj;
-        return Objects.equals(this.other, other.other);
+        return Objects.equals(this.shapeExpr, other.shapeExpr);
     }
 }

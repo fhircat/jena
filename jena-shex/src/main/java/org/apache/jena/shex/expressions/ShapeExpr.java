@@ -18,17 +18,15 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.List;
 
-public abstract class ShapeExpr implements ShapeElement {
+// TODO are annotations allowed for shape expressions ? If yes, we should add them
+public abstract class ShapeExpr {
 
-    private List<SemAct> semActs;
+    private final List<SemAct> semActs;
 
     public ShapeExpr(List<SemAct> semActs) {
         this.semActs = semActs;
@@ -40,22 +38,19 @@ public abstract class ShapeExpr implements ShapeElement {
         return semActs;
     }
 
-    @Override
-    public abstract boolean satisfies(ValidationContext vCxt, Node data);
-
     public boolean testShapeExprSemanticActions(ValidationContext v, Node focus) {
         if (this.semActs == null)
             return true;
         return v.dispatchShapeExprSemanticAction(this, focus);
     }
 
-    @Override
-    public abstract void print(IndentedWriter out, NodeFormatter nFmt);
-
-    public abstract void visit(ShapeExprVisitor visitor);
+    public abstract void visit(VoidShapeExprVisitor visitor);
+    public abstract <R> R visit(TypedShapeExprVisitor<R> visitor);
 
     @Override
-    public abstract String toString();
+    public String toString() {
+        return PrettyPrinter.asPrettyString(this);
+    }
 
     @Override
     public abstract int hashCode();

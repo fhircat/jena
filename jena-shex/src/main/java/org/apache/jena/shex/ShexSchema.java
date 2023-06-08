@@ -23,8 +23,9 @@ import java.util.*;
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.shex.expressions.SemAct;
-import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.util.SchemaAnalysis;
 
 /**
  * Shex Schema - a collection of shapes.
@@ -32,9 +33,10 @@ import org.apache.jena.shex.sys.SysShex;
 public class ShexSchema {
 
     private final ShapeDecl startShape;
+    // TODO shapes and shapeMap contain the same information => redundancy : bad idea
     private final List<ShapeDecl> shapes;
     private final Map<Node, ShapeDecl> shapeMap;
-    private final Map<Node, TripleExpression> tripleRefs;
+    private final Map<Node, TripleExpr> tripleRefs;
 
     private ShexSchema shapesWithImports = null;
 
@@ -44,9 +46,15 @@ public class ShexSchema {
     private final List<String> imports;
     private final List<SemAct> semActs;
 
+    // FIXME validity should be tested before creating the schema; for now only for testing
+    public boolean isValid () {
+        SchemaAnalysis analysis = new SchemaAnalysis(shapeMap, tripleRefs);
+        return analysis.isCorrect();
+    }
+
     public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,
                                     List<ShapeDecl> shapes, List<String> imports, List<SemAct> semActs,
-                                    Map<Node, TripleExpression> tripleRefs) {
+                                    Map<Node, TripleExpr> tripleRefs) {
         shapes = new ArrayList<>(shapes);
         Map<Node, ShapeDecl> shapeMap = new LinkedHashMap<>();
         for ( ShapeDecl shape:  shapes) {
@@ -63,7 +71,7 @@ public class ShexSchema {
 
     /*package*/ ShexSchema(String source, String baseURI, PrefixMap prefixes,
                            ShapeDecl startShape, List<ShapeDecl> shapes, Map<Node, ShapeDecl> shapeMap,
-                           List<String> imports, List<SemAct> semActs, Map<Node, TripleExpression> tripleRefMap) {
+                           List<String> imports, List<SemAct> semActs, Map<Node, TripleExpr> tripleRefMap) {
         this.sourceURI = source;
         this.baseURI = baseURI;
         this.prefixes = prefixes;
@@ -90,7 +98,7 @@ public class ShexSchema {
     }
 
     /** Get all the shapes. This includes the start shape, which has label {@link SysShex#startNode}. */
-    public TripleExpression getTripleExpression(Node label) {
+    public TripleExpr getTripleExpr(Node label) {
         return tripleRefs.get(label);
     }
 
@@ -138,7 +146,7 @@ public class ShexSchema {
             // Calculate the merge
             List<ShapeDecl> mergedShapes = new ArrayList<>();
             Map<Node, ShapeDecl> mergedShapeMap = new LinkedHashMap<>();
-            Map<Node, TripleExpression> mergedTripleRefs = new LinkedHashMap<>();
+            Map<Node, TripleExpr> mergedTripleRefs = new LinkedHashMap<>();
 
             mergeOne(this, mergedShapes, mergedShapeMap, mergedTripleRefs);
             for ( ShexSchema importedSchema : others ) {
@@ -162,7 +170,7 @@ public class ShexSchema {
     private static void mergeOne(ShexSchema schema,
                                  List<ShapeDecl> mergedShapes,
                                  Map<Node, ShapeDecl> mergedShapeMap,
-                                 Map<Node, TripleExpression> mergedTripleRefs
+                                 Map<Node, TripleExpr> mergedTripleRefs
                                  ) {
         // Without start shape.
         schema.getShapes().stream().filter(sh->!SysShex.startNode.equals(sh.getLabel())).forEach(shape->{
@@ -218,4 +226,5 @@ public class ShexSchema {
     public List<SemAct> getSemActs() {
         return semActs;
     }
+
 }

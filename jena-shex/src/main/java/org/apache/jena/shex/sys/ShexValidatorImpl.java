@@ -26,6 +26,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.eval.ShapeExprEval;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 class ShexValidatorImpl implements ShexValidator{
@@ -77,10 +78,10 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
         ShexRecord entry = new ShexRecord(focus, shapeRef);
-        shapes = shapes.importsClosure();
-        ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
+        ShexSchema schemaWithImports = shapes.importsClosure();
+        ValidationContext vCxt = new ValidationContext(dataGraph, schemaWithImports, semanticActionPluginIndex);
 
-        boolean isValid = vCxt.dispatchStartSemanticAction(shapes, vCxt);
+        boolean isValid = vCxt.dispatchStartSemanticAction(schemaWithImports, vCxt);
         if ( !isValid )
             report(vCxt, entry, focus, ShexStatus.nonconformant, null);
         else
@@ -99,6 +100,7 @@ class ShexValidatorImpl implements ShexValidator{
         ShexRecord entry = new ShexRecord(focus, shape.getLabel());
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
+        boolean started = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         boolean isValid = validationStep(vCxt, entry, entry.shapeExprLabel, focus);
         return vCxt.generateReport();
     }
@@ -112,6 +114,7 @@ class ShexValidatorImpl implements ShexValidator{
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         List<ShexRecord> reports = new ArrayList<>();
+        boolean isValid = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         shapeMap.entries().forEach(mapEntry->{
             validateOneShapeRecord(vCxt, mapEntry, focus);
         });
@@ -156,10 +159,10 @@ class ShexValidatorImpl implements ShexValidator{
     private static boolean validationStep(ValidationContext vCxt, ShexRecord mapEntry, Node shapeRef, Node focus) {
         track(mapEntry.shapeExprLabel, focus);
         // Isolate.
-        ShapeDecl shape = vCxt.getShape(shapeRef);
+        ShapeDecl shape = vCxt.getShapeDecl(shapeRef);
         if ( shape == null ) {
             // No such shape.
-            vCxt.getShape(shapeRef);
+            vCxt.getShapeDecl(shapeRef); // TODO what's this for ? the value is not used, and no exception is raised
             String msg = "No such shape: "+ShexLib.displayStr(shapeRef);
             ReportItem item = new ReportItem(msg, shapeRef);
             vCxt.reportEntry(item);
@@ -170,11 +173,12 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Worker.
-    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape, Node shapeRef, Node focus) {
+    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape,
+                                                Node shapeRef, Node focus) {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         vCxtInner.startValidate(shape, focus);
-        boolean isValid = shape.satisfies(vCxtInner, focus);
+        boolean isValid = ShapeExprEval.satisfies(shape, focus, vCxtInner);
         vCxtInner.finishValidate(shape, focus);
         if ( ! isValid ) {
             atLeastOneReportItem(vCxtInner, focus);

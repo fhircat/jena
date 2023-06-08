@@ -18,15 +18,12 @@
 
 package org.apache.jena.shex.expressions;
 
-import static java.lang.String.format;
-
 import java.util.Objects;
+import java.util.StringJoiner;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.shex.ShexException;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 import org.apache.jena.sparql.expr.NodeValue;
 
 public class NumRangeConstraint extends NodeConstraintComponent {
@@ -58,35 +55,13 @@ public class NumRangeConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( ! n.isLiteral() )
-            return new ReportItem("NumRange: Not a literal number", n);
-        NodeValue nv = NodeValue.makeNode(n);
-        int r = NodeValue.compare(nv, numericValue);
-
-        switch(rangeKind) {
-            case MAXEXCLUSIVE :
-                if ( r < 0 ) return null;
-                break;
-            case MAXINCLUSIVE :
-                if ( r <= 0 ) return null;
-                break;
-            case MINEXCLUSIVE :
-                if ( r > 0 ) return null;
-                break;
-            case MININCLUSIVE :
-                if ( r >= 0 ) return null;
-                break;
-            default :
-                break;
-        }
-        String msg = format("Expected %s %s : got = %s", rangeKind.label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(n));
-        return new ReportItem(msg, n);
+    public void visit(VoidNodeConstraintComponentVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void visit(NodeConstraintVisitor visitor) {
-        visitor.visit(this);
+    public <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -108,6 +83,12 @@ public class NumRangeConstraint extends NodeConstraintComponent {
 
     @Override
     public String toString() {
-        return "NumRange["+rangeKind.label()+" "+NodeFmtLib.displayStr(value)+"]";
+        // TODO uses NodeFmtLib, why not our internal pretty printer ?
+        return new StringJoiner(", ", NumRangeConstraint.class.getSimpleName() + "[", "]")
+                .add("rangeKind=" + rangeKind.label())
+                .add("value=" + NodeFmtLib.displayStr(value))
+                .add("numericValue=" + numericValue)
+                .toString();
     }
+
 }

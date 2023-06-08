@@ -18,15 +18,8 @@
 
 package org.apache.jena.shex.expressions;
 
-import static org.apache.jena.shex.sys.ShexLib.displayStr;
-
 import java.util.Objects;
-
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
+import java.util.StringJoiner;
 
 public class NodeKindConstraint extends NodeConstraintComponent {
     private NodeKind nodeKind;
@@ -38,47 +31,20 @@ public class NodeKindConstraint extends NodeConstraintComponent {
     public NodeKind getNodeKind() { return nodeKind; }
 
     @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        switch (nodeKind) {
-            case BNODE :
-                if ( n.isBlank() )
-                    return null;
-                break;
-            case IRI :
-                if ( n.isURI() )
-                    return null;
-                break;
-            case LITERAL :
-                if ( n.isLiteral() )
-                    return null;
-                break;
-            case NONLITERAL :
-                if ( ! n.isLiteral() )
-                    return null;
-                break;
-            default :
-//                data.isNodeTriple()
-//                data.isNodeGraph()
-                break;
-        }
-        // Bad.
-        String msg = toString()+" : Expected "+nodeKind.toString()+" for "+displayStr(n);
-        return new ReportItem(msg, n);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
-
-    @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(VoidNodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
+    public <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public String toString() {
-        return "NodeKind: "+nodeKind.toString();
+        return new StringJoiner(", ", NodeKindConstraint.class.getSimpleName() + "[", "]")
+                .add("nodeKind=" + nodeKind)
+                .toString();
     }
 
     @Override

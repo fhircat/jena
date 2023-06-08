@@ -21,72 +21,35 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeOr extends ShapeExpr {
 
-    public static ShapeExpr create(List<ShapeExpr> acc) {
-        if ( acc.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( acc.size() == 1 )
-            return acc.get(0);
-        return new ShapeOr(acc);
+    public static ShapeOr create(List<ShapeExpr> subExprs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("ShapeOr requires two or more disjuncts");
+        return new ShapeOr(subExprs);
     }
 
-    private List<ShapeExpr> shapeExprs;
+    private final List<ShapeExpr> shapeExprs;
 
-    private ShapeOr(List<ShapeExpr> expressions) {
-        super(null);
-        this.shapeExprs = expressions;
+    private ShapeOr(List<ShapeExpr> subExprs) {
+        super();
+        this.shapeExprs = subExprs;
     }
 
-    public List<ShapeExpr> expressions() {
+    public List<ShapeExpr> getShapeExprs() {
         return shapeExprs;
     }
 
-
     @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        // We need to ignore validation failures from expressions - we need to find one success.
-        for ( ShapeExpr shExpr : shapeExprs) {
-            ValidationContext vCxt2 = vCxt.create();
-            boolean innerSatisfies = shExpr.satisfies(vCxt2, data);
-            if ( innerSatisfies )
-                return true;
-        }
-        ReportItem item = new ReportItem("OR expression not satisfied:", data);
-        vCxt.reportEntry(item);
-        return false;
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println("OR");
-        //out.printf("OR(%d)\n", shapeExpressions.size());
-        int idx = 0;
-        for ( ShapeExpr shExpr : shapeExprs) {
-            idx++;
-            out.printf("%d -", idx);
-            out.incIndent(4);
-            shExpr.print(out, nFmt);
-            out.decIndent(4);
-        }
-        out.println("/OR");
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprOr "+expressions();
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
