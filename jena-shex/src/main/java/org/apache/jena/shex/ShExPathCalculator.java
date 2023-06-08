@@ -21,15 +21,15 @@ import org.apache.jena.shex.expressions.*;
 
 import java.util.*;
 
-public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, NodeConstraintVisitor {
+public class ShExPathCalculator implements VoidShapeExprVisitor, VoidTripleExprVisitor/*, NodeConstraintVisitor*/ {
     protected Map<ShapeExpr, String> shapeExprs = new HashMap<>();
-    protected Map<TripleExpression, String> tripleExprs = new HashMap<>();
+    protected Map<TripleExpr, String> tripleExprs = new HashMap<>();
 
     public Map<ShapeExpr, String> getShapeExprs() {
         return shapeExprs;
     }
 
-    public Map<TripleExpression, String> getTripleExprs() {
+    public Map<TripleExpr, String> getTripleExprs() {
         return tripleExprs;
     }
 
@@ -38,7 +38,7 @@ public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, 
     public ShExPathCalculator(ShexSchema schema) {
         schema.getShapes().forEach( shape->{
             pathComponents.push("@<" + shape.getLabel().toString()+ ">");
-            visit(shape.getShapeExpression());
+            visit(shape.getShapeExpr());
             pathComponents.pop();
         } );
     }
@@ -52,7 +52,7 @@ public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, 
         }
     }
 
-    private void visit(TripleExpression tripleExpression) {
+    private void visit(TripleExpr tripleExpression) {
         tripleExpression.visit(this);
         List<SemAct> semActs = tripleExpression.getSemActs();
         if (semActs != null && !semActs.isEmpty()) {
@@ -68,7 +68,7 @@ public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, 
         }
     }
 
-    private void walkTripleExprs(List<TripleExpression> tripleExprs) {
+    private void walkTripleExprs(List<TripleExpr> tripleExprs) {
         for (int i = 0; i < tripleExprs.size(); ++i) {
             pathComponents.push("/" + i);
             visit(tripleExprs.get(i));
@@ -78,15 +78,15 @@ public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, 
 
     // ShapeExprVisitor
     @Override
-    public void visit(ShapeAnd shape) { walkShapeExprs(shape.expressions()); }
+    public void visit(ShapeAnd shape) { walkShapeExprs(shape.getShapeExprs()); }
 
     @Override
-    public void visit(ShapeOr shape) { walkShapeExprs(shape.expressions()); }
+    public void visit(ShapeOr shape) { walkShapeExprs(shape.getShapeExprs()); }
 
     @Override
     public void visit(ShapeNot shape) {
         pathComponents.push("NOT/");
-        visit(shape.subShape());
+        visit(shape.getShapeExpr());
         pathComponents.pop();
     }
     public void visit(ShapeExprRef shape) {}
@@ -94,14 +94,14 @@ public class ShExPathCalculator implements ShapeExprVisitor, TripleExprVisitor, 
     public void visit(NodeConstraint shape) {}
 
     // TripleExprVisitor
-    public void visit(TripleExprCardinality tripleExpr) { visit(tripleExpr.target()); }
-    public void visit(EachOf tripleExpr) { walkTripleExprs(tripleExpr.expressions()); }
-    public void visit(OneOf tripleExpr) { walkTripleExprs(tripleExpr.expressions()); }
-    public void visit(TripleExprNone tripleExpr) {}
+    public void visit(TripleExprCardinality tripleExpr) { visit(tripleExpr.getSubExpr()); }
+    public void visit(EachOf tripleExpr) { walkTripleExprs(tripleExpr.getTripleExprs()); }
+    public void visit(OneOf tripleExpr) { walkTripleExprs(tripleExpr.getTripleExprs()); }
+    public void visit(TripleExprEmpty tripleExpr) {}
     public void visit(TripleExprRef tripleExpr) {}
     public void visit(TripleConstraint tripleExpr) {
         pathComponents.push("." + tripleExpr.getPredicate().toString());
-        visit(tripleExpr.getShapeExpression());
+        visit(tripleExpr.getValueExpr());
         pathComponents.pop();
     }
 

@@ -20,52 +20,34 @@ package org.apache.jena.shex.expressions;
 
 import java.util.*;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.eval.ShapeEval;
-import org.apache.jena.shex.sys.ValidationContext;
 
 // Shape
 public class Shape extends ShapeExpr {
     // [shex] This is the inlineShapeDefinition
     // Can we combine with a top-level ShexShape?
 
-    /*
-    Shape {
-        id:shapeExprLabel?
-        closed:BOOL?
-        extra:[IRIREF]?
-        expression:tripleExpr?
-        semActs:[SemAct+]?
-        annotations:[Annotation+]? }
-    */
-
-    private Node label;
     private Set<Node> extras;
+    private List<ShapeExprRef> xtends;
     private boolean closed;
-    //extra:[IRIREF]?
-    private TripleExpression tripleExpr;
-    //semActs:[SemAct+]?
-    //annotations:[Annotation+]?
+    private TripleExpr tripleExpr;
     public static Builder newBuilder() { return new Builder(); }
 
-    private Shape(Node label, Set<Node> extras, boolean closed, TripleExpression tripleExpr, List<SemAct> semActs) {
+    private Shape(Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
-        this.label = label;
-        if ( extras == null || extras.isEmpty() )
-            this.extras = null;
+        if (extras == null)
+            this.extras = Collections.emptySet();
         else
             this.extras = extras;
         this.closed = closed;
+        if ( xtends == null || xtends.isEmpty() )
+            this.xtends = null;
+        else
+            this.xtends = xtends;
         this.tripleExpr = tripleExpr;
     }
 
-    public TripleExpression getTripleExpr() { return tripleExpr; }
-
-    public Node getLabel() {
-        return label;
-    }
+    public TripleExpr getTripleExpr() { return tripleExpr; }
 
     public Set<Node> getExtras() {
         return extras;
@@ -75,46 +57,33 @@ public class Shape extends ShapeExpr {
         return closed;
     }
 
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node node) {
-        // Pass extras
-        return ShapeEval.matchesTripleExpr(vCxt, tripleExpr, node, extras, closed);
+    public List<ShapeExprRef> getExtends() {
+        return xtends;
     }
 
     @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        iOut.print("Shape");
-        if ( label != null ) {
-            iOut.print(" ");
-            nFmt.format(iOut,  label);
-        }
-        iOut.println();
-        iOut.incIndent();
-        if ( closed )
-            iOut.println("CLOSED");
-        iOut.println("TripleExpression");
-        iOut.incIndent();
-        if ( tripleExpr != null )
-            tripleExpr.print(iOut, nFmt);
-        else
-            iOut.println("<none>");
-        iOut.decIndent();
-        iOut.decIndent();
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public String toString() {
-        return "Shape: "+((label==null)?"":label);
+        return new StringJoiner(", ", Shape.class.getSimpleName() + "[", "]")
+                .add("extras=" + extras)
+                .add("closed=" + closed)
+                .add("extends=" + xtends)
+                .add("tripleExpr=" + tripleExpr)
+                .toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(closed, label, tripleExpr);
+        return Objects.hash(closed, tripleExpr);
     }
 
     @Override
@@ -126,27 +95,29 @@ public class Shape extends ShapeExpr {
         if ( getClass() != obj.getClass() )
             return false;
         Shape other = (Shape)obj;
-        return closed == other.closed && Objects.equals(label, other.label) && Objects.equals(tripleExpr, other.tripleExpr);
+        return closed == other.closed && tripleExpr.equals(other.tripleExpr);
     }
 
     public static class Builder {
-        private Node label;
         private Set<Node> extras = null;
+        private List<ShapeExprRef> xtends = null;
         private List<SemAct> semActs;
         private Optional<Boolean> closed = null;
-        //extra:[IRIREF]?
-        private TripleExpression tripleExpr = null;
-        //semActs:[SemAct+]?
-        //annotations:[Annotation+]?
+        private TripleExpr tripleExpr = null;
 
         Builder() {}
-
-        public Builder label(Node label) { this.label = label ; return this; }
 
         public Builder extras(List<Node> extrasList) {
             if ( extras == null )
                 extras = new HashSet<>();
             this.extras.addAll(extrasList);
+            return this;
+        }
+
+        public Builder xtends(List<ShapeExprRef> extendsList) {
+            if ( this.xtends == null )
+                this.xtends = new ArrayList<>();
+            this.xtends.addAll(extendsList);
             return this;
         }
 
@@ -160,11 +131,11 @@ public class Shape extends ShapeExpr {
 
         public Builder closed(boolean value) { this.closed = Optional.of(value); return this; }
 
-        public Builder shapeExpr(TripleExpression tripleExpr) { this.tripleExpr = tripleExpr; return this; }
+        public Builder shapeExpr(TripleExpr tripleExpr) { this.tripleExpr = tripleExpr; return this; }
 
         public Shape build() {
             boolean isClosed = (closed == null) ? false : closed.get();
-            return new Shape(label, extras, isClosed, tripleExpr, semActs);
+            return new Shape(extras, isClosed, xtends, tripleExpr, semActs);
         }
     }
 }

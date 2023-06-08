@@ -85,141 +85,145 @@ public interface ShExJavaccConstants {
   /** RegularExpression Id. */
   int EXTRA = 39;
   /** RegularExpression Id. */
-  int CODE_BLOCK = 40;
+  int ABSTRACT = 40;
   /** RegularExpression Id. */
-  int REPEAT_RANGE = 41;
+  int EXTENDS = 41;
   /** RegularExpression Id. */
-  int TRUE = 42;
+  int CODE_BLOCK = 42;
   /** RegularExpression Id. */
-  int FALSE = 43;
+  int REPEAT_RANGE = 43;
   /** RegularExpression Id. */
-  int HEX = 44;
+  int TRUE = 44;
   /** RegularExpression Id. */
-  int PLUS = 45;
+  int FALSE = 45;
   /** RegularExpression Id. */
-  int MINUS = 46;
+  int HEX = 46;
   /** RegularExpression Id. */
-  int VBAR = 47;
+  int PLUS = 47;
   /** RegularExpression Id. */
-  int AT = 48;
+  int MINUS = 48;
   /** RegularExpression Id. */
-  int CARAT = 49;
+  int VBAR = 49;
   /** RegularExpression Id. */
-  int DOT = 50;
+  int AT = 50;
   /** RegularExpression Id. */
-  int BANG = 51;
+  int CARAT = 51;
   /** RegularExpression Id. */
-  int QMARK = 52;
+  int DOT = 52;
   /** RegularExpression Id. */
-  int SLASH = 53;
+  int BANG = 53;
   /** RegularExpression Id. */
-  int STAR = 54;
+  int QMARK = 54;
   /** RegularExpression Id. */
-  int EQUALS = 55;
+  int SLASH = 55;
   /** RegularExpression Id. */
-  int LPAREN = 56;
+  int STAR = 56;
   /** RegularExpression Id. */
-  int RPAREN = 57;
+  int EQUALS = 57;
   /** RegularExpression Id. */
-  int LBRACE = 58;
+  int LPAREN = 58;
   /** RegularExpression Id. */
-  int RBRACE = 59;
+  int RPAREN = 59;
   /** RegularExpression Id. */
-  int LBRACKET = 60;
+  int LBRACE = 60;
   /** RegularExpression Id. */
-  int RBRACKET = 61;
+  int RBRACE = 61;
   /** RegularExpression Id. */
-  int PERCENT_CHAR = 62;
+  int LBRACKET = 62;
   /** RegularExpression Id. */
-  int COMMA = 63;
+  int RBRACKET = 63;
   /** RegularExpression Id. */
-  int USCORE = 64;
+  int PERCENT_CHAR = 64;
   /** RegularExpression Id. */
-  int SEMI_COLON = 65;
+  int COMMA = 65;
   /** RegularExpression Id. */
-  int DOLLAR = 66;
+  int USCORE = 66;
   /** RegularExpression Id. */
-  int TILDE = 67;
+  int SEMI_COLON = 67;
   /** RegularExpression Id. */
-  int AMP = 68;
+  int DOLLAR = 68;
   /** RegularExpression Id. */
-  int UCHAR = 69;
+  int TILDE = 69;
   /** RegularExpression Id. */
-  int IRIref = 70;
+  int AMP = 70;
   /** RegularExpression Id. */
-  int PNAME_NS = 71;
+  int UCHAR = 71;
   /** RegularExpression Id. */
-  int PNAME_LN = 72;
+  int IRIref = 72;
   /** RegularExpression Id. */
-  int ATPNAME_NS = 73;
+  int PNAME_NS = 73;
   /** RegularExpression Id. */
-  int ATPNAME_LN = 74;
+  int PNAME_LN = 74;
   /** RegularExpression Id. */
-  int ATSTART = 75;
+  int ATPNAME_NS = 75;
   /** RegularExpression Id. */
-  int QUOTE_3D = 76;
+  int ATPNAME_LN = 76;
   /** RegularExpression Id. */
-  int QUOTE_3S = 77;
+  int ATSTART = 77;
   /** RegularExpression Id. */
-  int ECHAR = 78;
+  int QUOTE_3D = 78;
   /** RegularExpression Id. */
-  int STRING_LITERAL1 = 79;
+  int QUOTE_3S = 79;
   /** RegularExpression Id. */
-  int STRING_LITERAL2 = 80;
+  int ECHAR = 80;
   /** RegularExpression Id. */
-  int STRING_LITERAL_LONG1 = 81;
+  int STRING_LITERAL1 = 81;
   /** RegularExpression Id. */
-  int STRING_LITERAL_LONG2 = 82;
+  int STRING_LITERAL2 = 82;
   /** RegularExpression Id. */
-  int LANG_STRING_LITERAL1 = 83;
+  int STRING_LITERAL_LONG1 = 83;
   /** RegularExpression Id. */
-  int LANG_STRING_LITERAL2 = 84;
+  int STRING_LITERAL_LONG2 = 84;
   /** RegularExpression Id. */
-  int LANG_STRING_LITERAL_LONG1 = 85;
+  int LANG_STRING_LITERAL1 = 85;
   /** RegularExpression Id. */
-  int LANG_STRING_LITERAL_LONG2 = 86;
+  int LANG_STRING_LITERAL2 = 86;
   /** RegularExpression Id. */
-  int DIGITS = 87;
+  int LANG_STRING_LITERAL_LONG1 = 87;
   /** RegularExpression Id. */
-  int INTEGER = 88;
+  int LANG_STRING_LITERAL_LONG2 = 88;
   /** RegularExpression Id. */
-  int DECIMAL = 89;
+  int DIGITS = 89;
   /** RegularExpression Id. */
-  int DOUBLE = 90;
+  int INTEGER = 90;
   /** RegularExpression Id. */
-  int EXPONENT = 91;
+  int DECIMAL = 91;
   /** RegularExpression Id. */
-  int REGEXP = 92;
+  int DOUBLE = 92;
   /** RegularExpression Id. */
-  int BLANK_NODE_LABEL = 93;
+  int EXPONENT = 93;
   /** RegularExpression Id. */
-  int LANGTAG = 94;
+  int REGEXP = 94;
   /** RegularExpression Id. */
-  int A2Z = 95;
+  int BLANK_NODE_LABEL = 95;
   /** RegularExpression Id. */
-  int A2ZN = 96;
+  int LANGTAG = 96;
   /** RegularExpression Id. */
-  int SURROGATE_PAIR = 97;
+  int A2Z = 97;
   /** RegularExpression Id. */
-  int PN_CHARS_BASE = 98;
+  int A2ZN = 98;
   /** RegularExpression Id. */
-  int PN_CHARS_U = 99;
+  int SURROGATE_PAIR = 99;
   /** RegularExpression Id. */
-  int PN_CHARS = 100;
+  int PN_CHARS_BASE = 100;
   /** RegularExpression Id. */
-  int PN_PREFIX = 101;
+  int PN_CHARS_U = 101;
   /** RegularExpression Id. */
-  int PN_LOCAL = 102;
+  int PN_CHARS = 102;
   /** RegularExpression Id. */
-  int VARNAME = 103;
+  int PN_PREFIX = 103;
   /** RegularExpression Id. */
-  int PN_LOCAL_ESC = 104;
+  int PN_LOCAL = 104;
   /** RegularExpression Id. */
-  int PLX = 105;
+  int VARNAME = 105;
   /** RegularExpression Id. */
-  int PERCENT = 106;
+  int PN_LOCAL_ESC = 106;
   /** RegularExpression Id. */
-  int UNKNOWN = 107;
+  int PLX = 107;
+  /** RegularExpression Id. */
+  int PERCENT = 108;
+  /** RegularExpression Id. */
+  int UNKNOWN = 109;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -268,6 +272,8 @@ public interface ShExJavaccConstants {
     "\"fractiondigits\"",
     "\"closed\"",
     "\"extra\"",
+    "\"abstract\"",
+    "\"extends\"",
     "<CODE_BLOCK>",
     "<REPEAT_RANGE>",
     "\"true\"",

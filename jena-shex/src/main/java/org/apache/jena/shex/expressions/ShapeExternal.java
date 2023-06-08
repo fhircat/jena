@@ -18,11 +18,6 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ValidationContext;
-
 public class ShapeExternal extends ShapeExpr {
 
     public ShapeExternal() {
@@ -30,23 +25,13 @@ public class ShapeExternal extends ShapeExpr {
     }
 
     @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        return false;
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println("EXTERNAL");
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public String toString() {
-        return "ShapeExprExternal []";
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.apache.jena.shex.ShExPathCalculator;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.ValidationContext;
 
 import java.io.OutputStream;
@@ -52,7 +52,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
 
 //    Map<Object, String> paths = new HashMap<>(); -- could be generic
     Map<ShapeExpr, String> shapeExprs = new HashMap<>();
-    Map<TripleExpression, String> tripleExprs = new HashMap<>();
+    Map<TripleExpr, String> tripleExprs = new HashMap<>();
     Stack<ShapeExpr> shapeExprStack = new Stack<>();
     BindingNode root = null;
     BindingNode cur = null;
@@ -101,7 +101,7 @@ public class ShExMapSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     @Override
-    public boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpression tripleExpression, Collection<Triple> triples) {
+    public boolean evaluateTripleExpr(SemAct semAct, ValidationContext vCxt, TripleExpr tripleExpression, Collection<Triple> triples) {
         Iterator<Triple> tripleIterator = triples.iterator();
         Triple triple = tripleIterator.hasNext() ? tripleIterator.next() : null; // should be one triple, as currently defined.
         return parse(semAct, (str) -> resolveTripleVar(str, triple), vCxt, tripleExprs.get(tripleExpression));

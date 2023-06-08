@@ -21,50 +21,46 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.riot.out.NodeFormatter;
+public class TripleExprCardinality extends TripleExpr {
 
-/**
- * Class to add cardinality to a bracketed {@link TripleExpression}.
- * <p>
- * {@link TripleConstraint TripleConstraints} have their own cardinality handling.
- */
-public class TripleExprCardinality extends TripleExpression {
-
-    private final TripleExpression subExpr;
+    private final TripleExpr subExpr;
     private final Cardinality cardinality;
-    private final int min;
-    private final int max;
 
-    // TODO: Cardinality should never be null
-    public TripleExprCardinality(TripleExpression tripleExpr, Cardinality cardinality, List<SemAct> semActs) {
-        super(semActs);
-        this.subExpr = tripleExpr;
-        this.cardinality = cardinality;
-        this.min = (cardinality==null) ? 1 : cardinality.min;
-        this.max = (cardinality==null) ? 1 : cardinality.max;
+    public static TripleExprCardinality create (TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
+        return new TripleExprCardinality(subExpr, cardinality, semActs);
     }
 
-    public TripleExpression target() { return subExpr; }
+    // TODO can this have semantic actions ?
+    private TripleExprCardinality(TripleExpr subExpr, Cardinality cardinality, List<SemAct> semActs) {
+        super(semActs);
+        this.subExpr = subExpr;
+        this.cardinality = cardinality;
+    }
+
+    public TripleExpr getSubExpr() { return subExpr; }
+    public Cardinality getCardinality() { return cardinality; }
 
     public String cardinalityString() {
-        if ( cardinality == null )
-            return "";
-        return cardinality.image;
+        return cardinality.getParsedFrom();
     }
 
     public int min() {
-        return min;
+        return cardinality.min;
     }
 
     public int max() {
-        return max;
+        return cardinality.max;
     }
 
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -84,23 +80,4 @@ public class TripleExprCardinality extends TripleExpression {
         return Objects.equals(this.subExpr, other.subExpr);
     }
 
-    @Override
-    public void print(IndentedWriter iOut, NodeFormatter nFmt) {
-        String s = cardinalityString();
-        iOut.println("Cardinality");
-        if ( ! s.isEmpty() )
-            iOut.println("Cardinality = "+s);
-        iOut.incIndent();
-        subExpr.print(iOut, nFmt);
-        iOut.decIndent();
-        iOut.println("/Cardinality");
-    }
-
-    @Override
-    public String toString() {
-        String s = cardinalityString();
-        if ( s.isEmpty() )
-            return "Cardinality [{-} other="+ subExpr +"]";
-        return "Cardinality ["+s+" other="+ subExpr +"]";
-    }
 }

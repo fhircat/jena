@@ -18,44 +18,11 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
+public abstract class NodeConstraintComponent  {
 
-/** The elements making up
-    <pre>
-    NodeConstraint  {
-        id:shapeExprLabel?
-        nodeKind:("iri" | "bnode" | "nonliteral" | "literal")?
-        datatype:IRIREF?
-        xsFacet*
-        values:[valueSetValue+]?
-    }
-    </pre>
- */
-public abstract class NodeConstraintComponent implements Satisfies, ShexPrintable {
+    public abstract void visit(VoidNodeConstraintComponentVisitor visitor);
 
-    @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        ReportItem item = nodeSatisfies(vCxt, data);
-        if ( item != null ) {
-            vCxt.reportEntry(item);
-            return false;
-        }
-        return true;
-    }
-
-    /** The function "nodeSatisfies" == satisfies2(n, nc)*/
-    public abstract ReportItem nodeSatisfies(ValidationContext vCxt, Node data);
-
-    public abstract void visit(NodeConstraintVisitor visitor);
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
+    public abstract <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor);
 
     @Override
     public abstract int hashCode();

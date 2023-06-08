@@ -18,18 +18,20 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.riot.out.NodeFormatter;
-
-public class TripleExprEmpty extends TripleExpression {
-    private static TripleExpression instance = new TripleExprEmpty();
-    public static TripleExpression get() { return instance ; }
+public class TripleExprEmpty extends TripleExpr {
+    private static final TripleExpr instance = new TripleExprEmpty();
+    public static TripleExpr get() { return instance ; }
 
     private TripleExprEmpty() { super(null); }
 
     @Override
-    public void visit(TripleExprVisitor visitor) {
+    public void visit(VoidTripleExprVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <R> R visit(TypedTripleExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override
@@ -43,16 +45,7 @@ public class TripleExprEmpty extends TripleExpression {
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        return true;
+        return getClass() == obj.getClass();
     }
 
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.println(toString());
-    }
-
-    @Override
-    public String toString() { return "TripleExpressionNone"; }
 }

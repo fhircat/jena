@@ -46,7 +46,7 @@ class ARQParserBase extends SPARQLParserBase
     }
     
     // All the signals from the parsing process.
-    protected void jsonStartParse(long currLine, long currCol)                 { handler.startParse(currLine, currCol) ; throw new Error(); }
+    protected void jsonStartParse(long currLine, long currCol)                 { handler.startParse(currLine, currCol) ; }
     protected void jsonFinishParse(long currLine, long currCol)                { handler.finishParse(currLine, currCol) ; }
     
     protected void jsonStartObject(long currLine, long currCol)                { handler.startObject(currLine, currCol) ; }

@@ -22,14 +22,10 @@ import static org.apache.jena.shex.sys.ShexLib.*;
 
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ReportItem;
-import org.apache.jena.shex.sys.ValidationContext;
-// ----
+
 import org.apache.jena.vocabulary.XSD;
 
 public class DatatypeConstraint extends NodeConstraintComponent {
@@ -53,6 +49,10 @@ public class DatatypeConstraint extends NodeConstraintComponent {
         this.rdfDatatype = NodeFactory.getType(dtURI);
     }
 
+    public Node getDatatype() {
+        return datatype;
+    }
+
     public String getDatatypeURI() {
         return dtURI;
     }
@@ -62,47 +62,18 @@ public class DatatypeConstraint extends NodeConstraintComponent {
     }
 
     @Override
-    public ReportItem nodeSatisfies(ValidationContext vCxt, Node n) {
-        if ( n.isLiteral() && dtURI.equals(n.getLiteralDatatypeURI()) ) {
-            // Must be valid for the type
-            if ( ! rdfDatatype.isValid(n.getLiteralLexicalForm()) ) {
-                String errMsg = toString()+" : Not valid value : Node "+displayStr(n);
-                return new ReportItem(errMsg, n);
-            }
-            return null;
-        }
-
-        if ( ! n.isLiteral() )
-            return new ReportItem(toString()+" : Not a literal", n);
-        //String dtStr = vCxt.getShapesGraph().getPrefixMapping().qnameFor(dtURI);
-        Node dt = NodeFactory.createURI(n.getLiteralDatatypeURI());
-        String errMsg = toString()+" -- Wrong datatype: "+strDatatype(n)+" for focus node: "+displayStr(n);
-        return new ReportItem(errMsg, n);
-    }
-
-    @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        out.print("Datatype[");
-        if ( datatype.isBlank() ) {
-            out.print("<_:");
-            out.print(datatype.getBlankNodeLabel());
-            out.print(">");
-        } else if ( datatype.isURI() && dtURI.startsWith(XSD.getURI()) ) {
-            out.print("xsd:");
-            out.print(datatype.getLocalName());
-        } else {
-            nFmt.format(out, datatype);
-        }
-        out.println("]");
-    }
-
-    @Override
-    public void visit(NodeConstraintVisitor visitor) {
+    public void visit(VoidNodeConstraintComponentVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
+    public <R> R visit(TypedNodeConstraintComponentVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public String toString() {
+        String className = DatatypeConstraint.class.getSimpleName();
         String x;
         if ( datatype.isURI() ) {
             if ( dtURI.startsWith(XSD.getURI()) )
@@ -114,7 +85,7 @@ public class DatatypeConstraint extends NodeConstraintComponent {
         else
             x = displayStr(datatype);
 
-        return "Datatype["+x+"]";
+        return String.format("%s[%s]", className, x);
     }
 
     @Override

@@ -33,7 +33,7 @@ import org.junit.runners.model.InitializationError;
 public class RunnerShexSyntax extends AbstractRunnerFiles {
 
     public RunnerShexSyntax(Class<? > klass) throws InitializationError {
-        super(klass, RunnerShexSyntax::makeShexSyntaxTest, includes(), excludes());
+        super(klass, RunnerShexSyntax::makeShexSyntaxTest, includes(), excludes(), ".shex");
     }
 
     private static Set<String> includes() {
@@ -43,12 +43,8 @@ public class RunnerShexSyntax extends AbstractRunnerFiles {
 
     private static Set<String> excludes() {
         Set<String> excludes = new HashSet<>();
-
-        // Contains \ud800 (ill-formed surrogate pair)
-        excludes.add("1refbnode_with_spanning_PN_CHARS_BASE1.shex");
-        // Contains \u0d00 (ill-formed surrogate pair)
-        excludes.add("_all.shex");
-
+        // e.g.
+        // excludes.add("1refbnode_with_spanning_PN_CHARS_BASE1.shex");
         return excludes;
     }
 

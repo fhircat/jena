@@ -32,7 +32,6 @@ import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexReport;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -47,46 +46,6 @@ public class ShexLib {
         return uri.substring(idx);
     }
 
-//    public static void walk(ShapeExpression shExpr, ShapeExprVisitor beforeVisitor, ShapeExprVisitor afterVisitor) {
-//        TripleExprVisitor tExprVisitor = new TripleExprVisitor() {
-//            @Override public void visit(TripleConstraint object) {
-//                // One level call of visitor.
-//                //object.getPredicate();
-//                ShapeExpression theShapeExpression = object.getShapeExpression();
-//                if ( theShapeExpression != null )
-//                    theShapeExpression.visit(beforeVisitor);
-//            }
-//        };
-//
-//        ShapeExprWalker walker = new ShapeExprWalker(beforeVisitor, afterVisitor, tExprVisitor, null, null);
-//        shExpr.visit(walker);
-//    }
-
-    public static void walk(ShapeExpr shExpr,
-                            ShapeExprVisitor shapeVisitor,
-                            TripleExprVisitor tripleExpressionVisitor,
-                            NodeConstraintVisitor nodeConstraintVisitor
-                            ) {
-        ShapeExprWalker walker = new ShapeExprWalker(shapeVisitor, null,
-                                                     tripleExpressionVisitor, null,
-                                                     nodeConstraintVisitor);
-        shExpr.visit(walker);
-    }
-
-
-    // XXX Does this make sense?
-//    private static void walk(ShapeExpression shExpr,
-//                             ShapeExprVisitor beforeVisitor, ShapeExprVisitor afterVisitor,
-//                             //TripleExprVisitor beforeTripleExpressionVisitor, TripleExprVisitor afterTripleExpressionVisitor,
-//                             //NodeConstraint beforeNodeConstraintVisitor, NodeConstraint afterNodeConstraintVisitor
-//                             NodeConstraintVisitor beforeNodeConstraintVisitor, NodeConstraint afterNodeConstraintVisitor
-//                            ) {
-//        ShapeExprWalker walker = new ShapeExprWalker(beforeVisitor, afterVisitor,
-//                                                     beforeTripleExpressionVisitor, afterTripleExpressionVisitor,
-//                                                     beforeNodeConstraintVisitor, afterNodeConstraintVisitor);
-//        shExpr.visit(walker);
-//    }
-
     private static PrefixMap displayPrefixMap = PrefixMapFactory.createForOutput();
     private static NodeFormatter nodeFmtAbbrev = new NodeFormatterTTL(null, displayPrefixMap);
 
@@ -95,6 +54,10 @@ public class ShexLib {
         displayPrefixMap.add("rdf",  RDF.getURI());
         displayPrefixMap.add("rdfs", RDFS.getURI());
         displayPrefixMap.add("xsd",  XSD.getURI());
+    }
+
+    public static NodeFormatter getNodeFmtAbbrev() {
+        return nodeFmtAbbrev;
     }
 
     /** Display string for human-readable output. */
@@ -136,7 +99,6 @@ public class ShexLib {
     public static void printReport(OutputStream outStream, ShexReport report) {
         AWriter out = IO.wrapUTF8(outStream);
         try {
-            //if ( report.conforms() )
             if ( ! report.hasReports() )
                 out.println("OK");  // Empty.
             else

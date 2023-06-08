@@ -21,71 +21,37 @@ package org.apache.jena.shex.expressions;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.InternalErrorException;
-import org.apache.jena.graph.Node;
-import org.apache.jena.riot.out.NodeFormatter;
-import org.apache.jena.shex.sys.ValidationContext;
 
 public class ShapeAnd extends ShapeExpr {
 
     // Could pull out ShapeExpressionN
-    // [ ] print
-    // [ ] Most of equals.
 
-    public static ShapeExpr create(List<ShapeExpr> acc) {
-        if ( acc.size() == 0 )
-            throw new InternalErrorException("Empty list");
-        if ( acc.size() == 1 )
-            return acc.get(0);
-        return new ShapeAnd(acc);
+    public static ShapeAnd create(List<ShapeExpr> subExprs) {
+        if ( subExprs.size() < 2 )
+            throw new InternalErrorException("ShapeAnd requires two or more conjuncts");
+        return new ShapeAnd(subExprs);
     }
 
-    List<ShapeExpr> shapeExprs;
+    private final List<ShapeExpr> shapeExprs;
 
-    private ShapeAnd(List<ShapeExpr> expressions) {
+    private ShapeAnd(List<ShapeExpr> subExprs) {
         super();
-        this.shapeExprs = expressions;
+        this.shapeExprs = subExprs;
     }
 
-    public List<ShapeExpr> expressions() {
+    public List<ShapeExpr> getShapeExprs() {
         return shapeExprs;
     }
 
     @Override
-    public boolean satisfies(ValidationContext vCxt, Node data) {
-        // Record all reports?
-        for ( ShapeExpr shExpr : shapeExprs) {
-            boolean innerSatisfies = shExpr.satisfies(vCxt, data);
-            if ( !innerSatisfies )
-                return false;
-        }
-        return true;
-    }
-
-    @Override
-    public void visit(ShapeExprVisitor visitor) {
+    public void visit(VoidShapeExprVisitor visitor) {
         visitor.visit(this);
     }
 
     @Override
-    public void print(IndentedWriter out, NodeFormatter nFmt) {
-        //out.printf("AND(%d)\n", shapeExpressions.size());
-        out.println("AND");
-        int idx = 0;
-        for ( ShapeExpr shExpr : shapeExprs) {
-            idx++;
-            out.printf("%d -", idx);
-            out.incIndent(4);
-            shExpr.print(out, nFmt);
-            out.decIndent(4);
-        }
-        out.println("/AND");
-    }
-
-    @Override
-    public String toString() {
-        return "ShapeExprAnd "+expressions();
+    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

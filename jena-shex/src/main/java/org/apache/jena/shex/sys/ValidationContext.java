@@ -26,23 +26,23 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.eval.SorbeHandler;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.TripleExpression;
+import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 /**
  * Context for a validation and collector of the results.
  */
 public class ValidationContext {
-    private final ShexSchema shapes;
+    // TODO Generation of reports is not tested
+    private final ShexSchema schema;
     private final Graph data;
-    private boolean verbose = false;
-    private boolean seenReportEntry = false;
+    private final SorbeHandler sorbeHandler;
     private ValidationContext parentCtx = null;
     private Map<String, SemanticActionPlugin> semActPluginIndex;
-
     private ShapeExpr shapeExpr;
-    // <data node, shape>
+    // <data node, shape decl>
     private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
@@ -53,35 +53,31 @@ public class ValidationContext {
         return vCxt.create(shape);
     }
 
-    public ValidationContext(Graph data, ShexSchema shapes) {
-        this(data, shapes, null);
+    public ValidationContext(Graph data, ShexSchema schema, Map<String, SemanticActionPlugin> semActPluginIndex) {
+        this(null, data, schema, null, semActPluginIndex, null, new SorbeHandler());
     }
 
-    /**
-     * Precondition: vCxt cannot be null
-     *
-     * @param vCxt
-     */
-    private ValidationContext(ValidationContext vCxt, ShapeExpr shapeExpr) {
-        this(vCxt, vCxt.data, vCxt.shapes, vCxt.inProgress, vCxt.semActPluginIndex, shapeExpr);
-    }
-
-    public ValidationContext(Graph data, ShexSchema shapes, Map<String, SemanticActionPlugin> semActPluginIndex) {
-        this(null, data, shapes, null, semActPluginIndex, null);
-    }
-
-    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema shapes, Deque<Pair<Node, ShapeDecl>> progress, Map<String, SemanticActionPlugin> semActPluginIndex, ShapeExpr shapeExpr) {
+    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema schema,
+                              Deque<Pair<Node, ShapeDecl>> progress,
+                              Map<String, SemanticActionPlugin> semActPluginIndex,
+                              ShapeExpr shapeExpr,
+                              SorbeHandler sorbeHandler) {
         this.parentCtx = parentCtx;
         this.data = data;
-        this.shapes = shapes;
+        this.schema = schema;
         this.semActPluginIndex = semActPluginIndex;
         this.shapeExpr = shapeExpr;
         if (progress != null)
             this.inProgress.addAll(progress);
+        this.sorbeHandler = sorbeHandler;
     }
 
     public ValidationContext getParent() {
         return parentCtx;
+    }
+
+    public SorbeHandler getSorbeHandler() {
+        return sorbeHandler;
     }
 
     public ValidationContext getRoot() {
@@ -92,16 +88,16 @@ public class ValidationContext {
         return (parent != null) ? parent : this;
     }
 
-    public TripleExpression getTripleExpr(Node label) {
-        return shapes.getTripleExpression(label);
+    public TripleExpr getTripleExpr(Node label) {
+        return schema.getTripleExpr(label);
     }
 
-    public ShexSchema getShapes() {
-        return shapes;
+    public ShexSchema getSchema() {
+        return schema;
     }
 
-    public ShapeDecl getShape(Node label) {
-        return shapes.get(label);
+    public ShapeDecl getShapeDecl(Node label) {
+        return schema.get(label);
     }
 
     public ShapeExpr getContextShape() {
@@ -120,7 +116,7 @@ public class ValidationContext {
      */
     public ValidationContext create(ShapeExpr shapeExpr) {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.shapes, this.inProgress, this.semActPluginIndex, shapeExpr);
+        return new ValidationContext(this, this.data, this.schema, this.inProgress, this.semActPluginIndex, shapeExpr, this.sorbeHandler);
     }
 
     public void startValidate(ShapeDecl shape, Node data) {
@@ -157,8 +153,8 @@ public class ValidationContext {
         });
     }
 
-    public boolean dispatchTripleExprSemanticAction(TripleExpression te, Set<Triple> matchables) {
-        return !te.getSemActs().stream().anyMatch(semAct -> {
+    public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
+        return te.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 if (!semActPlugin.evaluateTripleExpr(semAct, this, te, matchables))
@@ -173,13 +169,6 @@ public class ValidationContext {
         if (x.equalElts(data, shape))
             return;
         throw new InternalErrorException("Eval stack error");
-    }
-
-    // In ShEx "satisfies" returns a boolean.
-    //    public boolean conforms() { return validationReportBuilder.isEmpty(); }
-
-    public boolean hasEntries() {
-        return reportBuilder.hasEntries();
     }
 
     /**
