@@ -40,22 +40,13 @@ public class RunnerPrintShex extends org.apache.jena.shex.runner.AbstractRunnerF
 
     private static Set<String> includes() {
         Set<String> includes = new HashSet<>();
-        includes.add("src/test/files/shexTest/schemas/0Extends1.shex");
+        // includes.add("src/test/files/shexTest/schemas/1iri.shex"); // if includes.size() != 0, run only includes
         return includes;
     }
 
     private static Set<String> excludes() {
         Set<String> excludes = new HashSet<>();
-
-        // Contains \ud800 (ill-formed surrogate pair)
-        excludes.add("1refbnode_with_spanning_PN_CHARS_BASE1.shex");
-        // Contains \u0d00 (ill-formed surrogate pair)
-        excludes.add("_all.shex");
-
-        // Don't work - incomplete printing?
-        excludes.add("1literalPattern_with_all_controls.shex");
-        excludes.add("1literalPattern_with_ascii_boundaries.shex");
-
+        // excludes.add("1iri.shex"); // files to specifically NOT test
         return excludes;
     }
 
