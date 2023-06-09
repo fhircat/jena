@@ -138,7 +138,7 @@ public class WriterShExC {
                 case '\n':  out.print("\\n"); continue;
                 case '\t':  out.print("\\t"); continue;
                 case '\r':  out.print("\\r"); continue;
-                case '\f':  out.print("\\f"); continue;
+//                case '\f':  out.print("\\f"); continue;
                 case'/':
 //                    case '\\': case '|': case '.' : case'?':
 //                    case'*': case'+': case'(': case')': case'{': case'}': case'$':
