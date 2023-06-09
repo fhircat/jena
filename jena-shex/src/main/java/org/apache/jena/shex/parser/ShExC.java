@@ -196,6 +196,7 @@ public class ShExC {
      * 5.7.4 Negation Requirement
      *
      * (only after imports closure)
+     * TODO this comment does not correspond to what is being checked here
      */
     private static void validatePhase2(ShexSchema shapes) {
         if ( ! SysShex.STRICT )

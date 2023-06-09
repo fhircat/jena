@@ -34,20 +34,39 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/** A SORBE triple expression is a triple expression that satisfies:
+ * <ul>
+ *     <li>it does not contain triple expression references</li>
+ *     <li>cardinalities other than ?, *, + are appear only on triple constraints</li>
+ *     <li>cardinality + is appears only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
+ * </ul>
+ *
+ * <p>
+ * Given a triple expression, called <em>origin</em>, one can construct an equivalent SORBE triple expression.
+ * This involves replacing triple expression references by their definition, and copying some of the subexpressions.
+ * For instance, if <pre>tc1, tc2</pre> are triple constraints, then the triple expression <pre>(tc1 | tc2) {2;4}</pre>
+ * is not SORBE, but it is equivalent to the SORBE triple expression <pre>(tc1 | tc2) ; (tc1 | tc2) ; (tc1 | tc2)? ; (tc1 | tc2)?</pre>
+ * Such equivalent SORBE triple expression is constructed using {@link #create(TripleExpr, ShexSchema)}.
+ * </p><p>
+ * When copying occurs, all occurrences of the triple constraint <pre>tc1</pre> in the SORBE triple expression <em>originate</em> from the triple constraint <pre>tc1</pre> from the origin expression.
+ * Given a sub-expression of the <em>origin</em> triple expression, we can retrieve all triple constraints
+ * This origin information is used to determine which triples matched the
+ * </p>
+ */
 /*package*/ class SorbeTripleExpr {
 
-    private final TripleExpr sourceTripleExpr;
-    /*package*/ final TripleExpr sorbe;
-    private final List<TripleExpr> srcSubExprsWithSemActs;
+    private final TripleExpr originTripleExpr;
+    private final TripleExpr sorbe;
     // With every triple constraint's id associates its copies in the sorbe expression. Null if the source triple expr is sorbe
     private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
+    private final List<TripleExpr> originSubExprsWithSemActs;
 
-    private SorbeTripleExpr(TripleExpr sourceTripleExpr, TripleExpr sorbe,
-                            List<TripleExpr> srcSubExprsWithSemActs,
+    private SorbeTripleExpr(TripleExpr originTripleExpr, TripleExpr sorbe,
+                            List<TripleExpr> originSubExprsWithSemActs,
                             Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap) {
-        this.sourceTripleExpr = sourceTripleExpr;
+        this.originTripleExpr = originTripleExpr;
         this.sorbe = sorbe;
-        this.srcSubExprsWithSemActs = srcSubExprsWithSemActs;
+        this.originSubExprsWithSemActs = originSubExprsWithSemActs;
         this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
     }
 
@@ -59,19 +78,56 @@ import java.util.stream.Collectors;
         if (isSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
 
-        Map<TripleConstraint, TripleConstraint> sorbeToSourceMap = new HashMap<>();
         Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap = new HashMap<>();
-
-        SorbeConstructor constructor = new SorbeConstructor(sorbeToSourceMap, tripleConstraintCopiesMap, schema);
+        SorbeConstructor constructor = new SorbeConstructor(tripleConstraintCopiesMap, schema);
         TripleExpr sorbe = tripleExpr.visit(constructor);
         return new SorbeTripleExpr(tripleExpr, sorbe, subExprsWithSemActs, tripleConstraintCopiesMap);
+    }
+
+    /** With every triple in the input, associates the triple constraints of this SORBE triple expression that have the same predicate as the triple. */
+    /*package*/ Map<Triple, List<TripleConstraint>> getPredicateBasedPreMatching(Collection<Triple> triples) {
+
+        Map<Node, List<TripleConstraint>> tcsByPredicate = getSorbeTripleConstraintsGroupedByPredicate();
+        return triples.stream().collect(Collectors.toMap(Function.identity(),
+                t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
+    }
+
+    /*package*/ Cardinality computeInterval (Map<Triple, TripleConstraint> matching) {
+        Bag bag = Bag.fromMatching(matching, getAllSorbeTripleConstraints());
+        return sorbe.visit(new IntervalComputation(this, bag));
+    }
+
+    /** Checks whether the bag has value 0 for every triple constraint originating in the subexpression.
+     * @param bag The bag to be tested
+     * @param sorbeSubExpr A sub-expression of this SORBE triple expression
+     */
+    /*package*/ boolean isEmptySubbag(Bag bag, TripleExpr sorbeSubExpr) {
+        return getSorbeTripleConstraintsOfSorbeSubExpr(sorbeSubExpr).stream()
+                .allMatch(tc -> bag.getCard(tc) == 0);
+    }
+
+    /** With every origin sub-expression having semantic actions, associates the triples that the given matching matches to this sub-expression.
+     *
+     * @param matching Matching to SORBE triple constraints
+     * @param vCxt
+     * @return
+     */
+    // Cannot return a map here because two triple expressions can be equal (wrt Object#equals) but distinct in the AST
+    /*package*/ List<Pair<TripleExpr, Set<Triple>>> getSemActsSubExprsAndTheirMatchedTriples(
+            Map<Triple, TripleConstraint> matching, ValidationContext vCxt) {
+
+        return originSubExprsWithSemActs.stream()
+                .map(originSubExpr -> new ImmutablePair<>(originSubExpr,
+                        triplesMatchedInOriginSubExpr(matching, originSubExpr, vCxt)))
+                .collect(Collectors.toList());
     }
 
     // ---------------------------------------------------------------------------------------------------------
     // Accessors and memoized informations
     // ---------------------------------------------------------------------------------------------------------
 
-    /*package*/ List<TripleConstraint> getAllSorbeTripleConstraints() {
+    /** The triple constraints of this SORBE triple expression. Memorized. */
+    private List<TripleConstraint> getAllSorbeTripleConstraints() {
         if (allSorbeTripleConstraints == null) {
             allSorbeTripleConstraints = new ArrayList<>();
             AccumulationUtil.accumulateDirectTripleConstraints(sorbe, allSorbeTripleConstraints);
@@ -80,50 +136,33 @@ import java.util.stream.Collectors;
     }
     private List<TripleConstraint> allSorbeTripleConstraints;
 
-    /*package*/ List<Pair<TripleExpr, Set<Triple>>> getSemActsSubExprsAndTheirMatchedTriples(
-            Map<Triple, TripleConstraint> matching, ValidationContext vCxt) {
-
-        List<Pair<TripleExpr, Set<Triple>>> result = new ArrayList<>();
-
-        for (TripleExpr srcSubExpr : srcSubExprsWithSemActs) {
-            Set<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfSourceSubExpr(srcSubExpr, vCxt);
-            Set<Triple> matchedTriples = matching.entrySet().stream()
-                    .filter(e -> sorbeTripleConstraints.contains(e.getValue()))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet());
-            result.add(new ImmutablePair<>(srcSubExpr, matchedTriples));
-        }
-        return result;
-    }
-
-    /*package*/ Map<Triple, List<TripleConstraint>> getPredicateBasedPreMatching(Collection<Triple> triples) {
-
-        Map<Node, List<TripleConstraint>> tcsByPredicate = getTripleConstraintsGroupedByPredicate();
-        return triples.stream().collect(Collectors.toMap(Function.identity(),
-                t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
-    }
-
-    // Returns true if the bag has value 0 for all every triple constraint originating in the subexpression (which must be a sub expression of this sorbe expression)
-    /*package*/ boolean isEmptySubbag(Bag bag, TripleExpr subExpr) {
-        return getSorbeTripleConstraintsOfSorbeSubExpr(subExpr).stream()
-                .allMatch(tc -> bag.getCard(tc) == 0);
-    }
-
-    private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
-        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr.id, e -> {
-            Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
-            AccumulationUtil.accumulateTripleConstraintsFollowTripleExprReferences(srcSubExpr, vCxt::getTripleExpr, sourceTripleConstraintsSet);
-            if (sourceTripleExpr == sorbe)
-                return sourceTripleConstraintsSet;
+    /** The triple constraints of this SORBE triple expression which origins are in the given origin sub-expression.
+     * Memorized
+     * @param originSubExpr Must be a sub-expression of the origin triple expression that was used to create this SORBE triple expression.
+     * @param vCxt
+     * @return
+     */
+    private Set<Integer> getSorbeTripleConstraintsOfOriginSubExpr(TripleExpr originSubExpr, ValidationContext vCxt) {
+        return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(originSubExpr.id, e -> {
+            List<TripleConstraint> sourceTripleConstraints = new ArrayList<>();
+            AccumulationUtil.accumulateTripleConstraintsFollowTripleExprReferences(originSubExpr,
+                    vCxt::getTripleExpr, sourceTripleConstraints);
+            if (originTripleExpr == sorbe)
+                return sourceTripleConstraints.stream()
+                        .map(tc -> tc.id)
+                        .collect(Collectors.toSet());
             else
-                return sourceTripleConstraintsSet.stream()
+                return sourceTripleConstraints.stream()
                         .flatMap(tc -> tripleConstraintCopiesMap.get(tc.id).stream())
+                        .map(tc -> tc.id)
                         .collect(Collectors.toSet());
         });
     }
-    private final Map<Integer, Set<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
+    private final Map<Integer, Set<Integer>> srcSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
 
-    private Map<Node, List<TripleConstraint>> getTripleConstraintsGroupedByPredicate () {
+
+    /** The triple constraints of the SORBE expression grouped by predicate. Memorized. */
+    private Map<Node, List<TripleConstraint>> getSorbeTripleConstraintsGroupedByPredicate() {
         if (tripleConstraintsGroupedByPredicate == null) {
             tripleConstraintsGroupedByPredicate = getAllSorbeTripleConstraints().stream()
                     .collect(Collectors.groupingBy(TripleConstraint::getPredicate));
@@ -132,6 +171,7 @@ import java.util.stream.Collectors;
     }
     private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
 
+    /** The triple constraints of a sub-expression of this SORBE triple expression. Memorized. */
     private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
         return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr.id, e -> {
             List<TripleConstraint> tripleConstraints = new ArrayList<>();
@@ -141,18 +181,29 @@ import java.util.stream.Collectors;
     }
     private final Map<Integer, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new HashMap<>();
 
+    /** The triples that are matched with an origin sub-expression.
+     *
+     * @param sorbeMatching Matching to sorbe triple constraints
+     * @param originSubExpr Origin sub-expression
+     * @param vCxt
+     * @return The set of triples that {@code sorbeMatching} matches to some sorbe triple constraint which origin is in {@code originSubExpr}
+     */
+    private Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> sorbeMatching,
+                                                      TripleExpr originSubExpr,
+                                                      ValidationContext vCxt) {
+
+        Set<Integer> sorbeTripleConstraints = getSorbeTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
+        return sorbeMatching.entrySet().stream()
+                .filter(e -> sorbeTripleConstraints.contains(e.getValue().id))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
     // --------------------------------------------------------------------------------------------------
     // Visitor-based traversals of the expression
     // --------------------------------------------------------------------------------------------------
 
-    /** Checks whether a triple expression satisfies the SORBE constraints.
-     * An expression is SORBE if
-     * <ul>
-     *     <li>it does not contain any triple expression references</li>
-     *     <li>cardinalities other than ?, *, + are allowed only on triple constraints</li>
-     *     <li>cardinality + is allowed only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
-     * </ul>
-     */
+
     private static boolean isSorbe(TripleExpr tripleExpr) {
 
         // List with at most one element, artefact for reusing accumulation code
@@ -277,14 +328,11 @@ import java.util.stream.Collectors;
 
     private static class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
 
-        private final Map<TripleConstraint, TripleConstraint> sorbeToSourceMap;
         private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
         private final ShexSchema schema;
 
-        SorbeConstructor(Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
-                         Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap,
+        SorbeConstructor(Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap,
                          ShexSchema schema) {
-            this.sorbeToSourceMap = sorbeToSourceMap;
             this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
         }
@@ -292,7 +340,6 @@ import java.util.stream.Collectors;
         @Override
         public TripleExpr visit(TripleConstraint tripleConstraint) {
             TripleConstraint copy = (TripleConstraint) super.visit(tripleConstraint);
-            sorbeToSourceMap.put(copy, tripleConstraint);
             List<TripleConstraint> knownCopies
                     = tripleConstraintCopiesMap.computeIfAbsent(tripleConstraint.id, k -> new ArrayList<>());
             knownCopies.add(copy);
@@ -353,5 +400,7 @@ import java.util.stream.Collectors;
             }
         }
     }
+
+
 
 }

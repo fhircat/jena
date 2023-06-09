@@ -29,7 +29,7 @@ import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.calc.AccumulationUtil;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
-public class ShapeEval {
+public class TripleExprEval {
 
     // TODO remove debug code
     static boolean DEBUG = false;
@@ -98,8 +98,7 @@ public class ShapeEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
 
-            Cardinality interval = computeInterval(sorbeTripleExpr,
-                    Bag.fromMatching(matching, sorbeTripleExpr.getAllSorbeTripleConstraints()));
+            Cardinality interval = sorbeTripleExpr.computeInterval(matching);
             if (interval.min <= 1 && 1 <= interval.max) {
                 // the triple expression is satisfied by the matching, check semantic actions
                 if (sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
@@ -108,7 +107,6 @@ public class ShapeEval {
             }
         }
         return false;
-
     }
 
     private static void arcsOut(Graph graph, Node dataNode, Set<Node> predicates,
@@ -126,11 +124,5 @@ public class ShapeEval {
         ExtendedIterator<Triple> x = G.find(graph, null, null, dataNode);
         x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(acc::add);
     }
-
-    private static Cardinality computeInterval (SorbeTripleExpr sorbeTripleExpr, Bag bag) {
-        IntervalComputation computation = new IntervalComputation(sorbeTripleExpr, bag);
-        return sorbeTripleExpr.sorbe.visit(computation);
-    }
-
 
 }

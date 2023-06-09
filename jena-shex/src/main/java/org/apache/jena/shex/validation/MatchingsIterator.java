@@ -37,17 +37,17 @@ public class MatchingsIterator implements Iterator<Map<Triple, TripleConstraint>
     private final int[] sizes;
     /** Used for the iteration: 0 <= currentIndexes[i] < sizes[i] */
     private final int[] currentIndexes;
-
-    /** Constructs the iterable object starting from the {@param preMatching} map, by restricting it only to those triples in {@param domain}. */
+    
     public MatchingsIterator(Map<Triple, List<TripleConstraint>> preMatching, List<Triple> domain) {
-        neighbourhood = new ArrayList<>(domain.size());
-        allMatching = new ArrayList<>(domain.size());
 
-        // TODO : is the domain really useful ?
-        for (Triple e : domain) {
-            neighbourhood.add(e);
-            allMatching.add(preMatching.get(e));
-        }
+        neighbourhood = new ArrayList<>(preMatching.size());
+        allMatching = new ArrayList<>(preMatching.size());
+
+        preMatching.forEach((triple, list) -> {
+            neighbourhood.add(triple);
+            allMatching.add(list);
+        });
+
         currentIndexes = new int[allMatching.size()+1]; // Adding an artificial first column allows writing more easily all the operations
         sizes = new int[allMatching.size()+1];
         for (int i = 0; i < currentIndexes.length-1; i++) {

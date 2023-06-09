@@ -104,7 +104,7 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape) {
-            return ShapeEval.matchesTripleExpr(dataNode, shape.getTripleExpr(), shape.getExtras(), shape.isClosed(), vCxt
+            return TripleExprEval.matchesTripleExpr(dataNode, shape.getTripleExpr(), shape.getExtras(), shape.isClosed(), vCxt
             );
         }
 
