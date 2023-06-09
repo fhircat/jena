@@ -88,10 +88,7 @@ public class WriterShExC {
 
         PrinterShExC shexPrinter = new PrinterShExC(out, formatter);
         ShapeExpr shapeEx = decl.getShapeExpr();
-        if (shapeEx.equals(Shape.newBuilder().shapeExpr(TripleExprEmpty.get()).build()))
-            out.print("{}");
-        else
-            shexPrinter.printShapeExpression(shapeEx);
+        shexPrinter.printShapeExpression(shapeEx);
     }
 
     static <X> void printList(IndentedWriter out, List<X> items, String start, String finish, String sep, Consumer<X> action) {
@@ -167,8 +164,10 @@ public class WriterShExC {
         }
 
         private void printTripleExpression(TripleExpr tripleExpr) {
-            tripleExpr.visit(this);
-            out.print(" ;");
+            if (!tripleExpr.equals(TripleExprEmpty.get())) {
+                tripleExpr.visit(this);
+                out.print(" ;");
+            }
         }
 
         private void printTripleExpressionNoSep(TripleExpr tripleExpr) {
