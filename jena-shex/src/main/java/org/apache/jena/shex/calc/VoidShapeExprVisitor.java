@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.expressions;
+package org.apache.jena.shex.calc;
+
+import org.apache.jena.shex.expressions.*;
 
 public interface VoidShapeExprVisitor {
     public default void visit(ShapeAnd shapeAnd) {}

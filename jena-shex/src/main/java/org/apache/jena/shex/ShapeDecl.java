@@ -22,7 +22,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExprEmpty;
-import org.apache.jena.shex.sys.ValidationContext;
 
 import java.util.Objects;
 

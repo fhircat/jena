@@ -18,6 +18,9 @@
 
 package org.apache.jena.shex.expressions;
 
+import org.apache.jena.shex.calc.TypedShapeExprVisitor;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
+
 import java.util.List;
 
 public class NodeConstraint extends ShapeExpr {

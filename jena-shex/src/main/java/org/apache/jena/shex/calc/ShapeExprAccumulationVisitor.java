@@ -15,16 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.jena.shex.calc;
 
-package org.apache.jena.shex.expressions;
+import java.util.Collection;
 
-import org.apache.jena.shex.expressions.*;
+public abstract class ShapeExprAccumulationVisitor<T> implements VoidShapeExprVisitor {
 
-public interface TypedTripleExprVisitor<R> {
-    R visit(TripleExprCardinality tripleExprCardinality);
-    R visit(EachOf eachOf);
-    R visit(OneOf oneOf);
-    R visit(TripleExprEmpty tripleExprEmpty);
-    R visit(TripleExprRef tripleExprRef);
-    R visit(TripleConstraint tripleConstraint);
+    private final Collection<T> acc;
+    public ShapeExprAccumulationVisitor(Collection<T> acc) {
+        this.acc = acc;
+    }
+    protected void accumulate(T element) {
+        acc.add(element);
+    }
 }

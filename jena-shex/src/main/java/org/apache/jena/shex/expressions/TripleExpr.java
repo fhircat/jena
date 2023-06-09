@@ -18,11 +18,10 @@
 
 package org.apache.jena.shex.expressions;
 
-import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.sys.ValidationContext;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
+import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 
 import java.util.List;
-import java.util.Set;
 
 public abstract class TripleExpr {
 

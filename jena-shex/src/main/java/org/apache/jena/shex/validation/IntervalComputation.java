@@ -16,15 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.sys.ValidationContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
 
 class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 

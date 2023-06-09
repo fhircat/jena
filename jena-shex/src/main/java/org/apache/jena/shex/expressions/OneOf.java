@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
+import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 
 public class OneOf extends TripleExpr {
 

@@ -21,6 +21,8 @@ package org.apache.jena.shex.expressions;
 import java.util.*;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.shex.calc.TypedShapeExprVisitor;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
 
 // Shape
 public class Shape extends ShapeExpr {
@@ -35,15 +37,9 @@ public class Shape extends ShapeExpr {
 
     private Shape(Set<Node> extras, boolean closed, List<ShapeExprRef> xtends, TripleExpr tripleExpr, List<SemAct> semActs) {
         super(semActs);
-        if (extras == null)
-            this.extras = Collections.emptySet();
-        else
-            this.extras = extras;
+        this.extras = Objects.requireNonNullElse(extras, Collections.emptySet());
         this.closed = closed;
-        if ( xtends == null || xtends.isEmpty() )
-            this.xtends = null;
-        else
-            this.xtends = xtends;
+        this.xtends = Objects.requireNonNullElse(xtends, Collections.emptyList());
         this.tripleExpr = tripleExpr;
     }
 

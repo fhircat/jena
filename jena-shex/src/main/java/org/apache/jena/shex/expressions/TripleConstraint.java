@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
+import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 
 public class TripleConstraint extends TripleExpr {
 

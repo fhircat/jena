@@ -15,19 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.eval;
 
-import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.expressions.TripleExpr;
+package org.apache.jena.shex.calc;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.jena.shex.expressions.*;
 
-public class SorbeHandler {
+public interface TypedNodeConstraintComponentVisitor<R> {
 
-    private final Map<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new HashMap<>();
+    R visit(NodeKindConstraint nodeKindCstr);
+    R visit(DatatypeConstraint datatypeCstr);
+    R visit(NumLengthConstraint numLengthCstr);
+    R visit(NumRangeConstraint numRangeCstr);
+    R visit(StrRegexConstraint strRegexCstr);
+    R visit(StrLengthConstraint strLengthCstr);
+    R visit(ValueConstraint valueCstr);
 
-    /*package*/ SorbeTripleExpr getSorbe (TripleExpr tripleExpr, ShexSchema schema) {
-        return sourceToSorbeMap.computeIfAbsent(tripleExpr, e -> SorbeTripleExpr.create(tripleExpr, schema));
-    }
 }

@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.sparql.expr.RegexJava;
 
 /** sh:pattern.

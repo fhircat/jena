@@ -16,16 +16,18 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.calc.AccumulationUtil;
+import org.apache.jena.shex.calc.ExpressionWalker;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.sys.ValidationContext;
-import org.apache.jena.shex.util.TripleExprAccumulationVisitor;
+import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
+import org.apache.jena.shex.calc.TypedTripleExprVisitor;
 
 import java.util.*;
 import java.util.function.Function;
@@ -51,7 +53,8 @@ import java.util.stream.Collectors;
 
     /*package*/ static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
 
-        List<TripleExpr> subExprsWithSemActs = collectSubExprsWithSemActs(tripleExpr, schema);
+        List<TripleExpr> subExprsWithSemActs
+                = AccumulationUtil.collectSubExprsWithSemActs(tripleExpr, schema::getTripleExpr);
 
         if (isSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
@@ -71,7 +74,7 @@ import java.util.stream.Collectors;
     /*package*/ List<TripleConstraint> getAllSorbeTripleConstraints() {
         if (allSorbeTripleConstraints == null) {
             allSorbeTripleConstraints = new ArrayList<>();
-            collectTripleConstraints(sorbe, false, null, allSorbeTripleConstraints);
+            AccumulationUtil.accumulateDirectTripleConstraints(sorbe, allSorbeTripleConstraints);
         }
         return allSorbeTripleConstraints;
     }
@@ -109,7 +112,7 @@ import java.util.stream.Collectors;
     private Set<TripleConstraint> getSorbeTripleConstraintsOfSourceSubExpr(TripleExpr srcSubExpr, ValidationContext vCxt) {
         return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(srcSubExpr.id, e -> {
             Set<TripleConstraint> sourceTripleConstraintsSet = new HashSet<>();
-            collectTripleConstraints(srcSubExpr, true, vCxt.getSchema(), sourceTripleConstraintsSet);
+            AccumulationUtil.accumulateTripleConstraintsFollowTripleExprReferences(srcSubExpr, vCxt::getTripleExpr, sourceTripleConstraintsSet);
             if (sourceTripleExpr == sorbe)
                 return sourceTripleConstraintsSet;
             else
@@ -132,7 +135,7 @@ import java.util.stream.Collectors;
     private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
         return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr.id, e -> {
             List<TripleConstraint> tripleConstraints = new ArrayList<>();
-            collectTripleConstraints(sorbeSubExpr, false, null, tripleConstraints);
+            AccumulationUtil.accumulateDirectTripleConstraints(sorbeSubExpr, tripleConstraints);
             return tripleConstraints;
         });
     }
@@ -142,6 +145,14 @@ import java.util.stream.Collectors;
     // Visitor-based traversals of the expression
     // --------------------------------------------------------------------------------------------------
 
+    /** Checks whether a triple expression satisfies the SORBE constraints.
+     * An expression is SORBE if
+     * <ul>
+     *     <li>it does not contain any triple expression references</li>
+     *     <li>cardinalities other than ?, *, + are allowed only on triple constraints</li>
+     *     <li>cardinality + is allowed only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
+     * </ul>
+     */
     private static boolean isSorbe(TripleExpr tripleExpr) {
 
         // List with at most one element, artefact for reusing accumulation code
@@ -154,7 +165,7 @@ import java.util.stream.Collectors;
             }
         };
 
-        // Not the most natural or most efficient implementation, but reuses recursive mechanism of accumulation walker
+        // Not the most natural or most efficient implementation, but reuses the recursive mechanism of expression walker
         TripleExprAccumulationVisitor<Object> step = new TripleExprAccumulationVisitor<>(acc) {
             @Override
             public void visit(TripleExprRef tripleExprRef) {
@@ -175,18 +186,14 @@ import java.util.stream.Collectors;
             }
         };
 
-        VoidWalker walker = new VoidWalker.Builder()
+        ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(step)
                 .build();
         tripleExpr.visit(walker);
         return acc.isEmpty();
     }
 
-
-
-
-
-    private static boolean containsEmpty (TripleExpr tripleExpr, ShexSchema schema) {
+    private static boolean containsEmpty (TripleExpr tripleExpr, Function<Node, TripleExpr> tripleExprRefsDefs) {
 
         class CheckContainsEmpty implements TypedTripleExprVisitor<Boolean> {
 
@@ -219,15 +226,13 @@ import java.util.stream.Collectors;
 
             @Override
             public Boolean visit(TripleExprRef tripleExprRef) {
-                return schema.getTripleExpr(tripleExprRef.getLabel()).visit(this);
+                return tripleExprRefsDefs.apply(tripleExprRef.getLabel()).visit(this);
             }
         }
 
         CheckContainsEmpty visitor = new CheckContainsEmpty();
         return tripleExpr.visit(visitor);
     }
-
-
 
     private static class CloneWithNullSemanticActionsAndEraseLabels implements TypedTripleExprVisitor<TripleExpr> {
 
@@ -276,7 +281,6 @@ import java.util.stream.Collectors;
         private final Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap;
         private final ShexSchema schema;
 
-
         SorbeConstructor(Map<TripleConstraint, TripleConstraint> sorbeToSourceMap,
                          Map<Integer, List<TripleConstraint>> tripleConstraintCopiesMap,
                          ShexSchema schema) {
@@ -284,7 +288,6 @@ import java.util.stream.Collectors;
             this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
         }
-
 
         @Override
         public TripleExpr visit(TripleConstraint tripleConstraint) {
@@ -312,7 +315,7 @@ import java.util.stream.Collectors;
             if (tripleExprCardinality.getSubExpr() instanceof TripleConstraint)
                 // leave as is, just clone the subexpression
                 return TripleExprCardinality.create(clonedSubExpr.get(), card, null);
-            if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema))
+            if (card.equals(Cardinality.PLUS) && containsEmpty(tripleExprCardinality, schema::getTripleExpr))
                 // PLUS on an expression that contains the empty word becomes a star
                 return TripleExprCardinality.create(clonedSubExpr.get(), Cardinality.STAR, null);
             else if (card.equals(Cardinality.OPT) || card.equals(Cardinality.STAR)
@@ -351,73 +354,4 @@ import java.util.stream.Collectors;
         }
     }
 
-
-    private static List<TripleExpr> collectSubExprsWithSemActs(TripleExpr tripleExpr, ShexSchema schema) {
-
-        List<TripleExpr> result = new ArrayList<>();
-
-        TripleExprAccumulationVisitor<TripleExpr> accumulator = new TripleExprAccumulationVisitor<>(result) {
-
-            private void _visit(TripleExpr tripleExpr) {
-                if (tripleExpr.getSemActs() != null)
-                    accumulate(tripleExpr);
-            }
-
-            @Override
-            public void visit(TripleExprCardinality tripleExprCardinality) {
-                _visit(tripleExprCardinality);
-            }
-
-            @Override
-            public void visit(EachOf eachOf) {
-                _visit(eachOf);
-            }
-
-            @Override
-            public void visit(OneOf oneOf) {
-                _visit(oneOf);
-            }
-
-            @Override
-            public void visit(TripleExprEmpty tripleExprEmpty) {
-                _visit(tripleExpr);
-            }
-
-            @Override
-            public void visit(TripleExprRef tripleExprRef) {
-                _visit(tripleExprRef);
-            }
-
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                _visit(tripleConstraint);
-            }
-        };
-
-        VoidWalker walker = new VoidWalker.Builder()
-                .processTripleExprsWith(accumulator)
-                .followTripleExprRefs(schema)
-                .build();
-        tripleExpr.visit(walker);
-        return result;
-    }
-
-    private static void collectTripleConstraints (TripleExpr tripleExpr,
-                                                 boolean followTripleExprRefs, ShexSchema schema,
-                                                 Collection<TripleConstraint> acc) {
-
-        TripleExprAccumulationVisitor<TripleConstraint> step = new TripleExprAccumulationVisitor<>(acc) {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                accumulate(tripleConstraint);
-            }
-        };
-
-
-        VoidWalker.Builder builder = new VoidWalker.Builder();
-        builder.processTripleExprsWith(step);
-        if (followTripleExprRefs)
-            builder.followTripleExprRefs(schema);
-        tripleExpr.visit(builder.build());
-    }
 }

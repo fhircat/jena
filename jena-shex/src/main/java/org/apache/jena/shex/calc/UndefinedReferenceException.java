@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.util;
+package org.apache.jena.shex.calc;
 
-import org.apache.jena.shex.expressions.VoidShapeExprVisitor;
 
-import java.util.Collection;
+import org.apache.jena.graph.Node;
 
-public abstract class ShapeExprAccumulationVisitor<T> implements VoidShapeExprVisitor {
+public class UndefinedReferenceException extends RuntimeException {
 
-    private final Collection<T> acc;
-    public ShapeExprAccumulationVisitor(Collection<T> acc) {
-        this.acc = acc;
+    private final Node undefinedLabel;
+
+    public UndefinedReferenceException(Node undefinedRefLabel, String message) {
+        super(message);
+        undefinedLabel = undefinedRefLabel;
     }
-    protected void accumulate(T element) {
-        acc.add(element);
+
+    public Node getUndefinedLabel () {
+        return undefinedLabel;
     }
 }

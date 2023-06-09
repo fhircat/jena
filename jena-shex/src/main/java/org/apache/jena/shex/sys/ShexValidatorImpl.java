@@ -26,7 +26,8 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.eval.ShapeExprEval;
+import org.apache.jena.shex.validation.ShapeExprEval;
+import org.apache.jena.shex.validation.ValidationContext;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 class ShexValidatorImpl implements ShexValidator{
@@ -120,7 +121,7 @@ class ShexValidatorImpl implements ShexValidator{
 
     // Execute validation if the focus node is in the scope of the shapeRecord.
     private static boolean validateOneShapeRecord(ValidationContext vCxt, ShexRecord shapeRecord, Node focusNode) {
-        Collection<Node> focusNodes = focusNodes(vCxt.getData(), shapeRecord);
+        Collection<Node> focusNodes = focusNodes(vCxt.getGraph(), shapeRecord);
         if ( focusNodes == null )
             throw new InternalErrorException("Shex shape mapping has no node and no pattern");
         if ( ! focusNodes.contains(focusNode) )

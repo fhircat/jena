@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.eval;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -26,7 +26,8 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ValidationContext;
+import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
@@ -46,7 +47,7 @@ public class ShapeExprEval {
         vCxt.startValidate(shapeDecl, dataNode);
         ShapeExpr shapeExpr = shapeDecl.getShapeExpr();
         try {
-            return satisfies(shapeExpr, dataNode, vCxt) && shapeExpr.testShapeExprSemanticActions(vCxt, dataNode);
+            return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
         } finally {
             vCxt.finishValidate(shapeDecl, dataNode);
         }
@@ -89,9 +90,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef) {
             ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
-            if ( shapeDecl == null )
-                return false;
-            else if ( vCxt.cycle(shapeDecl, dataNode) )
+            if ( vCxt.cycle(dataNode, shapeDecl) )
                 return true;
             else
                 return satisfies(shapeDecl, dataNode, vCxt);
@@ -105,12 +104,13 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape) {
-            return ShapeEval.matchesTripleExpr(vCxt, shape.getTripleExpr(), dataNode,
-                    shape.getExtras(), shape.isClosed());
+            return ShapeEval.matchesTripleExpr(dataNode, shape.getTripleExpr(), shape.getExtras(), shape.isClosed(), vCxt
+            );
         }
 
         @Override
         public Boolean visit(NodeConstraint nodeConstraint) {
+            // TODO maybe this shape expr evaluation class could implement TypedNodeConstraintComponentVisitor as well. Then no need of creating a new instance here
             NodeConstraintComponentEvalVisitor componentEval = new NodeConstraintComponentEvalVisitor(dataNode);
             return nodeConstraint.getComponents().stream().allMatch( ncc -> {
                 ReportItem error = ncc.visit(componentEval);
@@ -196,9 +196,8 @@ public class ShapeExprEval {
                 return new ReportItem(msg, dataNode);
             }
 
-            String str = lexicalForm;
-            int N = str.length();
-            int idx = str.indexOf('.');
+            int N = lexicalForm.length();
+            int idx = lexicalForm.indexOf('.');
 
             switch (numLengthCstr.getLengthType()) {
                 case FRACTIONDIGITS : {
@@ -207,9 +206,9 @@ public class ShapeExprEval {
                         return null;
                     }
                     //int before = idx;
-                    int after = str.length()-idx-1;
+                    int after = lexicalForm.length()-idx-1;
                     for(int i = N-1 ; i > idx ; i-- ) {
-                        if ( str.charAt(i) != '0' )
+                        if ( lexicalForm.charAt(i) != '0' )
                             break;
                         after--;
                     }
@@ -221,12 +220,12 @@ public class ShapeExprEval {
                 case TOTALDIGITS : {
                     // Canonical form.
                     int start = 0;
-                    char ch1 = str.charAt(0);
+                    char ch1 = lexicalForm.charAt(0);
                     if ( ch1 == '+' || ch1 == '-' )
                         start++;
                     // Leading zeros
                     for( int i = start ; i < N ; i++ ) {
-                        if ( str.charAt(i) != '0' )
+                        if ( lexicalForm.charAt(i) != '0' )
                             break;
                         start++;
                     }
@@ -235,7 +234,7 @@ public class ShapeExprEval {
                     if ( idx >= 0 ) {
                         finish--;
                         for(int i = N-1 ; i > idx ; i-- ) {
-                            if ( str.charAt(i) != '0' )
+                            if ( lexicalForm.charAt(i) != '0' )
                                 break;
                             finish--;
                         }
@@ -252,7 +251,7 @@ public class ShapeExprEval {
             }
 
             String msg = format("Expected %s %d : got = %d", numLengthCstr.getLengthType().label(),
-                    numLengthCstr.getLength(), str.length());
+                    numLengthCstr.getLength(), lexicalForm.length());
             return new ReportItem(msg, dataNode);
         }
 

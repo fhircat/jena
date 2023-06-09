@@ -18,6 +18,9 @@
 
 package org.apache.jena.shex.expressions;
 
+import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
+import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
+
 public abstract class NodeConstraintComponent  {
 
     public abstract void visit(VoidNodeConstraintComponentVisitor visitor);

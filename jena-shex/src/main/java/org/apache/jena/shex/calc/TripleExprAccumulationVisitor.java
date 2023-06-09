@@ -15,21 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jena.shex.util;
+package org.apache.jena.shex.calc;
 
+import java.util.Collection;
 
-import org.apache.jena.graph.Node;
+public abstract class TripleExprAccumulationVisitor<T> implements VoidTripleExprVisitor {
 
-public class UndefinedReferenceException extends RuntimeException {
-
-    private final Node undefinedLabel;
-
-    public UndefinedReferenceException(Node undefinedRefLabel, String message) {
-        super(message);
-        undefinedLabel = undefinedRefLabel;
+    private final Collection<T> acc;
+    public TripleExprAccumulationVisitor(Collection<T> acc) {
+        this.acc = acc;
     }
-
-    public Node getUndefinedLabel () {
-        return undefinedLabel;
+    protected void accumulate(T element) {
+        acc.add(element);
     }
 }

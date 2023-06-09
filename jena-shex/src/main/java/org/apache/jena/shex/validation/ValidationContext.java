@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.sys;
+package org.apache.jena.shex.validation;
 
 import java.util.*;
 
@@ -26,10 +26,10 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.eval.SorbeHandler;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.sys.ReportItem;
 
 /**
  * Context for a validation and collector of the results.
@@ -38,11 +38,10 @@ public class ValidationContext {
     // TODO Generation of reports is not tested
     private final ShexSchema schema;
     private final Graph data;
-    private final SorbeHandler sorbeHandler;
     private ValidationContext parentCtx = null;
-    private Map<String, SemanticActionPlugin> semActPluginIndex;
-    // <data node, shape decl>
-    private Deque<Pair<Node, ShapeDecl>> inProgress = new ArrayDeque<>();
+    private final Map<String, SemanticActionPlugin> semActPluginIndex;
+    private final SorbeFactory sorbeFactory;
+    private final Deque<ValidationStackElement> validationStack;
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
 
@@ -53,28 +52,24 @@ public class ValidationContext {
     }
 
     public ValidationContext(Graph data, ShexSchema schema, Map<String, SemanticActionPlugin> semActPluginIndex) {
-        this(null, data, schema, null, semActPluginIndex, new SorbeHandler());
+            this(null, data, schema, new ArrayDeque<>(), semActPluginIndex, new SorbeFactory(schema));
     }
 
     private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema schema,
-                              Deque<Pair<Node, ShapeDecl>> progress,
+                              Deque<ValidationStackElement> progress,
                               Map<String, SemanticActionPlugin> semActPluginIndex,
-                              SorbeHandler sorbeHandler) {
+                              SorbeFactory sorbeFactory) {
         this.parentCtx = parentCtx;
         this.data = data;
         this.schema = schema;
         this.semActPluginIndex = semActPluginIndex;
-        if (progress != null)
-            this.inProgress.addAll(progress);
-        this.sorbeHandler = sorbeHandler;
+        this.validationStack = new ArrayDeque<>();
+        this.validationStack.addAll(progress); // TODO copying the stack ?
+        this.sorbeFactory = sorbeFactory;
     }
 
     public ValidationContext getParent() {
         return parentCtx;
-    }
-
-    public SorbeHandler getSorbeHandler() {
-        return sorbeHandler;
     }
 
     public ValidationContext getRoot() {
@@ -97,7 +92,7 @@ public class ValidationContext {
         return schema.get(label);
     }
 
-    public Graph getData() {
+    public Graph getGraph() {
         return data;
     }
 
@@ -109,20 +104,27 @@ public class ValidationContext {
      */
     public ValidationContext create() {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.schema, this.inProgress, this.semActPluginIndex, this.sorbeHandler);
+        return new ValidationContext(this, this.data, this.schema,
+                this.validationStack, this.semActPluginIndex, this.sorbeFactory);
     }
 
     public void startValidate(ShapeDecl shape, Node data) {
-        inProgress.push(Pair.create(data, shape));
+        validationStack.push(new ValidationStackElement(data, shape));
     }
 
-    // Return true if done or in-progress (i.e. don't walk further)
-    public boolean cycle(ShapeDecl shape, Node data) {
-        return inProgress.stream().anyMatch(p -> p.equalElts(data, shape));
+    public void finishValidate(ShapeDecl shape, Node data) {
+        // TODO this check seems to be a debugging functionality, remove it ?
+        if (! validationStack.pop().equals(new ValidationStackElement(data, shape)))
+            throw new InternalErrorException("Eval stack error");
+    }
+
+    public boolean cycle(Node dataNode, ShapeDecl shapeDecl) {
+        ValidationStackElement el = new ValidationStackElement(dataNode, shapeDecl);
+        return validationStack.stream().anyMatch(p -> p.equals(el));
     }
 
     public boolean dispatchStartSemanticAction(ShexSchema schema, ValidationContext vCxt) {
-        return !schema.getSemActs().stream().anyMatch(semAct -> {
+        return schema.getSemActs().stream().noneMatch(semAct -> {
             String semActIri = semAct.getIri();
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
@@ -136,33 +138,29 @@ public class ValidationContext {
     }
 
     public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
-        return !se.getSemActs().stream().anyMatch(semAct -> {
+        if (se.getSemActs() == null)
+            return true;
+        return se.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateShapeExpr(semAct, se, focus))
-                    return true;
+                return !semActPlugin.evaluateShapeExpr(semAct, se, focus);
             }
             return false;
         });
     }
 
     public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
+        if (te.getSemActs() == null)
+            return true;
         return te.getSemActs().stream().noneMatch(semAct -> {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateTripleExpr(semAct, te, matchables))
-                    return true;
+                return !semActPlugin.evaluateTripleExpr(semAct, te, matchables);
             }
             return false;
         });
     }
 
-    public void finishValidate(ShapeDecl shape, Node data) {
-        Pair<Node, ShapeDecl> x = inProgress.pop();
-        if (x.equalElts(data, shape))
-            return;
-        throw new InternalErrorException("Eval stack error");
-    }
 
     /**
      * Update other with "this" state
@@ -200,5 +198,53 @@ public class ValidationContext {
 
     public ShexReport generateReport() {
         return reportBuilder.build();
+    }
+
+    public SorbeTripleExpr getSorbe(TripleExpr tripleExpr) {
+        return sorbeFactory.getSorbe(tripleExpr);
+    }
+
+    private static class ValidationStackElement extends Pair<Node, ShapeDecl> {
+
+        public ValidationStackElement(Node dataNode, ShapeDecl shapeDecl) {
+            super(dataNode, shapeDecl);
+        }
+
+        public ShapeDecl getShapeDecl () {
+            return getRight();
+        }
+
+        public Node getDataNode () {
+            return getLeft();
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getDataNode(), getShapeDecl().getLabel());
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if ( getClass() != other.getClass() )
+                return false;
+            ValidationStackElement e = (ValidationStackElement) other;
+            return Objects.equals(getDataNode(), e.getDataNode())
+                    && Objects.equals(getShapeDecl().getLabel(), e.getShapeDecl().getLabel());
+        }
+    }
+
+
+    private static class SorbeFactory {
+
+        private final Map<Integer, SorbeTripleExpr> sourceToSorbeMap = new HashMap<>();
+        private final ShexSchema schema;
+
+        private SorbeFactory(ShexSchema schema) {
+            this.schema = schema;
+        }
+
+        SorbeTripleExpr getSorbe (TripleExpr tripleExpr) {
+            return sourceToSorbeMap.computeIfAbsent(tripleExpr.id, e -> SorbeTripleExpr.create(tripleExpr, schema));
+        }
     }
 }

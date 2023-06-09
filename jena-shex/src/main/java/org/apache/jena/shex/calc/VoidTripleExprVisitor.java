@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex.expressions;
+package org.apache.jena.shex.calc;
 
-public interface TypedShapeExprVisitor<R> {
-    R visit(ShapeAnd shapeAnd);
-    R visit(ShapeOr shapeOr);
-    R visit(ShapeNot shapeNot);
-    R visit(ShapeExprRef shapeExprRef);
-    R visit(ShapeExternal shapeExternal);
-    R visit(Shape shape);
-    R visit(NodeConstraint nodeConstraint);
+import org.apache.jena.shex.expressions.*;
+
+public interface VoidTripleExprVisitor {
+    public default void visit(TripleExprCardinality tripleExprCardinality) {}
+    public default void visit(EachOf eachOf) {}
+    public default void visit(OneOf oneOf) {}
+    public default void visit(TripleExprEmpty tripleExprEmpty) {}
+    public default void visit(TripleExprRef tripleExprRef) {}
+    public default void visit(TripleConstraint tripleConstraint) {}
 }
