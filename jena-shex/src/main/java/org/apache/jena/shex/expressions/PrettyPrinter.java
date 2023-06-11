@@ -119,6 +119,7 @@ public class PrettyPrinter {
         public void visit(ShapeAnd shapeAnd) {
             out.println("AND");
             visitShapeExprSubExprs(shapeAnd.getShapeExprs());
+            visitSemActs(shapeAnd.getSemActs());
             out.println("/AND");
         }
 
@@ -126,6 +127,7 @@ public class PrettyPrinter {
         public void visit(ShapeOr shapeOr) {
             out.println("OR");
             visitShapeExprSubExprs(shapeOr.getShapeExprs());
+            visitSemActs(shapeOr.getSemActs());
             out.println("/OR");
         }
 
@@ -133,6 +135,7 @@ public class PrettyPrinter {
         public void visit(ShapeNot shapeNot) {
             out.print("NOT ");
             shapeNot.getShapeExpr().visit(this);
+            visitSemActs(shapeNot.getSemActs());
         }
 
         @Override
@@ -178,6 +181,7 @@ public class PrettyPrinter {
                 shape.getTripleExpr().visit(this);
             else
                 out.println("<none>");
+            visitSemActs(shape.getSemActs());
             out.decIndent();
             out.decIndent();
         }
@@ -191,6 +195,7 @@ public class PrettyPrinter {
             out.incIndent();
             out.println("Cardinality = " + s);
             tripleExprCardinality.getSubExpr().visit(this);
+            visitSemActs(tripleExprCardinality.getSemActs());
             out.decIndent();
             out.println("/TripleExprCardinality");
         }
@@ -199,6 +204,7 @@ public class PrettyPrinter {
         public void visit(EachOf eachOf) {
             out.println("EachOf");
             visitTripleExprSubExprs(eachOf.getTripleExprs());
+            visitSemActs(eachOf.getSemActs());
             out.println("/EachOf");
         }
 
@@ -206,6 +212,7 @@ public class PrettyPrinter {
         public void visit(OneOf oneOf) {
             out.println("OneOf");
             visitTripleExprSubExprs(oneOf.getTripleExprs());
+            visitSemActs(oneOf.getSemActs());
             out.println("/OneOf");
         }
 
@@ -236,6 +243,7 @@ public class PrettyPrinter {
             nFmt.format(out, tripleConstraint.getPredicate());
             out.println();
             tripleConstraint.getValueExpr().visit(this);
+            visitSemActs(tripleConstraint.getSemActs());
             out.decIndent();
             out.println("}");
         }
@@ -245,6 +253,7 @@ public class PrettyPrinter {
             out.print("NodeConstraint");
             out.incIndent();
             nodeConstraint.getComponents().forEach(it -> it.visit(this));
+            visitSemActs(nodeConstraint.getSemActs());
             out.decIndent();
             out.print("/NodeConstraint");
         }
@@ -340,6 +349,21 @@ public class PrettyPrinter {
                 tExpr.visit(this);
             }
             out.decIndent();
+        }
+
+        private void visitSemActs(List<SemAct> semActs) {
+            if (semActs != null && semActs.size() > 0) {
+                out.println("SemActs");
+                int idx = 0;
+                out.incIndent();
+                for (SemAct semact : semActs) {
+                    idx++;
+                    out.printf("%d - %%<%s>{%s%%}", idx, semact.getIri(), semact.getCode()); // switch to nFmt.format(out, semact.getIri()) ?
+                    out.println();
+                }
+                out.decIndent();
+                out.println("/SemActs");
+            }
         }
     }
 
