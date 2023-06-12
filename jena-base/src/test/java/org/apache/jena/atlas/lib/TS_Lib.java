@@ -50,6 +50,7 @@ import org.junit.runners.Suite ;
     , TestDateTimeUtils.class
     , TestCacheSimple.class
     , TestRefCountingMap.class
+    , TestVersion.class
 } )
 
 public class TS_Lib
