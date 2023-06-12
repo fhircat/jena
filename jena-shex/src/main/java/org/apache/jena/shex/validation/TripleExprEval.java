@@ -41,12 +41,13 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr,
+    public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr, Shape parentShape,
                                             Set<Node> extraPredicates, boolean closed,
                                             ValidationContext vCxt) {
         Set<Node> fwdPredicates  = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
-        AccumulationUtil.accumulatePredicates(tripleExpr, vCxt::getTripleExpr, fwdPredicates, invPredicates);
+        AccumulationUtil.collectPredicatesE(parentShape, vCxt::getTripleExpr, vCxt::getShapeDecl,
+                fwdPredicates, invPredicates);
 
         Set<Triple> accMatchables = new HashSet<>();
         Set<Triple> accNonMatchables = new HashSet<>();

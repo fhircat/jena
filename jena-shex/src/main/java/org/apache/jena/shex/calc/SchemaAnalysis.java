@@ -186,7 +186,7 @@ public class SchemaAnalysis {
     }
 
     private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
-        Pair<Shape, List<ShapeExpr>> mc = mainShapeAndConstraints(shapeExpr);
+        Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(shapeExpr, shapeDeclMap::get);
         Shape mainShape = mc.getLeft();
         List<ShapeExpr> constraints = mc.getRight();
 
@@ -205,8 +205,8 @@ public class SchemaAnalysis {
     private boolean isConstraintPredicatesIncludedInMainShapePredicates(Shape mainShape, List<Shape> shapesInConstraints) {
         Set<Node> mainShapeFwdPredicates = new HashSet<>();
         Set<Node> mainShapeInvPredicates = new HashSet<>();
-        mainShapesOfBases(mainShape).forEach(baseShape ->
-                AccumulationUtil.accumulatePredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
+        Util.mainShapesOfBases(mainShape, shapeDeclMap::get).forEach(baseShape ->
+                AccumulationUtil.collectPredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 
 
@@ -218,56 +218,6 @@ public class SchemaAnalysis {
 
         return mainShapeFwdPredicates.containsAll(constraintShapesFwdPredicates)
                     && mainShapeInvPredicates.containsAll(constraintShapesInvPredicates);
-    }
-
-    private Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints (ShapeExpr shapeExpr) {
-        Shape mainShape;
-        List<ShapeExpr> constraints;
-
-        if (shapeExpr instanceof Shape) {
-            mainShape = (Shape) shapeExpr;
-            constraints = Collections.emptyList();
-        } else if (! (shapeExpr instanceof ShapeAnd))
-            throw new ShexSchemaStructureException("Extendable shape is not a ShapeAnd");
-        else {
-            ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
-            ShapeExpr first = dereference(shapeAnd.getShapeExprs().get(0));
-            if (!(first instanceof Shape))
-                throw new ShexSchemaStructureException("Extendable shape does not have a main shape");
-
-            mainShape = (Shape) first;
-            constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
-        }
-        return Pair.of(mainShape, constraints);
-    }
-
-    /** Dereferences until a non reference is found. */
-    private ShapeExpr dereference (ShapeExpr shapeExpr) {
-        ShapeExpr expr = shapeExpr;
-        while (expr instanceof ShapeExprRef) {
-            expr = shapeDeclMap.get(((ShapeExprRef) expr).getLabel()).getShapeExpr();
-        }
-        return expr;
-    }
-
-    /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
-    private List<Shape> mainShapesOfBases(ShapeExpr extendableShape) {
-        List<Shape> result = new ArrayList<>();
-        Deque<Node> extendedFifo = new ArrayDeque<>();
-
-        Consumer<ShapeExpr> step = (se) -> {
-            Shape mainShape = mainShapeAndConstraints(se).getLeft();
-            result.add(mainShape);
-            mainShape.getExtends().forEach( e -> extendedFifo.addLast(e.getLabel()));
-        };
-
-        ShapeExpr current = extendableShape;
-        step.accept(current);
-        while (!extendedFifo.isEmpty()) {
-            current = shapeDeclMap.get(extendedFifo.removeFirst()).getShapeExpr();
-            step.accept(current);
-        }
-        return result;
     }
 
     /** Collects all references to other shape expressions together with a boolean indicating whether the reference appears in negated context, as required for the dependency graph to determine stratification. */
