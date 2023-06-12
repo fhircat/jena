@@ -1,0 +1,140 @@
+PREFIX sx: <http://www.w3.org/ns/shex#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+[]
+  a sx:Schema ;
+  sx:shapes (
+    <http://a.example/A>
+    <http://a.example/B>
+    <http://a.example/C>
+    <http://a.example/X>
+    <http://a.example/D>
+  ) .
+
+<http://a.example/A>
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:Shape ;
+    sx:expression [
+      a sx:TripleConstraint ;
+      sx:predicate <https://shex.io/webapps/shex.js/doc/a>
+  ] ] .
+
+<http://a.example/B>
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:ShapeAnd ;
+    sx:shapeExprs (
+      [ a sx:Shape ;
+        sx:extends (<http://a.example/A>) ;
+        sx:expression [
+          a sx:TripleConstraint ;
+          sx:predicate <https://shex.io/webapps/shex.js/doc/b>
+        ] ]
+      [ a sx:Shape ;
+        sx:expression [
+          a sx:EachOf ;
+          sx:expressions (
+            [ a sx:TripleConstraint ;
+              sx:predicate <https://shex.io/webapps/shex.js/doc/a> ;
+              sx:valueExpr [
+                a sx:NodeConstraint ;
+                sx:nodeKind sx:literal
+            ] ]
+            [ a sx:TripleConstraint ;
+              sx:predicate <https://shex.io/webapps/shex.js/doc/b> ;
+              sx:valueExpr [
+                a sx:ShapeNot ;
+                sx:shapeExpr [
+                  a sx:NodeConstraint ;
+                  sx:nodeKind sx:literal
+                ]
+            ] ]
+          )
+      ] ]
+    )
+  ] .
+
+<http://a.example/C>
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:ShapeAnd ;
+    sx:shapeExprs (
+      [ a sx:Shape ;
+        sx:extends (<http://a.example/B>) ;
+        sx:expression [
+          a sx:TripleConstraint ;
+          sx:predicate <https://shex.io/webapps/shex.js/doc/c>
+        ] ]
+      [ a sx:Shape ;
+        sx:expression [
+          a sx:EachOf ;
+          sx:expressions (
+            [ a sx:TripleConstraint ;
+              sx:predicate <https://shex.io/webapps/shex.js/doc/a> ;
+              sx:valueExpr [
+                a sx:NodeConstraint ;
+                sx:nodeKind sx:literal
+            ] ]
+            [ a sx:TripleConstraint ;
+              sx:predicate <https://shex.io/webapps/shex.js/doc/b> ;
+              sx:valueExpr [
+                a sx:ShapeNot ;
+                sx:shapeExpr [
+                  a sx:NodeConstraint ;
+                  sx:nodeKind sx:literal
+                ]
+            ] ]
+            [ a sx:TripleConstraint ;
+              sx:predicate <https://shex.io/webapps/shex.js/doc/c> ;
+              sx:valueExpr [
+                a sx:NodeConstraint ;
+                sx:nodeKind sx:iri
+            ] ]
+          )
+        ]
+      ]
+    )
+  ] .
+
+<http://a.example/D>
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:ShapeAnd ;
+    sx:shapeExprs (
+      [ a sx:Shape ;
+        sx:extends (<http://a.example/A> <http://a.example/X>) ;
+        sx:expression [
+          a sx:TripleConstraint ;
+          sx:predicate <https://shex.io/webapps/shex.js/doc/d>
+        ] ]
+      [ a sx:Shape ;
+        sx:expression [
+          a sx:TripleConstraint ;
+          sx:predicate <https://shex.io/webapps/shex.js/doc/a> ;
+          sx:valueExpr [
+            a sx:NodeConstraint ;
+            sx:nodeKind sx:iri
+          ]
+      ] ]
+      [ a sx:Shape ;
+        sx:expression [
+          a sx:TripleConstraint ;
+          sx:predicate <https://shex.io/webapps/shex.js/doc/x> ;
+          sx:valueExpr [
+            a sx:NodeConstraint ;
+            sx:nodeKind sx:iri
+          ]
+      ] ]
+    )
+  ] .
+
+<http://a.example/X>
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:Shape ;
+    sx:expression [
+      a sx:TripleConstraint ;
+      sx:predicate <https://shex.io/webapps/shex.js/doc/x>
+  ] ] .
+

@@ -1,0 +1,170 @@
+{
+  "type": "Schema",
+  "shapes": [
+    {
+      "type": "ShapeDecl",
+      "id": "http://a.example/A",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "TripleConstraint",
+          "predicate": "https://shex.io/webapps/shex.js/doc/a"
+        }
+      }
+    },
+    {
+      "type": "ShapeDecl",
+      "id": "http://a.example/B",
+      "shapeExpr": {
+        "type": "ShapeAnd",
+        "shapeExprs": [
+          {
+            "type": "Shape",
+            "extends": [
+              "http://a.example/A"
+            ],
+            "expression": {
+              "type": "TripleConstraint",
+              "predicate": "https://shex.io/webapps/shex.js/doc/b"
+            }
+          },
+          {
+            "type": "Shape",
+            "expression": {
+              "type": "EachOf",
+              "expressions": [
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "https://shex.io/webapps/shex.js/doc/a",
+                  "valueExpr": {
+                    "type": "NodeConstraint",
+                    "nodeKind": "literal"
+                  }
+                },
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "https://shex.io/webapps/shex.js/doc/b",
+                  "valueExpr": {
+                    "type": "ShapeNot",
+                    "shapeExpr": {
+                      "type": "NodeConstraint",
+                      "nodeKind": "literal"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "ShapeDecl",
+      "id": "http://a.example/C",
+      "shapeExpr": {
+        "type": "ShapeAnd",
+        "shapeExprs": [
+          {
+            "type": "Shape",
+            "extends": [
+              "http://a.example/B"
+            ],
+            "expression": {
+              "type": "TripleConstraint",
+              "predicate": "https://shex.io/webapps/shex.js/doc/c"
+            }
+          },
+          {
+            "type": "Shape",
+            "expression": {
+              "type": "EachOf",
+              "expressions": [
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "https://shex.io/webapps/shex.js/doc/a",
+                  "valueExpr": {
+                    "type": "NodeConstraint",
+                    "nodeKind": "literal"
+                  }
+                },
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "https://shex.io/webapps/shex.js/doc/b",
+                  "valueExpr": {
+                    "type": "ShapeNot",
+                    "shapeExpr": {
+                      "type": "NodeConstraint",
+                      "nodeKind": "literal"
+                    }
+                  }
+                },
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "https://shex.io/webapps/shex.js/doc/c",
+                  "valueExpr": {
+                    "type": "NodeConstraint",
+                    "nodeKind": "iri"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "ShapeDecl",
+      "id": "http://a.example/X",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "TripleConstraint",
+          "predicate": "https://shex.io/webapps/shex.js/doc/x"
+        }
+      }
+    },
+    {
+      "type": "ShapeDecl",
+      "id": "http://a.example/D",
+      "shapeExpr": {
+        "type": "ShapeAnd",
+        "shapeExprs": [
+          {
+            "type": "Shape",
+            "extends": [
+              "http://a.example/A",
+              "http://a.example/X"
+            ],
+            "expression": {
+              "type": "TripleConstraint",
+              "predicate": "https://shex.io/webapps/shex.js/doc/d"
+            }
+          },
+          {
+            "type": "Shape",
+            "expression": {
+              "type": "TripleConstraint",
+              "predicate": "https://shex.io/webapps/shex.js/doc/a",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              }
+            }
+          },
+          {
+            "type": "Shape",
+            "expression": {
+              "type": "TripleConstraint",
+              "predicate": "https://shex.io/webapps/shex.js/doc/x",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "@context": "http://www.w3.org/ns/shex.jsonld"
+}
