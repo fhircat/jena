@@ -21,6 +21,7 @@ package org.apache.jena.shex.runner;
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.lib.FileOps;
 import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.parser.ShExC;
 import org.apache.jena.shex.parser.ShexParseException;
 import org.junit.runners.model.InitializationError;
@@ -54,12 +55,11 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
         return ()-> fileBadStructure(filename);
     }
 
-    public static ShexSchema fileBadStructure(String filename) {
+    public static void fileBadStructure(String filename) {
         String str = IO.readWholeFileAsUTF8(filename);
         InputStream input = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
         try {
             ShexSchema shapes = ShExC.parse(input, filename, null);
-            System.out.println("Loaded " + filename);
             if (shapes.isValid()) {
                 // Should not get here.
                 System.out.print("-- ");
@@ -67,9 +67,7 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
                 System.out.println(str);
                 fail("Accepted negative structure schema");
             }
-            return shapes;
-        } catch (ShexParseException ex) {
-            return null;
+        } catch (ShexParseException | ShexSchemaStructureException ignored) {
         }
     }
 }

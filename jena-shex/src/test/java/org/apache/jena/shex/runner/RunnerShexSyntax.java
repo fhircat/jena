@@ -57,6 +57,8 @@ public class RunnerShexSyntax extends AbstractRunnerFiles {
         InputStream input = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
         try {
             ShexSchema shapes = ShExC.parse(input, filename, null);
+            shapes = shapes.importsClosure();
+            shapes.isValid(); // throws exception if not valid
             return shapes;
         } catch (RuntimeException ex) {
             System.out.print("-- ");

@@ -1,0 +1,3 @@
+<http://a.example/S1> {<a> .} AND {<b> .}
+<http://a.example/S2> EXTENDS @<http://a.example/S1> {} AND {<c> .} 
+
