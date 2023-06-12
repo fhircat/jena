@@ -179,7 +179,7 @@ public class ShExC {
             validatePhase2(shapes);
             return shapes;
         } catch (ParseException ex) {
-            throw new ShexParseException(ex.getMessage(), ex.currentToken.beginLine, ex.currentToken.beginColumn);
+            throw new ShexParseException("Error parsing <" + sourceURI + ">: " + ex.getMessage(), ex.currentToken.beginLine, ex.currentToken.beginColumn);
         }
         catch ( TokenMgrError tErr) {
             int col = parser.token.endColumn ;
