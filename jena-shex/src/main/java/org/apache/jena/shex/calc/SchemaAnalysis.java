@@ -82,7 +82,7 @@ public class SchemaAnalysis {
             shapeDeclMap.values().forEach(decl ->
                     AccumulationUtil.accumulateAllTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
         } catch (UndefinedReferenceException e) {
-            throw new ShexSchemaStructureException("Undefined shape expression reference");
+            throw new ShexSchemaStructureException("Undefined expression reference");
         }
         allShapeExprRefs.removeAll(shapeDeclMap.keySet());
         allTripleExprRefs.removeAll(tripleRefsMap.keySet());
@@ -231,15 +231,24 @@ public class SchemaAnalysis {
             throw new ShexSchemaStructureException("Extendable shape is not a ShapeAnd");
         else {
             ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
-
-            if (!(shapeAnd.getShapeExprs().get(0) instanceof Shape))
+            ShapeExpr first = dereference(shapeAnd.getShapeExprs().get(0));
+            if (!(first instanceof Shape))
                 throw new ShexSchemaStructureException("Extendable shape does not have a main shape");
-            mainShape = (Shape) (shapeAnd.getShapeExprs().get(0));
+
+            mainShape = (Shape) first;
             constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
         }
         return Pair.of(mainShape, constraints);
     }
 
+    /** Dereferences until a non reference is found. */
+    private ShapeExpr dereference (ShapeExpr shapeExpr) {
+        ShapeExpr expr = shapeExpr;
+        while (expr instanceof ShapeExprRef) {
+            expr = shapeDeclMap.get(((ShapeExprRef) expr).getLabel()).getShapeExpr();
+        }
+        return expr;
+    }
 
     /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
     private List<Shape> mainShapesOfBases(ShapeExpr extendableShape) {

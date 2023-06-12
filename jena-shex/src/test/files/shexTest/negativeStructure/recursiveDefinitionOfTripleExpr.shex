@@ -1,0 +1,13 @@
+# Triple expr T1 depends on itself
+<http://a.example/S> {
+  $<http://a.example/T1> (
+  <http://a.example/p> . ; 
+  &<http://a.example/T2>)
+}
+
+<http://a.example/S2> {
+  $<http://a.example/T2> (
+  <http://a.example/p> . ; 
+  &<http://a.example/T1>)
+}
+

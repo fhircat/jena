@@ -1,0 +1,3 @@
+# Referenced expression missing
+<http://a.example/S> {<http://a.example/p> .} AND @<http://a.example/S1> 
+

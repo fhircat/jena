@@ -1,3 +1,4 @@
+# In S2 the predicate <c> does not occur in the main shape or its base shapes and cannot be used in this position
 <http://a.example/S1> {<a> .}
 <http://a.example/S2> EXTENDS @<http://a.example/S1> {<b> .} AND {<c> .} 
 
