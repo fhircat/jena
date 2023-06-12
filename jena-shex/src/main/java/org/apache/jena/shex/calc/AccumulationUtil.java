@@ -1,10 +1,7 @@
 package org.apache.jena.shex.calc;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 
 import java.util.*;
@@ -19,10 +16,10 @@ public class AccumulationUtil {
      * @param accFwdPredicates The collection to which the forward predicates are added
      * @param accInvPredicates The collection to which the inverse predicates are added
      */
-    public static void collectPredicates (TripleExpr tripleExpr,
-                                          Function<Node, TripleExpr> tripleExprRefsDefs,
-                                          Collection<Node> accFwdPredicates,
-                                          Collection<Node> accInvPredicates) {
+    public static void accumulatePredicates(TripleExpr tripleExpr,
+                                            Function<Node, TripleExpr> tripleExprRefsDefs,
+                                            Collection<Node> accFwdPredicates,
+                                            Collection<Node> accInvPredicates) {
 
         TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(accFwdPredicates) {
             @Override

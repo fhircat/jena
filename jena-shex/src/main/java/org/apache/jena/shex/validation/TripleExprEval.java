@@ -20,7 +20,6 @@ package org.apache.jena.shex.validation;
 
 import java.util.*;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -47,7 +46,7 @@ public class TripleExprEval {
                                             ValidationContext vCxt) {
         Set<Node> fwdPredicates  = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
-        AccumulationUtil.collectPredicates(tripleExpr, vCxt::getTripleExpr, fwdPredicates, invPredicates);
+        AccumulationUtil.accumulatePredicates(tripleExpr, vCxt::getTripleExpr, fwdPredicates, invPredicates);
 
         Set<Triple> accMatchables = new HashSet<>();
         Set<Triple> accNonMatchables = new HashSet<>();

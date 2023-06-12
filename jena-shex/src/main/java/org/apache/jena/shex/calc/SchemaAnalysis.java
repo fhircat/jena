@@ -206,14 +206,14 @@ public class SchemaAnalysis {
         Set<Node> mainShapeFwdPredicates = new HashSet<>();
         Set<Node> mainShapeInvPredicates = new HashSet<>();
         mainShapesOfBases(mainShape).forEach(baseShape ->
-                AccumulationUtil.collectPredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
+                AccumulationUtil.accumulatePredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 
 
         Set<Node> constraintShapesFwdPredicates = new HashSet<>();
         Set<Node> constraintShapesInvPredicates = new HashSet<>();
         shapesInConstraints.forEach(constraintShape ->
-            AccumulationUtil.collectPredicates(constraintShape.getTripleExpr(), tripleRefsMap::get,
+            AccumulationUtil.accumulatePredicates(constraintShape.getTripleExpr(), tripleRefsMap::get,
                     constraintShapesFwdPredicates, constraintShapesInvPredicates));
 
         return mainShapeFwdPredicates.containsAll(constraintShapesFwdPredicates)
