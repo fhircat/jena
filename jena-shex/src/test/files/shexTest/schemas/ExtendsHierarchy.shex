@@ -1,0 +1,7 @@
+<http://a.example/A> {<a> .}
+<http://a.example/B> EXTENDS @<http://a.example/A> {<b> .} AND {<a> LITERAL ; <b> NOT LITERAL} 
+<http://a.example/C> EXTENDS @<http://a.example/B> {<c> .} AND {<a> LITERAL ; <b> NOT LITERAL; <c> IRI} 
+
+<http://a.example/X> {<x> .}
+<http://a.example/D> EXTENDS @<http://a.example/A> EXTENDS @<http://a.example/X> {<d> .} AND {<a> IRI} AND {<x> IRI} 
+

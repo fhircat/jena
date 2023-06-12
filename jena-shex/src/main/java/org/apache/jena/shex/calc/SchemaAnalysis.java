@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.CycleDetector;
@@ -31,6 +32,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -80,7 +82,7 @@ public class SchemaAnalysis {
             shapeDeclMap.values().forEach(decl ->
                     AccumulationUtil.accumulateAllTripleExprRefsInShapeExpr(decl.getShapeExpr(), allTripleExprRefs));
         } catch (UndefinedReferenceException e) {
-            return false;
+            throw new ShexSchemaStructureException("Undefined expression reference");
         }
         allShapeExprRefs.removeAll(shapeDeclMap.keySet());
         allTripleExprRefs.removeAll(tripleRefsMap.keySet());
@@ -99,7 +101,7 @@ public class SchemaAnalysis {
         });
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(shapeRefDependencyGraph);
         if (cycleDetector.detectCycles())
-            return false;
+            throw new ShexSchemaStructureException("Cyclic definition of shape experessions");
 
         DefaultDirectedGraph<Node, DefaultEdge> texprRefDependencyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
         tripleRefsMap.keySet().forEach(texprRefDependencyGraph::addVertex);
@@ -110,7 +112,7 @@ public class SchemaAnalysis {
         });
         cycleDetector = new CycleDetector<>(texprRefDependencyGraph);
         if (cycleDetector.detectCycles())
-            return false;
+            throw new ShexSchemaStructureException("Cyclic definition of triple expressions");
 
         return true;
     }
@@ -161,7 +163,7 @@ public class SchemaAnalysis {
         DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = computeTypeHierarchyGraph();
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(typeHierarchyGraph);
         if (cycleDetector.detectCycles())
-            return false;
+            throw new ShexSchemaStructureException("Cyclic extends");
 
         return typeHierarchyGraph.vertexSet().stream()
                 // every label that extend another label or is extended
@@ -184,6 +186,41 @@ public class SchemaAnalysis {
     }
 
     private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
+        Pair<Shape, List<ShapeExpr>> mc = mainShapeAndConstraints(shapeExpr);
+        Shape mainShape = mc.getLeft();
+        List<ShapeExpr> constraints = mc.getRight();
+
+        List<Shape> shapesInConstraints = new ArrayList<>();
+        constraints.forEach(se ->
+                AccumulationUtil.accumulateShapesFollowShapeExprRefs(se, shapeDeclMap::get, shapesInConstraints));
+        if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
+            throw new ShexSchemaStructureException("Extendable shape with more than one extends");
+
+        if (! isConstraintPredicatesIncludedInMainShapePredicates (mainShape, shapesInConstraints))
+            throw new ShexSchemaStructureException("Extendable shape : Main shape does not contain all the predicates of the constraints");
+
+        return true;
+    }
+
+    private boolean isConstraintPredicatesIncludedInMainShapePredicates(Shape mainShape, List<Shape> shapesInConstraints) {
+        Set<Node> mainShapeFwdPredicates = new HashSet<>();
+        Set<Node> mainShapeInvPredicates = new HashSet<>();
+        mainShapesOfBases(mainShape).forEach(baseShape ->
+                AccumulationUtil.accumulatePredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
+                        mainShapeFwdPredicates, mainShapeInvPredicates));
+
+
+        Set<Node> constraintShapesFwdPredicates = new HashSet<>();
+        Set<Node> constraintShapesInvPredicates = new HashSet<>();
+        shapesInConstraints.forEach(constraintShape ->
+            AccumulationUtil.accumulatePredicates(constraintShape.getTripleExpr(), tripleRefsMap::get,
+                    constraintShapesFwdPredicates, constraintShapesInvPredicates));
+
+        return mainShapeFwdPredicates.containsAll(constraintShapesFwdPredicates)
+                    && mainShapeInvPredicates.containsAll(constraintShapesInvPredicates);
+    }
+
+    private Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints (ShapeExpr shapeExpr) {
         Shape mainShape;
         List<ShapeExpr> constraints;
 
@@ -191,33 +228,46 @@ public class SchemaAnalysis {
             mainShape = (Shape) shapeExpr;
             constraints = Collections.emptyList();
         } else if (! (shapeExpr instanceof ShapeAnd))
-            return false;
+            throw new ShexSchemaStructureException("Extendable shape is not a ShapeAnd");
         else {
             ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
+            ShapeExpr first = dereference(shapeAnd.getShapeExprs().get(0));
+            if (!(first instanceof Shape))
+                throw new ShexSchemaStructureException("Extendable shape does not have a main shape");
 
-            if (!(shapeAnd.getShapeExprs().get(0) instanceof Shape))
-                return false;
-            mainShape = (Shape) (shapeAnd.getShapeExprs().get(0));
+            mainShape = (Shape) first;
             constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
         }
-        List<Shape> shapesInConstraints = new ArrayList<>();
-        constraints.forEach(se ->
-                AccumulationUtil.accumulateShapesFollowShapeExprRefs(se, shapeDeclMap::get, shapesInConstraints));
-        if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
-            return false;
-        Pair<Set<Node>, Set<Node>> mainShapePredicates = AccumulationUtil.collectPredicates(mainShape.getTripleExpr(),
-                tripleRefsMap::get);
-        Set<Node> mainShapeFwdPredicates = mainShapePredicates.getLeft();
-        Set<Node> mainShapeInvPredicates = mainShapePredicates.getRight();
-        if (shapesInConstraints.stream().anyMatch(shape -> {
-            Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(shape.getTripleExpr(),
-                    tripleRefsMap::get);
-            return mainShapeFwdPredicates.containsAll(predicates.getLeft())
-                    && mainShapeInvPredicates.containsAll(predicates.getRight());
-        }))
-            return false;
+        return Pair.of(mainShape, constraints);
+    }
 
-        return true;
+    /** Dereferences until a non reference is found. */
+    private ShapeExpr dereference (ShapeExpr shapeExpr) {
+        ShapeExpr expr = shapeExpr;
+        while (expr instanceof ShapeExprRef) {
+            expr = shapeDeclMap.get(((ShapeExprRef) expr).getLabel()).getShapeExpr();
+        }
+        return expr;
+    }
+
+    /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
+    private List<Shape> mainShapesOfBases(ShapeExpr extendableShape) {
+        List<Shape> result = new ArrayList<>();
+        Deque<Node> extendedFifo = new ArrayDeque<>();
+
+        Consumer<ShapeExpr> step = (se) -> {
+            Shape mainShape = mainShapeAndConstraints(se).getLeft();
+            result.add(mainShape);
+            mainShape.getExtends().forEach( e -> extendedFifo.addLast(e.getLabel()));
+        };
+
+        ShapeExpr current = extendableShape;
+        step.accept(current);
+        while (!extendedFifo.isEmpty()) {
+            current = shapeDeclMap.get(extendedFifo.removeFirst()).getShapeExpr();
+            step.accept(current);
+        }
+        return result;
     }
 
     /** Collects all references to other shape expressions together with a boolean indicating whether the reference appears in negated context, as required for the dependency graph to determine stratification. */

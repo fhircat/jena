@@ -20,7 +20,6 @@ package org.apache.jena.shex.validation;
 
 import java.util.*;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -45,14 +44,14 @@ public class TripleExprEval {
     public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr,
                                             Set<Node> extraPredicates, boolean closed,
                                             ValidationContext vCxt) {
-        Pair<Set<Node>, Set<Node>> predicates = AccumulationUtil.collectPredicates(tripleExpr, vCxt::getTripleExpr);
-        Set<Node> forwardPredicates  = predicates.getLeft();
-        Set<Node> backwardPredicates = predicates.getRight();
+        Set<Node> fwdPredicates  = new HashSet<>();
+        Set<Node> invPredicates = new HashSet<>();
+        AccumulationUtil.accumulatePredicates(tripleExpr, vCxt::getTripleExpr, fwdPredicates, invPredicates);
 
         Set<Triple> accMatchables = new HashSet<>();
         Set<Triple> accNonMatchables = new HashSet<>();
-        arcsOut(vCxt.getGraph(), dataNode, forwardPredicates, accMatchables, accNonMatchables);
-        arcsIn(vCxt.getGraph(), dataNode, backwardPredicates, accMatchables);
+        arcsOut(vCxt.getGraph(), dataNode, fwdPredicates, accMatchables, accNonMatchables);
+        arcsIn(vCxt.getGraph(), dataNode, invPredicates, accMatchables);
 
         if (closed && ! accNonMatchables.isEmpty())
             return false;

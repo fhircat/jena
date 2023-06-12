@@ -1,10 +1,7 @@
 package org.apache.jena.shex.calc;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 
 import java.util.*;
@@ -12,25 +9,26 @@ import java.util.function.Function;
 
 public class AccumulationUtil {
 
-    /** Collect the forward and backward predicates of a triple expression.
+    /** Accumulate the forward and backward predicates of a triple expression.
      * Follows triple expression references.
      * @param tripleExpr The triple expression to explore
      * @param tripleExprRefsDefs Retrieves the definition of a triple expression reference
-     * @return A pair of sets (forward predicates, inverse predicates)
+     * @param accFwdPredicates The collection to which the forward predicates are added
+     * @param accInvPredicates The collection to which the inverse predicates are added
      */
-    public static Pair<Set<Node>, Set<Node>> collectPredicates (TripleExpr tripleExpr,
-                                                                Function<Node, TripleExpr> tripleExprRefsDefs) {
+    public static void accumulatePredicates(TripleExpr tripleExpr,
+                                            Function<Node, TripleExpr> tripleExprRefsDefs,
+                                            Collection<Node> accFwdPredicates,
+                                            Collection<Node> accInvPredicates) {
 
-        Set<Node> fwdPredicates = new HashSet<>();
-        Set<Node> invPredicates = new HashSet<>();
-        TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(fwdPredicates) {
+        TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(accFwdPredicates) {
             @Override
             public void visit(TripleConstraint tripleConstraint) {
                 if (! tripleConstraint.isInverse())
                     accumulate(tripleConstraint.getPredicate());
             }
         };
-        TripleExprAccumulationVisitor<Node> invPredAccumulator = new TripleExprAccumulationVisitor<>(invPredicates) {
+        TripleExprAccumulationVisitor<Node> invPredAccumulator = new TripleExprAccumulationVisitor<>(accInvPredicates) {
             @Override
             public void visit(TripleConstraint tripleConstraint) {
                 if (tripleConstraint.isInverse())
@@ -45,7 +43,6 @@ public class AccumulationUtil {
                 .followTripleExprRefs(tripleExprRefsDefs)
                 .build();
         tripleExpr.visit(walker);
-        return new ImmutablePair<>(fwdPredicates, invPredicates);
     }
 
     /** Accumulates the shape expression references that appear in a shape expression.

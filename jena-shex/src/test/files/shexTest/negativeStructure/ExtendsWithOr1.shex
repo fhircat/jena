@@ -1,0 +1,4 @@
+# An shape expr with extends should be a Shape or ShapeAnd
+<http://a.example/S1> {<a> .}
+<http://a.example/S2> EXTENDS @<http://a.example/S1> {} OR {<b> .}
+
