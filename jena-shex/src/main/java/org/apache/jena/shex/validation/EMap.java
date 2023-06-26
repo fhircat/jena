@@ -1,5 +1,6 @@
 package org.apache.jena.shex.validation;
 
+import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.TripleExpr;
 
 import java.util.Collection;
@@ -7,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V> {
+public class EMap<K extends Expression, V> implements Map<K, V> {
 
     private final Map<Integer, V> map = new HashMap<>();
 
@@ -23,7 +24,7 @@ public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V
 
     @Override
     public boolean containsKey(Object key) {
-        return (key instanceof TripleExpr) && map.containsKey(((TripleExpr) key).id);
+        return (key instanceof Expression) && map.containsKey(((Expression) key).id);
     }
 
     @Override
@@ -39,7 +40,7 @@ public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V
     }
 
     @Override
-    public V put(TripleExpr key, V value) {
+    public V put(K key, V value) {
         return map.put(key.id, value);
     }
 
@@ -51,7 +52,7 @@ public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V
     }
 
     @Override
-    public void putAll(Map<? extends TripleExpr, ? extends V> m) {
+    public void putAll(Map<? extends K, ? extends V> m) {
         throw new UnsupportedOperationException();
     }
 
@@ -61,7 +62,7 @@ public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V
     }
 
     @Override
-    public Set<TripleExpr> keySet() {
+    public Set<K> keySet() {
         throw new UnsupportedOperationException();
     }
 
@@ -71,7 +72,7 @@ public class TripleExprMap<K extends TripleExpr, V> implements Map<TripleExpr, V
     }
 
     @Override
-    public Set<Entry<TripleExpr, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         throw new UnsupportedOperationException();
     }
 }

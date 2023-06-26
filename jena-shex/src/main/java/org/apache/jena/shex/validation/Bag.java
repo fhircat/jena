@@ -23,16 +23,15 @@ import org.apache.jena.shex.expressions.TripleConstraint;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 // A multiset over org.apache.jena.shex.expressions.TripleConstraint
 /*package*/ class Bag {
 
-    private TripleExprMap<TripleConstraint, Integer> cardMap;
+    private EMap<TripleConstraint, Integer> cardMap;
 
     /*package*/ static Bag fromMatching(Map<Triple, TripleConstraint> matching, List<TripleConstraint> base) {
         Bag bag = new Bag();
-        bag.cardMap = new TripleExprMap<>();
+        bag.cardMap = new EMap<>();
         base.forEach(tc -> bag.cardMap.put(tc, 0));
         for (TripleConstraint tc : matching.values())
             bag.cardMap.computeIfPresent(tc, (k, old) -> old+1);

@@ -23,16 +23,14 @@ import org.apache.jena.shex.calc.VoidTripleExprVisitor;
 
 import java.util.List;
 
-public abstract class TripleExpr {
+public abstract class TripleExpr extends Expression {
 
     private List<SemAct> semActs;
-    public final int id;
-    private static int nextId = 0;
 
     // TODO semacts are most often empty, it's weird to have the unique constructor requiring semantic actions
     protected TripleExpr(List<SemAct> semActs) {
+        super();
         this.semActs = semActs;
-        this.id = nextId++;
     }
 
     public List<SemAct> getSemActs() {

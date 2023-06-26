@@ -236,7 +236,7 @@ public class ValidationContext {
 
     private static class SorbeFactory {
 
-        private final TripleExprMap<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new TripleExprMap<>();
+        private final EMap<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new EMap<>();
         private final ShexSchema schema;
 
         private SorbeFactory(ShexSchema schema) {

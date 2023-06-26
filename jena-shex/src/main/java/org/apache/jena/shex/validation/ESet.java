@@ -1,10 +1,11 @@
 package org.apache.jena.shex.validation;
 
+import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.TripleExpr;
 
 import java.util.*;
 
-public class TripleExprSet<E extends TripleExpr> implements Set<E> {
+public class ESet<E extends Expression> implements Set<E> {
 
     private final Map<Integer, E> map = new HashMap<>();
 
@@ -46,9 +47,9 @@ public class TripleExprSet<E extends TripleExpr> implements Set<E> {
 
     @Override
     public boolean remove(Object o) {
-        if (! (o instanceof TripleExpr))
+        if (! (o instanceof Expression))
             return false;
-        TripleExpr old = map.remove(((TripleExpr) o).id);
+        Expression old = map.remove(((Expression) o).id);
         return old != null;
     }
 

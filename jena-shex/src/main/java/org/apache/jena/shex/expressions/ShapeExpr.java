@@ -24,15 +24,18 @@ import org.apache.jena.shex.calc.VoidShapeExprVisitor;
 import java.util.List;
 
 // TODO are annotations allowed for shape expressions ? If yes, we should add them
-public abstract class ShapeExpr {
+public abstract class ShapeExpr extends Expression {
 
     private final List<SemAct> semActs;
 
     public ShapeExpr(List<SemAct> semActs) {
+        super();
         this.semActs = semActs;
     }
 
-    protected ShapeExpr() { this(null); }
+    protected ShapeExpr() {
+        this(null);
+    }
 
     public List<SemAct> getSemActs() {
         return semActs;

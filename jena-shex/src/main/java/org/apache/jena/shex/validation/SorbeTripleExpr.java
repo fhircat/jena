@@ -57,13 +57,13 @@ import java.util.stream.Collectors;
 
     private final TripleExpr originTripleExpr;
     private final TripleExpr sorbe;
-    // With every triple constraint's id associates its copies in the sorbe expression. Null if the source triple expr is sorbe
-    private final TripleExprMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
+    // With every triple constraint associates its copies in the sorbe expression. Null if the source triple expr is sorbe
+    private final EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
     private final List<TripleExpr> originSubExprsWithSemActs;
 
     private SorbeTripleExpr(TripleExpr originTripleExpr, TripleExpr sorbe,
                             List<TripleExpr> originSubExprsWithSemActs,
-                            TripleExprMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap) {
+                            EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap) {
         this.originTripleExpr = originTripleExpr;
         this.sorbe = sorbe;
         this.originSubExprsWithSemActs = originSubExprsWithSemActs;
@@ -78,7 +78,7 @@ import java.util.stream.Collectors;
         if (isSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
 
-        TripleExprMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap = new TripleExprMap<>();
+        EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap = new EMap<>();
         SorbeConstructor constructor = new SorbeConstructor(tripleConstraintCopiesMap, schema);
         TripleExpr sorbe = tripleExpr.visit(constructor);
         return new SorbeTripleExpr(tripleExpr, sorbe, subExprsWithSemActs, tripleConstraintCopiesMap);
@@ -142,7 +142,7 @@ import java.util.stream.Collectors;
      * @param vCxt
      * @return
      */
-    private TripleExprSet<TripleConstraint> getSorbeTripleConstraintsOfOriginSubExpr(TripleExpr originSubExpr, ValidationContext vCxt) {
+    private ESet<TripleConstraint> getSorbeTripleConstraintsOfOriginSubExpr(TripleExpr originSubExpr, ValidationContext vCxt) {
         return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(originSubExpr, e -> {
             List<TripleConstraint> sourceTripleConstraints = new ArrayList<>();
             AccumulationUtil.accumulateTripleConstraintsFollowTripleExprReferences(originSubExpr,
@@ -150,15 +150,15 @@ import java.util.stream.Collectors;
             if (originTripleExpr == sorbe)
                 return sourceTripleConstraints.stream()
                         .map(tc -> tc)
-                        .collect(TripleExprSet::new, TripleExprSet::add, TripleExprSet::addAll);
+                        .collect(ESet::new, ESet::add, ESet::addAll);
             else
                 return sourceTripleConstraints.stream()
                         .flatMap(tc -> tripleConstraintCopiesMap.get(tc).stream())
                         .map(tc -> tc)
-                        .collect(TripleExprSet::new, TripleExprSet::add, TripleExprSet::addAll);
+                        .collect(ESet::new, ESet::add, ESet::addAll);
         });
     }
-    private final TripleExprMap<TripleExpr, TripleExprSet<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new TripleExprMap<>();
+    private final EMap<TripleExpr, ESet<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new EMap<>();
 
 
     /** The triple constraints of the SORBE expression grouped by predicate. Memorized. */
@@ -179,7 +179,7 @@ import java.util.stream.Collectors;
             return tripleConstraints;
         });
     }
-    private final TripleExprMap<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new TripleExprMap<>();
+    private final EMap<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new EMap<>();
 
     /** The triples that are matched with an origin sub-expression.
      *
@@ -192,7 +192,7 @@ import java.util.stream.Collectors;
                                                       TripleExpr originSubExpr,
                                                       ValidationContext vCxt) {
 
-        TripleExprSet<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
+        ESet<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
         return sorbeMatching.entrySet().stream()
                 .filter(e -> sorbeTripleConstraints.contains(e.getValue()))
                 .map(Map.Entry::getKey)
@@ -328,10 +328,10 @@ import java.util.stream.Collectors;
 
     private static class SorbeConstructor extends CloneWithNullSemanticActionsAndEraseLabels {
 
-        private final TripleExprMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
+        private final EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
         private final ShexSchema schema;
 
-        SorbeConstructor(TripleExprMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap,
+        SorbeConstructor(EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap,
                          ShexSchema schema) {
             this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
             this.schema = schema;
