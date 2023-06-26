@@ -236,7 +236,7 @@ public class ValidationContext {
 
     private static class SorbeFactory {
 
-        private final Map<Integer, SorbeTripleExpr> sourceToSorbeMap = new HashMap<>();
+        private final TripleExprMap<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new TripleExprMap<>();
         private final ShexSchema schema;
 
         private SorbeFactory(ShexSchema schema) {
@@ -244,7 +244,7 @@ public class ValidationContext {
         }
 
         SorbeTripleExpr getSorbe (TripleExpr tripleExpr) {
-            return sourceToSorbeMap.computeIfAbsent(tripleExpr.id, e -> SorbeTripleExpr.create(tripleExpr, schema));
+            return sourceToSorbeMap.computeIfAbsent(tripleExpr, e -> SorbeTripleExpr.create(tripleExpr, schema));
         }
     }
 }

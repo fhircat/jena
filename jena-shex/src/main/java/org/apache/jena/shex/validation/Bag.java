@@ -28,17 +28,18 @@ import java.util.stream.Collectors;
 // A multiset over org.apache.jena.shex.expressions.TripleConstraint
 /*package*/ class Bag {
 
-    private Map<Integer, Integer> cardMap;
+    private TripleExprMap<TripleConstraint, Integer> cardMap;
 
     /*package*/ static Bag fromMatching(Map<Triple, TripleConstraint> matching, List<TripleConstraint> base) {
         Bag bag = new Bag();
-        bag.cardMap = base.stream().collect(Collectors.toMap(tc -> tc.id, x->0));
+        bag.cardMap = new TripleExprMap<>();
+        base.forEach(tc -> bag.cardMap.put(tc, 0));
         for (TripleConstraint tc : matching.values())
-            bag.cardMap.computeIfPresent(tc.id, (k, old) -> old+1);
+            bag.cardMap.computeIfPresent(tc, (k, old) -> old+1);
         return bag;
     }
 
     public final int getCard (TripleConstraint tripleConstraint) {
-        return cardMap.get(tripleConstraint.id);
+        return cardMap.get(tripleConstraint);
     }
 }
