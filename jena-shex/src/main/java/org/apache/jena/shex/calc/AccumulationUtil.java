@@ -26,45 +26,6 @@ import java.util.function.Function;
 
 public class AccumulationUtil {
 
-    /** Accumulate the forward and backward predicates of a triple expression and its extended shapes.
-     * Follows triple expression references.
-     * @param tripleExprRefsDefs Retrieves the definition of a triple expression reference
-     * @param shapeDeclRefsDefs Retrives the definition of shape expression reference
-     * @param accFwdPredicates The collection to which the forward predicates are added
-     * @param accInvPredicates The collection to which the inverse predicates are added
-     */
-    public static void collectPredicatesE (Shape parentShape,
-                                           Function<Node, TripleExpr> tripleExprRefsDefs,
-                                           Function<Node, ShapeDecl> shapeDeclRefsDefs,
-                                           Collection<Node> accFwdPredicates,
-                                           Collection<Node> accInvPredicates) {
-
-        TripleExprAccumulationVisitor<Node> fwdPredAccumulator = new TripleExprAccumulationVisitor<>(accFwdPredicates) {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                if (! tripleConstraint.isInverse())
-                    accumulate(tripleConstraint.getPredicate());
-            }
-        };
-        TripleExprAccumulationVisitor<Node> invPredAccumulator = new TripleExprAccumulationVisitor<>(accInvPredicates) {
-            @Override
-            public void visit(TripleConstraint tripleConstraint) {
-                if (tripleConstraint.isInverse())
-                    accumulate(tripleConstraint.getPredicate());
-                super.visit(tripleConstraint);
-            }
-        };
-
-        ExpressionWalker walker = ExpressionWalker.builder()
-                .processTripleExprsWith(fwdPredAccumulator)
-                .processTripleExprsWith(invPredAccumulator)
-                .followTripleExprRefs(tripleExprRefsDefs)
-                .build();
-
-        List<Shape> allExtended = Util.mainShapesOfBases(parentShape, shapeDeclRefsDefs);
-        allExtended.forEach(shape -> shape.getTripleExpr().visit(walker));
-    }
-
     /** Accumulate the forward and backward predicates of a triple expression.
      * Follows triple expression references.
      * @param tripleExpr The triple expression to explore

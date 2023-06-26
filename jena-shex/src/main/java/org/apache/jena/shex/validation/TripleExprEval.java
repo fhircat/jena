@@ -24,6 +24,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
+import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.calc.AccumulationUtil;
 import org.apache.jena.util.iterator.ExtendedIterator;
@@ -44,10 +45,13 @@ public class TripleExprEval {
     public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr, Shape parentShape,
                                             Set<Node> extraPredicates, boolean closed,
                                             ValidationContext vCxt) {
+
+        List<Shape> allBaseShapes = Util.mainShapesOfBases(parentShape, vCxt::getShapeDecl);
+
         Set<Node> fwdPredicates  = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
-        AccumulationUtil.collectPredicatesE(parentShape, vCxt::getTripleExpr, vCxt::getShapeDecl,
-                fwdPredicates, invPredicates);
+        allBaseShapes.forEach(shape -> AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
+                vCxt::getTripleExpr, fwdPredicates, invPredicates));
 
         Set<Triple> accMatchables = new HashSet<>();
         Set<Triple> accNonMatchables = new HashSet<>();
@@ -56,12 +60,13 @@ public class TripleExprEval {
 
         if (closed && ! accNonMatchables.isEmpty())
             return false;
-        return  matchesExpr(accMatchables, tripleExpr, extraPredicates, vCxt);
+        return matchesExpr(accMatchables, tripleExpr, extraPredicates, allBaseShapes, vCxt);
     }
 
     private static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
-                                       ValidationContext vCxt) {
+                                       List<Shape> allBaseShapes, ValidationContext vCxt) {
 
+        // FIXME here we do not have a single sorbe triple expression, but a set of triple constraints on which we will retrieve a predicate based pre-matching
         SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(tripleExpr);
 
         // 1. Identify which triples could match which triple constraints

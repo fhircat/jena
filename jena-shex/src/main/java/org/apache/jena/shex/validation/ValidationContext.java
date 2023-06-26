@@ -41,6 +41,7 @@ public class ValidationContext {
     private ValidationContext parentCtx = null;
     private final Map<String, SemanticActionPlugin> semActPluginIndex;
     private final SorbeFactory sorbeFactory;
+    private final TypeHierarchyGraph typeHierarchyGraph;
     private final Deque<ValidationStackElement> validationStack;
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
@@ -66,6 +67,7 @@ public class ValidationContext {
         this.validationStack = new ArrayDeque<>();
         this.validationStack.addAll(progress); // TODO copying the stack ?
         this.sorbeFactory = sorbeFactory;
+        this.typeHierarchyGraph = TypeHierarchyGraph.create(sorbeFactory);
     }
 
     public ValidationContext getParent() {
@@ -233,8 +235,7 @@ public class ValidationContext {
         }
     }
 
-
-    private static class SorbeFactory {
+    static class SorbeFactory {
 
         private final EMap<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new EMap<>();
         private final ShexSchema schema;

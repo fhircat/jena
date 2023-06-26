@@ -160,7 +160,7 @@ public class SchemaAnalysis {
     }
 
     private boolean checkExtendsCorrect () {
-        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = computeTypeHierarchyGraph();
+        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = Util.computeTypeHierarchyGraph(shapeDeclMap);
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(typeHierarchyGraph);
         if (cycleDetector.detectCycles())
             throw new ShexSchemaStructureException("Cyclic extends");
@@ -170,19 +170,6 @@ public class SchemaAnalysis {
                 .filter(label -> typeHierarchyGraph.degreeOf(label) > 0)
                 // must be of the form mainShape AND constraints
                 .allMatch(label -> isMainShapeAndConstraints(shapeDeclMap.get(label).getShapeExpr()));
-    }
-
-    private DefaultDirectedGraph<Node, DefaultEdge> computeTypeHierarchyGraph () {
-        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        shapeDeclMap.keySet().forEach(typeHierarchyGraph::addVertex);
-        shapeDeclMap.forEach((label, decl) -> {
-            List<Shape> accShapes = new ArrayList<>();
-            AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
-            for (Shape shape : accShapes)
-                for (ShapeExprRef extended : shape.getExtends())
-                    typeHierarchyGraph.addEdge(label, extended.getLabel());
-        });
-        return typeHierarchyGraph;
     }
 
     private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {

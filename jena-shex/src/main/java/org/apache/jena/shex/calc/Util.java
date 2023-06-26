@@ -8,6 +8,8 @@ import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeAnd;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.ShapeExprRef;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -65,6 +67,19 @@ public class Util {
             constraints = shapeAnd.getShapeExprs().subList(1, shapeAnd.getShapeExprs().size());
         }
         return Pair.of(mainShape, constraints);
+    }
+
+    public static DefaultDirectedGraph<Node, DefaultEdge> computeTypeHierarchyGraph (Map<Node, ShapeDecl> shapeDeclMap) {
+        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        shapeDeclMap.keySet().forEach(typeHierarchyGraph::addVertex);
+        shapeDeclMap.forEach((label, decl) -> {
+            List<Shape> accShapes = new ArrayList<>();
+            AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
+            for (Shape shape : accShapes)
+                for (ShapeExprRef extended : shape.getExtends())
+                    typeHierarchyGraph.addEdge(label, extended.getLabel());
+        });
+        return typeHierarchyGraph;
     }
 
 }
