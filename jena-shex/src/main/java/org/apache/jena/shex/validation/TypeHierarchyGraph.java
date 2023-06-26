@@ -35,6 +35,7 @@ public class TypeHierarchyGraph {
             ShapeExpr extendableShape = shapeExprRefsDefs.apply(label).getShapeExpr();
             Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints = Util.mainShapeAndConstraints(extendableShape, shapeExprRefsDefs);
             THNode thNode = new THNode(
+                    label,
                     extendableShape,
                     mainShapeAndConstraints.getLeft(),
                     mainShapeAndConstraints.getRight(),
@@ -49,7 +50,7 @@ public class TypeHierarchyGraph {
         });
     }
 
-    // The result map contains all ShapeExpr (ids) that are supertypes of this node (including the node) and
+    // The result map contains all ShapeExpr that are supertypes of this node (including the node) and
     // for each of them, the triple constraints of its main shape
     Map<Integer, List<TripleConstraint>> getTCs (ShapeExpr extendableShapeExpr) {
         throw new UnsupportedOperationException("TODO");
