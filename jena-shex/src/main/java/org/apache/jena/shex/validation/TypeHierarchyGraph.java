@@ -56,6 +56,7 @@ public class TypeHierarchyGraph {
         // use graph accessibility to collect all the TCs
     }
 
+    /*
     Set<Triple> getMatchedTriples (THNode node, Map<Triple, TripleConstraint> matching, Set<Triple> among) {
         Set<Integer> tripleConstraints = getTCs(node).stream().map(tc -> tc.id).collect(Collectors.toSet());
         return matching.entrySet().stream()
@@ -63,6 +64,7 @@ public class TypeHierarchyGraph {
                 .map(e -> e.getKey())
                 .collect(Collectors.toSet());
     }
+     */
 
 
 }
