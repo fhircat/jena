@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.validation;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
@@ -34,10 +35,7 @@ import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.String.format;
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
@@ -90,9 +88,12 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeAnd shapeAnd, Object alwaysNull) {
-            // Record all reports?
-            return shapeAnd.getShapeExprs().stream().allMatch(se ->
-                se.visit(this, null));
+            if (Util.hasExtends(shapeAnd, vCxt::getShapeDecl)) {
+                Pair<Shape, List<ShapeExpr>> mainAndConstraints = Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl);
+                return satisfiesExtendable(mainAndConstraints.getLeft(), mainAndConstraints.getRight());
+            } else
+                return shapeAnd.getShapeExprs().stream().allMatch(se ->
+                        se.visit(this, null));
         }
 
         @Override
@@ -129,35 +130,43 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Object alwaysNull) {
-            // TODO this should be a set
-            List<Shape> allBaseShapes = Util.mainShapesOfBases(shape, vCxt::getShapeDecl);
+            return satisfiesExtendable(shape, Collections.emptyList());
+        }
+
+        @Override
+        public Boolean visit(NodeConstraint nodeConstraint, Object alwaysNull) {
+            return satisfies(nodeConstraint, dataNode, vCxt);
+        }
+
+        private Boolean satisfiesExtendable(Shape mainShape, List<ShapeExpr> constraints) {
+
+            ESet<ShapeExpr> baseShapeExprs = Util.extendedBases(mainShape, vCxt::getShapeDecl);
 
             Set<Node> fwdPredicates = new HashSet<>();
             Set<Node> invPredicates = new HashSet<>();
-            allBaseShapes.forEach(s -> AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
-                    vCxt::getTripleExpr, fwdPredicates, invPredicates));
+
+            baseShapeExprs.stream()
+                            .map(se -> Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft())
+                            .forEach(s -> AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
+                                    vCxt::getTripleExpr, fwdPredicates, invPredicates));
 
             Set<Triple> accMatchables = new HashSet<>();
             Set<Triple> accNonMatchables = new HashSet<>();
             Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
                     accMatchables, accNonMatchables);
 
-            if (shape.isClosed() && ! accNonMatchables.isEmpty())
+            if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
-            EMap<Shape, Set<Triple>> matchedTriplesMap = TripleExprEval.matchesExpr(accMatchables,
-                    allBaseShapes, shape, vCxt);
+            EMap<Shape, Set<Triple>> matchedTriplesMap = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
+                    mainShape, vCxt);
+
             if (matchedTriplesMap == null)
                 return false;
 
             // FIXME check the constraints
+            // TODO we should ignore closed in the constraints, or forbid it ?
             return true;
-            //throw new UnsupportedOperationException("not yet implemented");
-        }
-
-        @Override
-        public Boolean visit(NodeConstraint nodeConstraint, Object alwaysNull) {
-            return satisfies(nodeConstraint, dataNode, vCxt);
         }
     }
 

@@ -44,9 +44,14 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    /*package*/ static EMap<Shape, Set<Triple>> matchesExpr(Set<Triple> triples, List<Shape> allBaseShapes,
+    /*package*/ static EMap<Shape, Set<Triple>> matchesExpr(Set<Triple> triples, ESet<ShapeExpr> baseShapeExprs,
                                            Shape shape, ValidationContext vCxt) {
-        List<SorbeTripleExpr> baseTripleExprs = allBaseShapes.stream()
+
+        List<Shape> extendedMainShapes = baseShapeExprs.stream()
+                .map(se -> Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft())
+                .collect(Collectors.toList());
+
+        List<SorbeTripleExpr> baseTripleExprs = extendedMainShapes.stream()
                 .map(s -> vCxt.getSorbe(s.getTripleExpr()))
                 .collect(Collectors.toList());
 

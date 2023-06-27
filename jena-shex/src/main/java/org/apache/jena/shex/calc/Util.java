@@ -11,6 +11,7 @@ import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeAnd;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.ShapeExprRef;
+import org.apache.jena.shex.validation.ESet;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -51,6 +52,34 @@ public class Util {
         return result;
     }
 
+    /** Returns the base (ie extended) shape expressions of the given shape expression, including the shape expression itself.
+     * @param extendableShape Must be an extendable shape, otherwise an error may occur.
+     * @param shapeExprRefsDefs Allows to dereference shape expression references.
+     * @return
+     */
+    public static ESet<ShapeExpr> extendedBases(ShapeExpr extendableShape, Function<Node, ShapeDecl> shapeExprRefsDefs) {
+        // TODO add test with diamond extension and verify that the shape that is extended several times is satisfied only once
+        ESet<ShapeExpr> result = new ESet<>(true);
+        Deque<Node> extendedFifo = new ArrayDeque<>();
+
+        Consumer<ShapeExpr> step = (se) -> {
+            result.add(se);
+            Shape mainShape = mainShapeAndConstraints(se, shapeExprRefsDefs).getLeft();
+            mainShape.getExtends().forEach(e -> extendedFifo.addLast(e.getLabel()));
+        };
+
+        ShapeExpr current = extendableShape;
+        step.accept(current);
+        while (!extendedFifo.isEmpty()) {
+            current = shapeExprRefsDefs.apply(extendedFifo.removeFirst()).getShapeExpr();
+            step.accept(current);
+        }
+        return result;
+    }
+
+
+
+    private static final int INDEX_MAIN = 0;
     public static Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints (ShapeExpr shapeExpr,
                                                                         Function<Node, ShapeDecl> shapeExprRefsDefs) {
         Shape mainShape;
@@ -63,7 +92,7 @@ public class Util {
             throw new ShexSchemaStructureException("Extendable shape is not a ShapeAnd");
         else {
             ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
-            ShapeExpr first = Util.dereference(shapeAnd.getShapeExprs().get(0), shapeExprRefsDefs);
+            ShapeExpr first = Util.dereference(shapeAnd.getShapeExprs().get(INDEX_MAIN), shapeExprRefsDefs);
             if (!(first instanceof Shape))
                 throw new ShexSchemaStructureException("Extendable shape does not have a main shape");
 
@@ -104,4 +133,13 @@ public class Util {
         y.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
     }
 
+    public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
+        Pair<Shape, List<ShapeExpr>> mainAndConstr;
+        try {
+             mainAndConstr = mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs);
+        } catch (ShexSchemaStructureException e) {
+            return false;
+        }
+        return ! mainAndConstr.getLeft().getExtends().isEmpty();
+    }
 }

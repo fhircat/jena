@@ -24,7 +24,14 @@ import java.util.*;
 
 public class ESet<E extends Expression> implements Set<E> {
 
-    private final Map<Integer, E> map = new HashMap<>();
+    private final Map<Integer, E> map;
+
+    public ESet() {
+        this(false);
+    }
+    public ESet(boolean orderPreserving) {
+        this.map = orderPreserving ? new LinkedHashMap<>() : new HashMap<>();
+    }
 
     @Override
     public int size() {

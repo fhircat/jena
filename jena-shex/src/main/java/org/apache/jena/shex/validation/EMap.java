@@ -20,14 +20,18 @@ package org.apache.jena.shex.validation;
 import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.TripleExpr;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EMap<K extends Expression, V> implements Map<K, V> {
 
-    private final Map<Integer, V> map = new HashMap<>();
+    private final Map<Integer, V> map;
+
+    public EMap() {
+        this(false);
+    }
+    public EMap(boolean orderPreserving) {
+        this.map = orderPreserving ? new LinkedHashMap<>() : new HashMap<>();
+    }
 
     @Override
     public int size() {
