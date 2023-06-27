@@ -44,12 +44,17 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    /*package*/ static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
-                               List<Shape> allBaseShapes, ValidationContext vCxt) {
+    /*package*/ static EMap<Shape, Set<Triple>> matchesExpr(Set<Triple> triples, List<Shape> allBaseShapes,
+                                           Shape shape, ValidationContext vCxt) {
         List<SorbeTripleExpr> baseTripleExprs = allBaseShapes.stream()
-                .map(shape -> vCxt.getSorbe(shape.getTripleExpr()))
+                .map(s -> vCxt.getSorbe(s.getTripleExpr()))
                 .collect(Collectors.toList());
-        return matchesExprNew(triples, extraPredicates, baseTripleExprs, vCxt);
+
+        // FIXME : compute and return the appropriate map
+        if (matchesExprNew(triples, shape.getExtras(), baseTripleExprs, vCxt))
+            return new EMap<>();
+        else
+            return null;
     }
 
     // TODO note: starting to generalize for extends.

@@ -129,6 +129,7 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Object alwaysNull) {
+            // TODO this should be a set
             List<Shape> allBaseShapes = Util.mainShapesOfBases(shape, vCxt::getShapeDecl);
 
             Set<Node> fwdPredicates = new HashSet<>();
@@ -144,8 +145,14 @@ public class ShapeExprEval {
             if (shape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
-            return TripleExprEval.matchesExpr(accMatchables, shape.getTripleExpr(),
-                    shape.getExtras(), allBaseShapes, vCxt);
+            EMap<Shape, Set<Triple>> matchedTriplesMap = TripleExprEval.matchesExpr(accMatchables,
+                    allBaseShapes, shape, vCxt);
+            if (matchedTriplesMap == null)
+                return false;
+
+            // FIXME check the constraints
+            return true;
+            //throw new UnsupportedOperationException("not yet implemented");
         }
 
         @Override
