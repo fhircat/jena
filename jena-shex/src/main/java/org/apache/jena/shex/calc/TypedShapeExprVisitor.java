@@ -20,12 +20,12 @@ package org.apache.jena.shex.calc;
 
 import org.apache.jena.shex.expressions.*;
 
-public interface TypedShapeExprVisitor<R> {
-    R visit(ShapeAnd shapeAnd);
-    R visit(ShapeOr shapeOr);
-    R visit(ShapeNot shapeNot);
-    R visit(ShapeExprRef shapeExprRef);
-    R visit(ShapeExternal shapeExternal);
-    R visit(Shape shape);
-    R visit(NodeConstraint nodeConstraint);
+public interface TypedShapeExprVisitor<R,A> {
+    R visit(ShapeAnd shapeAnd, A arg);
+    R visit(ShapeOr shapeOr, A arg);
+    R visit(ShapeNot shapeNot, A arg);
+    R visit(ShapeExprRef shapeExprRef, A arg);
+    R visit(ShapeExternal shapeExternal, A arg);
+    R visit(Shape shape, A arg);
+    R visit(NodeConstraint nodeConstraint, A arg);
 }

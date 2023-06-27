@@ -63,8 +63,8 @@ public class Shape extends ShapeExpr {
     }
 
     @Override
-    public <R> R visit(TypedShapeExprVisitor<R> visitor) {
-        return visitor.visit(this);
+    public <R,A> R visit(TypedShapeExprVisitor<R,A> visitor, A arg) {
+        return visitor.visit(this, arg);
     }
 
     @Override

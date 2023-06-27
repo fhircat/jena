@@ -67,7 +67,8 @@ public class ValidationContext {
         this.validationStack = new ArrayDeque<>();
         this.validationStack.addAll(progress); // TODO copying the stack ?
         this.sorbeFactory = sorbeFactory;
-        this.typeHierarchyGraph = TypeHierarchyGraph.create(sorbeFactory);
+        //this.typeHierarchyGraph = TypeHierarchyGraph.create(sorbeFactory);
+        this.typeHierarchyGraph = null;
     }
 
     public ValidationContext getParent() {

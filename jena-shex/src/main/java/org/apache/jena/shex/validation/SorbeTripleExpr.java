@@ -88,8 +88,10 @@ import java.util.stream.Collectors;
     /*package*/ Map<Triple, List<TripleConstraint>> getPredicateBasedPreMatching(Collection<Triple> triples) {
 
         Map<Node, List<TripleConstraint>> tcsByPredicate = getSorbeTripleConstraintsGroupedByPredicate();
-        return triples.stream().collect(Collectors.toMap(Function.identity(),
-                t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
+        return triples.stream()
+                .filter(t -> tcsByPredicate.containsKey(t.getPredicate()))
+                .collect(Collectors.toMap(Function.identity(),
+                    t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
     }
 
     /*package*/ Cardinality computeInterval (Map<Triple, TripleConstraint> matching) {

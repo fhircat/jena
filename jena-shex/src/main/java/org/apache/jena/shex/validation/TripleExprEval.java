@@ -19,6 +19,8 @@
 package org.apache.jena.shex.validation;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -42,31 +44,77 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    public static boolean matchesTripleExpr(Node dataNode, TripleExpr tripleExpr, Shape parentShape,
-                                            Set<Node> extraPredicates, boolean closed,
-                                            ValidationContext vCxt) {
-
-        List<Shape> allBaseShapes = Util.mainShapesOfBases(parentShape, vCxt::getShapeDecl);
-
-        Set<Node> fwdPredicates  = new HashSet<>();
-        Set<Node> invPredicates = new HashSet<>();
-        allBaseShapes.forEach(shape -> AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
-                vCxt::getTripleExpr, fwdPredicates, invPredicates));
-
-        Set<Triple> accMatchables = new HashSet<>();
-        Set<Triple> accNonMatchables = new HashSet<>();
-        arcsOut(vCxt.getGraph(), dataNode, fwdPredicates, accMatchables, accNonMatchables);
-        arcsIn(vCxt.getGraph(), dataNode, invPredicates, accMatchables);
-
-        if (closed && ! accNonMatchables.isEmpty())
-            return false;
-        return matchesExpr(accMatchables, tripleExpr, extraPredicates, allBaseShapes, vCxt);
+    /*package*/ static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
+                               List<Shape> allBaseShapes, ValidationContext vCxt) {
+        List<SorbeTripleExpr> baseTripleExprs = allBaseShapes.stream()
+                .map(shape -> vCxt.getSorbe(shape.getTripleExpr()))
+                .collect(Collectors.toList());
+        return matchesExprNew(triples, extraPredicates, baseTripleExprs, vCxt);
     }
 
-    private static boolean matchesExpr(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
-                                       List<Shape> allBaseShapes, ValidationContext vCxt) {
+    // TODO note: starting to generalize for extends.
+    private static boolean matchesExprNew (Set<Triple> triples,
+                                           Set<Node> extraPredicates,
+                                           List<SorbeTripleExpr> baseTripleExprs,
+                                           ValidationContext vCxt) {
 
-        // FIXME here we do not have a single sorbe triple expression, but a set of triple constraints on which we will retrieve a predicate based pre-matching
+        // 1. Identify which triples could match which triple constraints
+        Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
+                .collect(Collectors.toMap(Function.identity(),
+                    t -> new ArrayList<>()));
+        for (SorbeTripleExpr sorbeTripleExpr :  baseTripleExprs) {
+            Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
+            pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
+        }
+
+        // 2. Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
+        preMatching.forEach((triple, matchingTripleConstraints) -> {
+            Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
+            while (it.hasNext()) {
+                TripleConstraint tc = it.next();
+                ShapeExpr valueExpr = tc.getValueExpr();
+                Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
+                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
+                    it.remove();
+            }
+        });
+
+        // 3. Check whether all non matching triples are allowed by extra
+        Iterator<Map.Entry<Triple, List<TripleConstraint>>> it = preMatching.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Triple, List<TripleConstraint>> e = it.next();
+            if (e.getValue().isEmpty()) {
+                // the triple satisfies none of the triple constraints
+                if (! extraPredicates.contains(e.getKey().getPredicate()))
+                    // should satisfy extra
+                    return false;
+                // remove the triple as it should not participate in the satisfaction of the triple expression
+                it.remove();
+            }
+        }
+
+        // 4. SORBE based validation algorithm on the matching triples
+        Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
+        while (mit.hasNext()) {
+            Map<Triple, TripleConstraint> matching = mit.next();
+            boolean mainShapesAreSatisfied = baseTripleExprs.stream().allMatch(sorbeTripleExpr -> {
+                Cardinality interval = sorbeTripleExpr.computeInterval(matching);
+                return interval.min <= 1 && 1 <= interval.max
+                        // the triple expression is satisfied by the matching, check semantic actions
+                        &&
+                        sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
+                                .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
+            });
+            if (mainShapesAreSatisfied)
+                // TODO verify satisfaction of the constraints
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean matchesExprOld(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,
+                                          ValidationContext vCxt) {
+
         SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(tripleExpr);
 
         // 1. Identify which triples could match which triple constraints
@@ -102,32 +150,60 @@ public class TripleExprEval {
         Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
-
             Cardinality interval = sorbeTripleExpr.computeInterval(matching);
-            if (interval.min <= 1 && 1 <= interval.max) {
-                // the triple expression is satisfied by the matching, check semantic actions
-                if (sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
-                        .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue())))
-                    return true;
-            }
+            if (interval.min <= 1 && 1 <= interval.max
+                    // the triple expression is satisfied by the matching, check semantic actions
+                    &&
+                    sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
+                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue())))
+                return true;
         }
         return false;
     }
 
-    private static void arcsOut(Graph graph, Node dataNode, Set<Node> predicates,
-                                Set<Triple> accMatchables, Set<Triple> accNonMatchables) {
-        ExtendedIterator<Triple> x = G.find(graph, dataNode, null, null);
-        x.forEach(t -> {
-            if (predicates.contains(t.getPredicate()))
-                accMatchables.add(t);
-            else
-                accNonMatchables.add(t);
+    /*package*/ static boolean matchesExtendsConstraintTripleExpr (Set<Triple> triples,
+                                                                   TripleExpr tripleExpr,
+                                                                   ValidationContext vCxt) {
+        // Extra and closed are ignored
+        SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(tripleExpr);
+
+        // 1. Identify which triples could match which triple constraints
+        Map<Triple, List<TripleConstraint>> preMatching = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
+
+        // 2. Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
+        preMatching.forEach((triple, matchingTripleConstraints) -> {
+            Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
+            while (it.hasNext()) {
+                TripleConstraint tc = it.next();
+                ShapeExpr valueExpr = tc.getValueExpr();
+                Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
+                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
+                    it.remove();
+            }
         });
+
+        // 3. Check that there are no non-matching triples
+        if (preMatching.values().stream().anyMatch(List::isEmpty))
+            return false;
+
+        // 4. SORBE based validation algorithm on the matching triples
+        Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
+        while (mit.hasNext()) {
+            Map<Triple, TripleConstraint> matching = mit.next();
+            Cardinality interval = sorbeTripleExpr.computeInterval(matching);
+            if (interval.min <= 1 && 1 <= interval.max
+                    // the triple expression is satisfied by the matching, check semantic actions
+                    // TODO do we ignore semantic actions in this case ?
+                    &&
+                    sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
+                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue())))
+                return true;
+        }
+        return false;
+
+
+
     }
 
-    private static void arcsIn(Graph graph, Node dataNode, Set<Node> predicates, Set<Triple> acc) {
-        ExtendedIterator<Triple> x = G.find(graph, null, null, dataNode);
-        x.filterKeep(t -> predicates.contains(t.getPredicate())).forEach(acc::add);
-    }
 
 }

@@ -46,7 +46,7 @@ public class ShexSchema {
     private final List<String> imports;
     private final List<SemAct> semActs;
 
-    // FIXME validity should be tested before creating the schema; for now only for testing
+    // TODO validity could be verified before creating the schema; for now only for testing
     public boolean isValid () {
         SchemaAnalysis analysis = new SchemaAnalysis(shapeMap, tripleRefs);
         return analysis.isCorrect();

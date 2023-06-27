@@ -52,7 +52,7 @@ public class TypeHierarchyGraph {
 
     // The result map contains all ShapeExpr that are supertypes of this node (including the node) and
     // for each of them, the triple constraints of its main shape
-    Map<Integer, List<TripleConstraint>> getTCs (ShapeExpr extendableShapeExpr) {
+    Map<ShapeExpr, List<TripleConstraint>> getTCs (ShapeExpr extendableShapeExpr) {
         throw new UnsupportedOperationException("TODO");
         // use graph accessibility to collect all the TCs
     }

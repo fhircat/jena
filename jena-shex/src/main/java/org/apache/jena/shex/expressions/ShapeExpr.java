@@ -42,7 +42,7 @@ public abstract class ShapeExpr extends Expression {
     }
 
     public abstract void visit(VoidShapeExprVisitor visitor);
-    public abstract <R> R visit(TypedShapeExprVisitor<R> visitor);
+    public abstract <R,A> R visit(TypedShapeExprVisitor<R, A> visitor, A arg);
 
     @Override
     public String toString() {

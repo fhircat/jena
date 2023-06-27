@@ -21,8 +21,11 @@ package org.apache.jena.shex.validation;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.calc.AccumulationUtil;
+import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.ReportItem;
 import org.apache.jena.shex.sys.ShexLib;
@@ -31,16 +34,28 @@ import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static java.lang.String.format;
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
 import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 
 public class ShapeExprEval {
 
-    public static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
+    /*package*/ static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
 
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, vCxt);
-        return shapeExpr.visit(evaluator);
+        return shapeExpr.visit(evaluator, null);
+    }
+
+    /*package*/ static boolean extendsSatisfies(ShapeExpr shapeExpr, Node node,
+                                                Map<Triple, TripleConstraint> neigh,
+                                                ValidationContext vCxt) {
+        // FIXME corresponds to the cAnd rule where constraints are the conjuncts
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
@@ -53,7 +68,17 @@ public class ShapeExprEval {
         }
     }
 
-    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean> {
+    private static boolean satisfies (NodeConstraint nodeConstraint, Node dataNode, ValidationContext vCxt) {
+        NodeConstraintComponentEvalVisitor componentEval = new NodeConstraintComponentEvalVisitor(dataNode);
+        return nodeConstraint.getComponents().stream().allMatch( ncc -> {
+            ReportItem error = ncc.visit(componentEval);
+            if (error != null)
+                vCxt.reportEntry(error);
+            return error == null;
+        });
+    }
+
+    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Object> {
 
         private final ValidationContext vCxt;
         private final Node dataNode;
@@ -64,31 +89,31 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeAnd shapeAnd) {
+        public Boolean visit(ShapeAnd shapeAnd, Object alwaysNull) {
             // Record all reports?
             return shapeAnd.getShapeExprs().stream().allMatch(se ->
-                se.visit(this));
+                se.visit(this, null));
         }
 
         @Override
-        public Boolean visit(ShapeOr shapeOr) {
+        public Boolean visit(ShapeOr shapeOr, Object alwaysNull) {
             boolean result = shapeOr.getShapeExprs().stream().anyMatch(se ->
-                se.visit(this));
+                se.visit(this, null));
             if (!result)
                 vCxt.reportEntry(new ReportItem("OR expression not satisfied:", dataNode));
             return result;
         }
 
         @Override
-        public Boolean visit(ShapeNot shapeNot) {
-            boolean result = !shapeNot.getShapeExpr().visit(this);
+        public Boolean visit(ShapeNot shapeNot, Object alwaysNull) {
+            boolean result = !shapeNot.getShapeExpr().visit(this, null);
             if (!result)
                 vCxt.reportEntry(new ReportItem("NOT: Term reject because it conforms", dataNode));
             return result;
         }
 
         @Override
-        public Boolean visit(ShapeExprRef shapeExprRef) {
+        public Boolean visit(ShapeExprRef shapeExprRef, Object alwaysNull) {
             ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
             if ( vCxt.cycle(dataNode, shapeDecl) )
                 return true;
@@ -97,28 +122,93 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeExternal shapeExternal) {
+        public Boolean visit(ShapeExternal shapeExternal, Object alwaysNull) {
             // TODO shape external never satisfied
             return false;
         }
 
         @Override
-        public Boolean visit(Shape shape) {
-            return TripleExprEval.matchesTripleExpr(dataNode, shape.getTripleExpr(),
-                    shape.getExtras(), shape.isClosed(), shape.getExtends(), vCxt);
+        public Boolean visit(Shape shape, Object alwaysNull) {
+            List<Shape> allBaseShapes = Util.mainShapesOfBases(shape, vCxt::getShapeDecl);
+
+            Set<Node> fwdPredicates = new HashSet<>();
+            Set<Node> invPredicates = new HashSet<>();
+            allBaseShapes.forEach(s -> AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
+                    vCxt::getTripleExpr, fwdPredicates, invPredicates));
+
+            Set<Triple> accMatchables = new HashSet<>();
+            Set<Triple> accNonMatchables = new HashSet<>();
+            Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
+                    accMatchables, accNonMatchables);
+
+            if (shape.isClosed() && ! accNonMatchables.isEmpty())
+                return false;
+
+            return TripleExprEval.matchesExpr(accMatchables, shape.getTripleExpr(),
+                    shape.getExtras(), allBaseShapes, vCxt);
         }
 
         @Override
-        public Boolean visit(NodeConstraint nodeConstraint) {
-            // TODO maybe this shape expr evaluation class could implement TypedNodeConstraintComponentVisitor as well. Then no need of creating a new instance here
-            NodeConstraintComponentEvalVisitor componentEval = new NodeConstraintComponentEvalVisitor(dataNode);
-            return nodeConstraint.getComponents().stream().allMatch( ncc -> {
-                ReportItem error = ncc.visit(componentEval);
-                if (error != null)
-                    vCxt.reportEntry(error);
-                return error == null;
-            });
+        public Boolean visit(NodeConstraint nodeConstraint, Object alwaysNull) {
+            return satisfies(nodeConstraint, dataNode, vCxt);
         }
+    }
+
+    static class ShapeExprExtendsEvalVisitor implements TypedShapeExprVisitor<Boolean, Map<Triple,TripleConstraint>> {
+
+        private final ValidationContext vCxt;
+        private final Node dataNode;
+
+        ShapeExprExtendsEvalVisitor (Node data, ValidationContext vCxt) {
+            this.vCxt = vCxt;
+            this.dataNode = data;
+        }
+
+        @Override
+        public Boolean visit(ShapeAnd shapeAnd, Map<Triple, TripleConstraint> neigh) {
+            return shapeAnd.getShapeExprs().stream().allMatch(se ->
+                    se.visit(this, neigh));
+        }
+
+        @Override
+        public Boolean visit(ShapeExprRef shapeExprRef, Map<Triple, TripleConstraint> neigh) {
+            return extendsSatisfies(vCxt.getShapeDecl(shapeExprRef.getLabel()).getShapeExpr(),
+                    dataNode, neigh, vCxt);
+        }
+
+        @Override
+        public Boolean visit(Shape shape, Map<Triple, TripleConstraint> neigh) {
+            SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(shape.getTripleExpr());
+            Cardinality interval = sorbeTripleExpr.computeInterval(neigh);
+            return
+                    interval.min <= 1 && 1 <= interval.max
+                    &&
+                    // the triple expression is satisfied by the matching, check semantic actions
+                    // TODO do we want to check semantic actions that appear in the constraints of an extended shape ?
+                    sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(neigh, vCxt).stream()
+                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
+        }
+
+        @Override
+        public Boolean visit(NodeConstraint nodeConstraint, Map<Triple, TripleConstraint> arg) {
+            return satisfies(nodeConstraint, dataNode, vCxt);
+        }
+
+        @Override
+        public Boolean visit(ShapeOr shapeOr, Map<Triple, TripleConstraint> neigh) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(ShapeNot shapeNot, Map<Triple, TripleConstraint> neigh) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(ShapeExternal shapeExternal, Map<Triple, TripleConstraint> neigh) {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
     static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<ReportItem> {

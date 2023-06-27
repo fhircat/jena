@@ -32,7 +32,6 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -160,7 +159,7 @@ public class SchemaAnalysis {
     }
 
     private boolean checkExtendsCorrect () {
-        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = Util.computeTypeHierarchyGraph(shapeDeclMap);
+        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = Util.computeExtendsReferencesGraph(shapeDeclMap);
         CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(typeHierarchyGraph);
         if (cycleDetector.detectCycles())
             throw new ShexSchemaStructureException("Cyclic extends");
