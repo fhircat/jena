@@ -36,6 +36,7 @@ import java.util.Map;
         for (TripleConstraint tc : matching.values())
             bag.cardMap.computeIfPresent(tc, (k, old) -> old+1);
         return bag;
+
     }
 
     public final int getCard (TripleConstraint tripleConstraint) {

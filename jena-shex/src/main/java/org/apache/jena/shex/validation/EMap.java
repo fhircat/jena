@@ -24,14 +24,7 @@ import java.util.*;
 
 public class EMap<K extends Expression, V> implements Map<K, V> {
 
-    private final Map<Integer, V> map;
-
-    public EMap() {
-        this(false);
-    }
-    public EMap(boolean orderPreserving) {
-        this.map = orderPreserving ? new LinkedHashMap<>() : new HashMap<>();
-    }
+    private final Map<Integer, V> map = new LinkedHashMap<>();
 
     @Override
     public int size() {
@@ -96,4 +89,5 @@ public class EMap<K extends Expression, V> implements Map<K, V> {
     public Set<Entry<K, V>> entrySet() {
         throw new UnsupportedOperationException();
     }
+
 }

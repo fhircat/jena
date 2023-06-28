@@ -7,10 +7,8 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
-import org.apache.jena.shex.expressions.Shape;
-import org.apache.jena.shex.expressions.ShapeAnd;
-import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.ShapeExprRef;
+import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.validation.EMap;
 import org.apache.jena.shex.validation.ESet;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -59,7 +57,7 @@ public class Util {
      */
     public static ESet<ShapeExpr> extendedBases(ShapeExpr extendableShape, Function<Node, ShapeDecl> shapeExprRefsDefs) {
         // TODO add test with diamond extension and verify that the shape that is extended several times is satisfied only once
-        ESet<ShapeExpr> result = new ESet<>(true);
+        ESet<ShapeExpr> result = new ESet<>();
         Deque<Node> extendedFifo = new ArrayDeque<>();
 
         Consumer<ShapeExpr> step = (se) -> {
@@ -141,5 +139,12 @@ public class Util {
             return false;
         }
         return ! mainAndConstr.getLeft().getExtends().isEmpty();
+    }
+
+    public static EMap<ShapeExpr, Set<Triple>> groupByShapeExpr(ESet<ShapeExpr> baseShapeExprs, Map<Triple, TripleConstraint> satisfyingMatching) {
+        //EMap<TripleConstraint, Set<Triple>> matchingTriples =
+
+        // FIXME
+        throw new UnsupportedOperationException("not yet implemented");
     }
 }

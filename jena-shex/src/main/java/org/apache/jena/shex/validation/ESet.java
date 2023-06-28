@@ -21,17 +21,15 @@ import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.TripleExpr;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 public class ESet<E extends Expression> implements Set<E> {
 
-    private final Map<Integer, E> map;
-
-    public ESet() {
-        this(false);
-    }
-    public ESet(boolean orderPreserving) {
-        this.map = orderPreserving ? new LinkedHashMap<>() : new HashMap<>();
-    }
+    private final Map<Integer, E> map = new LinkedHashMap<>();
 
     @Override
     public int size() {
@@ -103,5 +101,39 @@ public class ESet<E extends Expression> implements Set<E> {
     @Override
     public void clear() {
         map.clear();
+    }
+
+    public static <E extends Expression> Collector<E, ESet<E>, ESet<E>> collector () {
+        return new Collector<>() {
+            @Override
+            public Supplier<ESet<E>> supplier() {
+                return ESet::new;
+            }
+
+            @Override
+            public BiConsumer<ESet<E>, E> accumulator() {
+                return ESet::add;
+            }
+
+            @Override
+            public BinaryOperator<ESet<E>> combiner() {
+                return (x1, x2) -> {
+                    ESet<E> result = new ESet<>();
+                    result.addAll(x1);
+                    result.addAll(x2);
+                    return result;
+                };
+            }
+
+            @Override
+            public Function<ESet<E>, ESet<E>> finisher() {
+                return Function.identity();
+            }
+
+            @Override
+            public Set<Characteristics> characteristics() {
+                return Set.of(Characteristics.IDENTITY_FINISH);
+            }
+        };
     }
 }

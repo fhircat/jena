@@ -44,8 +44,8 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    /*package*/ static EMap<Shape, Set<Triple>> matchesExpr(Set<Triple> triples, ESet<ShapeExpr> baseShapeExprs,
-                                           Shape shape, ValidationContext vCxt) {
+    /*package*/ static Map<Triple, TripleConstraint> matchesExpr(Set<Triple> triples, ESet<ShapeExpr> baseShapeExprs,
+                                                                 Shape shape, ValidationContext vCxt) {
 
         List<Shape> extendedMainShapes = baseShapeExprs.stream()
                 .map(se -> Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft())
@@ -55,18 +55,13 @@ public class TripleExprEval {
                 .map(s -> vCxt.getSorbe(s.getTripleExpr()))
                 .collect(Collectors.toList());
 
-        // FIXME : compute and return the appropriate map
-        if (matchesExprNew(triples, shape.getExtras(), baseTripleExprs, vCxt))
-            return new EMap<>();
-        else
-            return null;
+        return matchesExprNew(triples, shape.getExtras(), baseTripleExprs, vCxt);
     }
 
-    // TODO note: starting to generalize for extends.
-    private static boolean matchesExprNew (Set<Triple> triples,
-                                           Set<Node> extraPredicates,
-                                           List<SorbeTripleExpr> baseTripleExprs,
-                                           ValidationContext vCxt) {
+    private static Map<Triple, TripleConstraint> matchesExprNew (Set<Triple> triples,
+                                                                 Set<Node> extraPredicates,
+                                                                 List<SorbeTripleExpr> baseTripleExprs,
+                                                                 ValidationContext vCxt) {
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
@@ -97,7 +92,7 @@ public class TripleExprEval {
                 // the triple satisfies none of the triple constraints
                 if (! extraPredicates.contains(e.getKey().getPredicate()))
                     // should satisfy extra
-                    return false;
+                    return null;
                 // remove the triple as it should not participate in the satisfaction of the triple expression
                 it.remove();
             }
@@ -116,10 +111,9 @@ public class TripleExprEval {
                                 .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
             });
             if (mainShapesAreSatisfied)
-                // TODO verify satisfaction of the constraints
-                return true;
+                return matching;
         }
-        return false;
+        return null;
     }
 
     private static boolean matchesExprOld(Set<Triple> triples, TripleExpr tripleExpr, Set<Node> extraPredicates,

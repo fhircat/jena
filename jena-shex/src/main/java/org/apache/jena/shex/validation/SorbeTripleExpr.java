@@ -151,13 +151,11 @@ import java.util.stream.Collectors;
                     vCxt::getTripleExpr, sourceTripleConstraints);
             if (originTripleExpr == sorbe)
                 return sourceTripleConstraints.stream()
-                        .map(tc -> tc)
-                        .collect(ESet::new, ESet::add, ESet::addAll);
+                        .collect(ESet.collector());
             else
                 return sourceTripleConstraints.stream()
                         .flatMap(tc -> tripleConstraintCopiesMap.get(tc).stream())
-                        .map(tc -> tc)
-                        .collect(ESet::new, ESet::add, ESet::addAll);
+                        .collect(ESet.collector());
         });
     }
     private final EMap<TripleExpr, ESet<TripleConstraint>> srcSubExprToItsSorbeTripleConstraintsMap = new EMap<>();

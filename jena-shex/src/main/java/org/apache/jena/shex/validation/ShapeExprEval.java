@@ -36,6 +36,8 @@ import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.jena.shex.sys.ShexLib.displayStr;
@@ -50,7 +52,7 @@ public class ShapeExprEval {
     }
 
     /*package*/ static boolean extendsSatisfies(ShapeExpr shapeExpr, Node node,
-                                                Map<Triple, TripleConstraint> neigh,
+                                                Set<Triple> neigh,
                                                 ValidationContext vCxt) {
         // FIXME corresponds to the cAnd rule where constraints are the conjuncts
         throw new UnsupportedOperationException("not yet implemented");
@@ -158,19 +160,20 @@ public class ShapeExprEval {
             if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
-            EMap<Shape, Set<Triple>> matchedTriplesMap = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
+            Map<Triple, TripleConstraint> satisfyingMatching = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
                     mainShape, vCxt);
 
-            if (matchedTriplesMap == null)
+            if (satisfyingMatching == null)
                 return false;
 
-            // FIXME check the constraints
-            // TODO we should ignore closed in the constraints, or forbid it ?
             return true;
+
+            //EMap<ShapeExpr, Set<Triple>> matchedTriples = Util.groupByShapeExpr(baseShapeExprs, satisfyingMatching);
+            //return baseShapeExprs.stream().allMatch(se -> extendsSatisfies(se, dataNode, matchedTriples.get(se), vCxt));
         }
     }
 
-    static class ShapeExprExtendsEvalVisitor implements TypedShapeExprVisitor<Boolean, Map<Triple,TripleConstraint>> {
+    static class ShapeExprExtendsEvalVisitor implements TypedShapeExprVisitor<Boolean, Set<Triple>> {
 
         private final ValidationContext vCxt;
         private final Node dataNode;
@@ -181,19 +184,20 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeAnd shapeAnd, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(ShapeAnd shapeAnd, Set<Triple> neigh) {
             return shapeAnd.getShapeExprs().stream().allMatch(se ->
                     se.visit(this, neigh));
         }
 
         @Override
-        public Boolean visit(ShapeExprRef shapeExprRef, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(ShapeExprRef shapeExprRef, Set<Triple> neigh) {
             return extendsSatisfies(vCxt.getShapeDecl(shapeExprRef.getLabel()).getShapeExpr(),
                     dataNode, neigh, vCxt);
         }
 
         @Override
-        public Boolean visit(Shape shape, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(Shape shape, Set<Triple> neigh) {
+            /*
             SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(shape.getTripleExpr());
             Cardinality interval = sorbeTripleExpr.computeInterval(neigh);
             return
@@ -203,25 +207,28 @@ public class ShapeExprEval {
                     // TODO do we want to check semantic actions that appear in the constraints of an extended shape ?
                     sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(neigh, vCxt).stream()
                             .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
+             */
+            // TODO
+            throw new UnsupportedOperationException("not yet implemented");
         }
 
         @Override
-        public Boolean visit(NodeConstraint nodeConstraint, Map<Triple, TripleConstraint> arg) {
+        public Boolean visit(NodeConstraint nodeConstraint, Set<Triple> neigh) {
             return satisfies(nodeConstraint, dataNode, vCxt);
         }
 
         @Override
-        public Boolean visit(ShapeOr shapeOr, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(ShapeOr shapeOr, Set<Triple> neigh) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Boolean visit(ShapeNot shapeNot, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(ShapeNot shapeNot, Set<Triple> neigh) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Boolean visit(ShapeExternal shapeExternal, Map<Triple, TripleConstraint> neigh) {
+        public Boolean visit(ShapeExternal shapeExternal, Set<Triple> neigh) {
             throw new UnsupportedOperationException();
         }
 
