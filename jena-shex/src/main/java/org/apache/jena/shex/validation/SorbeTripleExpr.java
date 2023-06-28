@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 /*package*/ class SorbeTripleExpr {
 
     private final TripleExpr originTripleExpr;
-    private final TripleExpr sorbe;
+    /*package*/ final TripleExpr sorbe;
     // With every triple constraint associates its copies in the sorbe expression. Null if the source triple expr is sorbe
     private final EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap;
     private final List<TripleExpr> originSubExprsWithSemActs;
@@ -172,14 +172,14 @@ import java.util.stream.Collectors;
     private Map<Node, List<TripleConstraint>> tripleConstraintsGroupedByPredicate;
 
     /** The triple constraints of a sub-expression of this SORBE triple expression. Memorized. */
-    private List<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
+    /*package*/ Set<TripleConstraint> getSorbeTripleConstraintsOfSorbeSubExpr (TripleExpr sorbeSubExpr) {
         return sorbeSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(sorbeSubExpr, e -> {
-            List<TripleConstraint> tripleConstraints = new ArrayList<>();
+            Set<TripleConstraint> tripleConstraints = new ESet<>();
             AccumulationUtil.accumulateDirectTripleConstraints(sorbeSubExpr, tripleConstraints);
             return tripleConstraints;
         });
     }
-    private final EMap<TripleExpr, List<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new EMap<>();
+    private final EMap<TripleExpr, Set<TripleConstraint>> sorbeSubExprToItsSorbeTripleConstraintsMap = new EMap<>();
 
     /** The triples that are matched with an origin sub-expression.
      *

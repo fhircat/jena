@@ -54,8 +54,9 @@ public class ShapeExprEval {
     /*package*/ static boolean extendsSatisfies(ShapeExpr shapeExpr, Node node,
                                                 Set<Triple> neigh,
                                                 ValidationContext vCxt) {
-        // FIXME corresponds to the cAnd rule where constraints are the conjuncts
-        throw new UnsupportedOperationException("not yet implemented");
+        ShapeExprExtendsEvalVisitor evaluator = new ShapeExprExtendsEvalVisitor(node, vCxt);
+        return shapeExpr.visit(evaluator, neigh);
+
     }
 
     public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
@@ -132,7 +133,10 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Object alwaysNull) {
-            return satisfiesExtendable(shape, Collections.emptyList());
+            if (Util.hasExtends(shape, vCxt::getShapeDecl))
+                return satisfiesExtendable(shape, Collections.emptyList());
+            else // TODO is the else case different from the if case ?
+                return satisfiesExtendable(shape, Collections.emptyList());
         }
 
         @Override
@@ -141,6 +145,7 @@ public class ShapeExprEval {
         }
 
         private Boolean satisfiesExtendable(Shape mainShape, List<ShapeExpr> constraints) {
+            // TODO what to do with the constraints ?
 
             ESet<ShapeExpr> baseShapeExprs = Util.extendedBases(mainShape, vCxt::getShapeDecl);
 
@@ -152,6 +157,7 @@ public class ShapeExprEval {
                             .forEach(s -> AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
                                     vCxt::getTripleExpr, fwdPredicates, invPredicates));
 
+            // Retrieve the relevant neighbourhood and check closed constraint
             Set<Triple> accMatchables = new HashSet<>();
             Set<Triple> accNonMatchables = new HashSet<>();
             Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
@@ -160,18 +166,23 @@ public class ShapeExprEval {
             if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
-            Map<Triple, TripleConstraint> satisfyingMatching = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
+            Map<ShapeExpr, Set<Triple>> satisfyingTriples = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
                     mainShape, vCxt);
 
-            if (satisfyingMatching == null)
+            if (satisfyingTriples == null)
                 return false;
 
+            for (ShapeExpr base : baseShapeExprs) {
+                for (ShapeExpr constr : Util.mainShapeAndConstraints(base, vCxt::getShapeDecl).getRight()) {
+                    if (! extendsSatisfies(constr, dataNode, satisfyingTriples.get(base), vCxt))
+                        return false;
+                }
+            }
             return true;
-
-            //EMap<ShapeExpr, Set<Triple>> matchedTriples = Util.groupByShapeExpr(baseShapeExprs, satisfyingMatching);
-            //return baseShapeExprs.stream().allMatch(se -> extendsSatisfies(se, dataNode, matchedTriples.get(se), vCxt));
         }
     }
+
+
 
     static class ShapeExprExtendsEvalVisitor implements TypedShapeExprVisitor<Boolean, Set<Triple>> {
 
@@ -197,19 +208,20 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Set<Triple> neigh) {
-            /*
-            SorbeTripleExpr sorbeTripleExpr = vCxt.getSorbe(shape.getTripleExpr());
-            Cardinality interval = sorbeTripleExpr.computeInterval(neigh);
-            return
-                    interval.min <= 1 && 1 <= interval.max
-                    &&
-                    // the triple expression is satisfied by the matching, check semantic actions
-                    // TODO do we want to check semantic actions that appear in the constraints of an extended shape ?
-                    sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(neigh, vCxt).stream()
-                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
-             */
-            // TODO
-            throw new UnsupportedOperationException("not yet implemented");
+
+            Set<Node> fwdPredicates = new HashSet<>();
+            Set<Node> invPredicates = new HashSet<>();
+            AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
+                    vCxt::getTripleExpr, fwdPredicates, invPredicates);
+
+            Set<Triple> relevantNeigh = neigh.stream()
+                    .filter(triple ->
+                            triple.getSubject().equals(dataNode) && fwdPredicates.contains(triple.getPredicate())
+                            ||
+                            triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
+                    .collect(Collectors.toSet());
+
+            return null != TripleExprEval.matchesExpr(relevantNeigh, Collections.singleton(shape), shape, vCxt);
         }
 
         @Override

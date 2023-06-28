@@ -8,7 +8,6 @@ import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.validation.EMap;
 import org.apache.jena.shex.validation.ESet;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -118,8 +117,8 @@ public class Util {
                                                     Set<Triple> accMatchables, Set<Triple> accNonMatchables) {
 
         // outgoing
-        ExtendedIterator<Triple> x = G.find(graph, dataNode, null, null);
-        x.forEach(t -> {
+        ExtendedIterator<Triple> outNeighbourhood = G.find(graph, dataNode, null, null);
+        outNeighbourhood.forEach(t -> {
             if (fwdPredicates.contains(t.getPredicate()))
                 accMatchables.add(t);
             else
@@ -127,9 +126,22 @@ public class Util {
         });
 
         // incoming
-        ExtendedIterator<Triple> y = G.find(graph, null, null, dataNode);
-        y.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
+        ExtendedIterator<Triple> inNeighbourhood = G.find(graph, null, null, dataNode);
+        inNeighbourhood.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
     }
+
+    public static void filterNeighbourhoodForPredicates (Set<Triple> neighbourhood, Node dataNode,
+                                                         Set<Node> fwdPredicates, Set<Node> invPredicates,
+                                                         Set<Triple> accMatchables) {
+            neighbourhood.forEach(triple -> {
+                if (triple.getSubject().equals(dataNode) && fwdPredicates.contains(triple.getPredicate())
+                    ||
+                    triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
+                    accMatchables.add(triple);
+            });
+    }
+
+
 
     public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
         Pair<Shape, List<ShapeExpr>> mainAndConstr;
@@ -139,12 +151,5 @@ public class Util {
             return false;
         }
         return ! mainAndConstr.getLeft().getExtends().isEmpty();
-    }
-
-    public static EMap<ShapeExpr, Set<Triple>> groupByShapeExpr(ESet<ShapeExpr> baseShapeExprs, Map<Triple, TripleConstraint> satisfyingMatching) {
-        //EMap<TripleConstraint, Set<Triple>> matchingTriples =
-
-        // FIXME
-        throw new UnsupportedOperationException("not yet implemented");
     }
 }

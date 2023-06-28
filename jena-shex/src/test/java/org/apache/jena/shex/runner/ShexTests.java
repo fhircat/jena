@@ -59,7 +59,7 @@ public class ShexTests {
         // --- Exclusions - development
 
         // BNodes tests we don't support (testing labels, cross file references)
-        excludeTraits.add(ShexT.tExtends); // TODO: implement EXTENDS
+        // excludeTraits.add(ShexT.tExtends);
         excludeTraits.add(ShexT.tCrossFileBNodeShapeLabel);
         excludeTraits.add(ShexT.tRefBNodeShapeLabel);
         excludeTraits.add(ShexT.tLexicalBNode);

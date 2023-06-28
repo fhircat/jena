@@ -44,30 +44,28 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-    /*package*/ static Map<Triple, TripleConstraint> matchesExpr(Set<Triple> triples, ESet<ShapeExpr> baseShapeExprs,
-                                                                 Shape shape, ValidationContext vCxt) {
+    /*package*/ static Map<ShapeExpr, Set<Triple>> matchesExpr(Set<Triple> triples, Set<ShapeExpr> baseShapeExprs,
+                                                               Shape shape, ValidationContext vCxt) {
 
-        List<Shape> extendedMainShapes = baseShapeExprs.stream()
-                .map(se -> Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft())
-                .collect(Collectors.toList());
+        Map<ShapeExpr, SorbeTripleExpr> correspondingSorbe = baseShapeExprs.stream()
+                .collect(EMap.collector(
+                        Function.identity(),
+                        se -> vCxt.getSorbe(Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft().getTripleExpr())));
 
-        List<SorbeTripleExpr> baseTripleExprs = extendedMainShapes.stream()
-                .map(s -> vCxt.getSorbe(s.getTripleExpr()))
-                .collect(Collectors.toList());
-
-        return matchesExprNew(triples, shape.getExtras(), baseTripleExprs, vCxt);
+        return matchesExprNew(triples, shape.getExtras(), baseShapeExprs, correspondingSorbe, vCxt);
     }
 
-    private static Map<Triple, TripleConstraint> matchesExprNew (Set<Triple> triples,
-                                                                 Set<Node> extraPredicates,
-                                                                 List<SorbeTripleExpr> baseTripleExprs,
-                                                                 ValidationContext vCxt) {
+    private static Map<ShapeExpr, Set<Triple>> matchesExprNew (Set<Triple> triples,
+                                                               Set<Node> extraPredicates,
+                                                               Set<ShapeExpr> baseShapeExprs,
+                                                               Map<ShapeExpr, SorbeTripleExpr> correspondingSorbe,
+                                                               ValidationContext vCxt) {
 
         // 1. Identify which triples could match which triple constraints
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
                 .collect(Collectors.toMap(Function.identity(),
                     t -> new ArrayList<>()));
-        for (SorbeTripleExpr sorbeTripleExpr :  baseTripleExprs) {
+        for (SorbeTripleExpr sorbeTripleExpr :  correspondingSorbe.values()) {
             Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
             pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
         }
@@ -102,7 +100,7 @@ public class TripleExprEval {
         Iterator<Map<Triple, TripleConstraint>> mit = new MatchingsIterator(preMatching, new ArrayList<>(preMatching.keySet()));
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
-            boolean mainShapesAreSatisfied = baseTripleExprs.stream().allMatch(sorbeTripleExpr -> {
+            boolean mainShapesAreSatisfied = correspondingSorbe.values().stream().allMatch(sorbeTripleExpr -> {
                 Cardinality interval = sorbeTripleExpr.computeInterval(matching);
                 return interval.min <= 1 && 1 <= interval.max
                         // the triple expression is satisfied by the matching, check semantic actions
@@ -111,7 +109,7 @@ public class TripleExprEval {
                                 .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
             });
             if (mainShapesAreSatisfied)
-                return matching;
+                return groupByShapeExpr(baseShapeExprs, correspondingSorbe, matching);
         }
         return null;
     }
@@ -204,10 +202,30 @@ public class TripleExprEval {
                 return true;
         }
         return false;
-
-
-
     }
 
+    // FIXME make sure this is called only when needed, that is, when there are extends => need to validate extends separately
+    private static Map<ShapeExpr, Set<Triple>> groupByShapeExpr(Set<ShapeExpr> baseShapeExprs,
+                                                                Map<ShapeExpr, SorbeTripleExpr> correspondingSorbe,
+                                                                Map<Triple, TripleConstraint> satisfyingMatching) {
+        EMap<TripleConstraint, Set<Triple>> inverseMatching = satisfyingMatching.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getValue,
+                        EMap::new,
+                        Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
+
+        Map<ShapeExpr, Set<Triple>> result = new EMap<>();
+        for (ShapeExpr se : baseShapeExprs) {
+            result.put(se, new HashSet<>());
+            SorbeTripleExpr sorbeTe = correspondingSorbe.get(se);
+            Set<TripleConstraint> tcs = sorbeTe.getSorbeTripleConstraintsOfSorbeSubExpr(sorbeTe.sorbe);
+            for (TripleConstraint tc : tcs) {
+                Set<Triple> triples = inverseMatching.get(tc);
+                if (triples != null)
+                    result.get(se).addAll(triples);
+            }
+        }
+        return result;
+    }
 
 }

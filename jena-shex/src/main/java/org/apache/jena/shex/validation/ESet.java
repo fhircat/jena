@@ -18,7 +18,6 @@
 package org.apache.jena.shex.validation;
 
 import org.apache.jena.shex.expressions.Expression;
-import org.apache.jena.shex.expressions.TripleExpr;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -43,7 +42,7 @@ public class ESet<E extends Expression> implements Set<E> {
 
     @Override
     public boolean contains(Object o) {
-        return (o instanceof TripleExpr) && map.containsKey(((TripleExpr) o).id);
+        return (o instanceof Expression) && map.containsKey(((Expression) o).id);
     }
 
     @Override
