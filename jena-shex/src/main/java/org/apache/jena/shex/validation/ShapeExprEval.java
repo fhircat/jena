@@ -177,10 +177,16 @@ public class ShapeExprEval {
 
             for (ShapeExpr base : baseShapeExprs) {
                 for (ShapeExpr constr : Util.mainShapeAndConstraints(base, vCxt::getShapeDecl).getRight()) {
+                    // FIXME here we need the union of satisfying triples on all supertypes
                     if (! extendsSatisfies(constr, dataNode, satisfyingTriples.get(base), vCxt))
                         return false;
                 }
             }
+            for (ShapeExpr constr : constraints) {
+                if (! extendsSatisfies(constr, dataNode, satisfyingTriples.get(mainShape), vCxt))
+                    return false;
+            }
+
             return true;
         }
     }
