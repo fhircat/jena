@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.validation;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
@@ -26,6 +27,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
@@ -67,8 +69,7 @@ public class ValidationContext {
         this.validationStack = new ArrayDeque<>();
         this.validationStack.addAll(progress); // TODO copying the stack ?
         this.sorbeFactory = sorbeFactory;
-        //this.typeHierarchyGraph = TypeHierarchyGraph.create(sorbeFactory);
-        this.typeHierarchyGraph = null;
+        this.typeHierarchyGraph = ShexSchema.computeTypeHierarchyGraph(schema);
     }
 
     public ValidationContext getParent() {
@@ -207,6 +208,10 @@ public class ValidationContext {
         return sorbeFactory.getSorbe(tripleExpr);
     }
 
+    public TypeHierarchyGraph getTypeHierarchyGraph () {
+        return typeHierarchyGraph;
+    }
+
     private static class ValidationStackElement extends Pair<Node, ShapeDecl> {
 
         public ValidationStackElement(Node dataNode, ShapeDecl shapeDecl) {
@@ -249,4 +254,5 @@ public class ValidationContext {
             return sourceToSorbeMap.computeIfAbsent(tripleExpr, e -> SorbeTripleExpr.create(tripleExpr, schema));
         }
     }
+
 }

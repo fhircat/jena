@@ -22,10 +22,14 @@ import java.util.*;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.shex.calc.SchemaAnalysis;
+import org.apache.jena.shex.validation.TypeHierarchyGraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 /**
  * Shex Schema - a collection of shapes.
@@ -50,6 +54,12 @@ public class ShexSchema {
     public boolean isValid () {
         SchemaAnalysis analysis = new SchemaAnalysis(shapeMap, tripleRefs);
         return analysis.isCorrect();
+    }
+
+    // TODO this shouldn't be here, but for now I need it for validating extends and no time to figure out where is more appropriate
+    // Needs visibility to the shape declarations map
+    public static TypeHierarchyGraph computeTypeHierarchyGraph (ShexSchema schema) {
+        return new TypeHierarchyGraph(Util.computeExtendsReferencesGraph(schema.shapeMap), schema.shapeMap);
     }
 
     public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,

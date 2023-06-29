@@ -60,13 +60,16 @@ public class ShapeExprEval {
     }
 
     public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
-        vCxt.startValidate(shapeDecl, dataNode);
-        ShapeExpr shapeExpr = shapeDecl.getShapeExpr();
-        try {
-            return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
-        } finally {
-            vCxt.finishValidate(shapeDecl, dataNode);
+        for (ShapeDecl base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl)) {
+            vCxt.startValidate(base, dataNode);
+            ShapeExpr shapeExpr = base.getShapeExpr();
+            try {
+                return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
+            } finally {
+                vCxt.finishValidate(base, dataNode);
+            }
         }
+        return false;
     }
 
     private static boolean satisfies (NodeConstraint nodeConstraint, Node dataNode, ValidationContext vCxt) {
