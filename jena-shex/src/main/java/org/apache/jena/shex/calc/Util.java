@@ -35,7 +35,7 @@ public class Util {
         Deque<Node> extendedFifo = new ArrayDeque<>();
 
         Consumer<ShapeExpr> step = (se) -> {
-            Shape mainShape = mainShapeAndConstraints(se, shapeExprRefsDefs).getLeft();
+            Shape mainShape = mainShape(se, shapeExprRefsDefs);
             result.add(mainShape);
             mainShape.getExtends().forEach( e -> extendedFifo.addLast(e.getLabel()));
         };
@@ -49,33 +49,6 @@ public class Util {
         return result;
     }
 
-    /** Returns the base (ie extended) shape expressions of the given shape expression, including the shape expression itself.
-     * @param extendableShape Must be an extendable shape, otherwise an error may occur.
-     * @param shapeExprRefsDefs Allows to dereference shape expression references.
-     * @return
-     */
-    public static ESet<ShapeExpr> extendedBases(ShapeExpr extendableShape, Function<Node, ShapeDecl> shapeExprRefsDefs) {
-        // TODO add test with diamond extension and verify that the shape that is extended several times is satisfied only once
-        ESet<ShapeExpr> result = new ESet<>();
-        Deque<Node> extendedFifo = new ArrayDeque<>();
-
-        Consumer<ShapeExpr> step = (se) -> {
-            result.add(se);
-            Shape mainShape = mainShapeAndConstraints(se, shapeExprRefsDefs).getLeft();
-            mainShape.getExtends().forEach(e -> extendedFifo.addLast(e.getLabel()));
-        };
-
-        ShapeExpr current = extendableShape;
-        step.accept(current);
-        while (!extendedFifo.isEmpty()) {
-            current = shapeExprRefsDefs.apply(extendedFifo.removeFirst()).getShapeExpr();
-            step.accept(current);
-        }
-        return result;
-    }
-
-
-
     private static final int INDEX_MAIN = 0;
     public static Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints (ShapeExpr shapeExpr,
                                                                         Function<Node, ShapeDecl> shapeExprRefsDefs) {
@@ -86,7 +59,7 @@ public class Util {
             mainShape = (Shape) shapeExpr;
             constraints = Collections.emptyList();
         } else if (! (shapeExpr instanceof ShapeAnd))
-            throw new ShexSchemaStructureException("Extendable shape is not a ShapeAnd");
+            throw new ShexSchemaStructureException("Extendable shape is neither a ShapeAnd nor a Shape");
         else {
             ShapeAnd shapeAnd = (ShapeAnd) shapeExpr;
             ShapeExpr first = Util.dereference(shapeAnd.getShapeExprs().get(INDEX_MAIN), shapeExprRefsDefs);
@@ -98,6 +71,18 @@ public class Util {
         }
         return Pair.of(mainShape, constraints);
     }
+
+    public static Shape mainShape (ShapeExpr shapeExpr,
+                                   Function<Node, ShapeDecl> shapeExprRefsDefs) {
+        return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getLeft();
+    }
+
+    public static List<ShapeExpr> constraints (ShapeExpr shapeExpr,
+                                               Function<Node, ShapeDecl> shapeExprRefsDefs) {
+        return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getRight();
+    }
+
+
 
     public static DefaultDirectedGraph<Node, DefaultEdge> computeExtendsReferencesGraph(Map<Node, ShapeDecl> shapeDeclMap) {
         DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);

@@ -195,7 +195,6 @@ public class SchemaAnalysis {
                 AccumulationUtil.collectPredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 
-
         Set<Node> constraintShapesFwdPredicates = new HashSet<>();
         Set<Node> constraintShapesInvPredicates = new HashSet<>();
         shapesInConstraints.forEach(constraintShape ->

@@ -18,7 +18,6 @@
 
 package org.apache.jena.shex.validation;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
@@ -36,7 +35,6 @@ import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -45,31 +43,38 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 
 public class ShapeExprEval {
 
+    public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
+        for (ShapeDecl base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl)) {
+            vCxt.startValidate(base, dataNode);
+            try {
+                ShapeExpr shapeExpr = base.getShapeExpr();
+                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl))
+                    return satisfiesWithExtends(base, dataNode, vCxt); // TODO semantic actions and extends ?
+                else
+                    return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
+            } finally {
+                vCxt.finishValidate(base, dataNode);
+            }
+        }
+        return false;
+    }
+
+    private static boolean satisfiesWithExtends(ShapeDecl shapeDeclWithExtends, Node dataNode, ValidationContext vCxt) {
+        ExtendsShapeExprEvalVisitor evaluator = new ExtendsShapeExprEvalVisitor(dataNode, shapeDeclWithExtends, vCxt);
+        return shapeDeclWithExtends.getShapeExpr().visit(evaluator, null);
+    }
+
     /*package*/ static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
 
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, vCxt);
         return shapeExpr.visit(evaluator, null);
     }
 
-    /*package*/ static boolean extendsSatisfies(ShapeExpr shapeExpr, Node node,
-                                                Set<Triple> neigh,
-                                                ValidationContext vCxt) {
-        ShapeExprExtendsEvalVisitor evaluator = new ShapeExprExtendsEvalVisitor(node, vCxt);
-        return shapeExpr.visit(evaluator, neigh);
-
-    }
-
-    public static boolean satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt) {
-        for (ShapeDecl base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl)) {
-            vCxt.startValidate(base, dataNode);
-            ShapeExpr shapeExpr = base.getShapeExpr();
-            try {
-                return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
-            } finally {
-                vCxt.finishValidate(base, dataNode);
-            }
-        }
-        return false;
+    private static boolean satisfiesExtendsConstraint(ShapeExpr constr, Node node,
+                                                      Set<Triple> neigh,
+                                                      ValidationContext vCxt) {
+        ExtendsConstraintEvalVisitor evaluator = new ExtendsConstraintEvalVisitor(node, vCxt);
+        return constr.visit(evaluator, neigh);
     }
 
     private static boolean satisfies (NodeConstraint nodeConstraint, Node dataNode, ValidationContext vCxt) {
@@ -94,18 +99,14 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeAnd shapeAnd, Object alwaysNull) {
-            if (Util.hasExtends(shapeAnd, vCxt::getShapeDecl)) {
-                Pair<Shape, List<ShapeExpr>> mainAndConstraints = Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl);
-                return satisfiesExtendable(mainAndConstraints.getLeft(), mainAndConstraints.getRight());
-            } else
-                return shapeAnd.getShapeExprs().stream().allMatch(se ->
-                        se.visit(this, null));
+            return shapeAnd.getShapeExprs().stream().allMatch(se ->
+                    se.visit(this, null));
         }
 
         @Override
         public Boolean visit(ShapeOr shapeOr, Object alwaysNull) {
             boolean result = shapeOr.getShapeExprs().stream().anyMatch(se ->
-                se.visit(this, null));
+                    se.visit(this, null));
             if (!result)
                 vCxt.reportEntry(new ReportItem("OR expression not satisfied:", dataNode));
             return result;
@@ -136,29 +137,11 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Object alwaysNull) {
-            if (Util.hasExtends(shape, vCxt::getShapeDecl))
-                return satisfiesExtendable(shape, Collections.emptyList());
-            else // TODO is the else case different from the if case ?
-                return satisfiesExtendable(shape, Collections.emptyList());
-        }
-
-        @Override
-        public Boolean visit(NodeConstraint nodeConstraint, Object alwaysNull) {
-            return satisfies(nodeConstraint, dataNode, vCxt);
-        }
-
-        private Boolean satisfiesExtendable(Shape mainShape, List<ShapeExpr> constraints) {
-            // TODO what to do with the constraints ?
-
-            ESet<ShapeExpr> baseShapeExprs = Util.extendedBases(mainShape, vCxt::getShapeDecl);
-
             Set<Node> fwdPredicates = new HashSet<>();
             Set<Node> invPredicates = new HashSet<>();
 
-            baseShapeExprs.stream()
-                            .map(se -> Util.mainShapeAndConstraints(se, vCxt::getShapeDecl).getLeft())
-                            .forEach(s -> AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
-                                    vCxt::getTripleExpr, fwdPredicates, invPredicates));
+            AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
+                    vCxt::getTripleExpr, fwdPredicates, invPredicates);
 
             // Retrieve the relevant neighbourhood and check closed constraint
             Set<Triple> accMatchables = new HashSet<>();
@@ -166,39 +149,126 @@ public class ShapeExprEval {
             Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
                     accMatchables, accNonMatchables);
 
-            if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
+            if (shape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
-            Map<ShapeExpr, Set<Triple>> satisfyingTriples = TripleExprEval.matchesExpr(accMatchables, baseShapeExprs,
-                    mainShape, vCxt);
+            return TripleExprEval.matchesExpr(accMatchables, shape, vCxt);
+        }
 
-            if (satisfyingTriples == null)
-                return false;
-
-            for (ShapeExpr base : baseShapeExprs) {
-                for (ShapeExpr constr : Util.mainShapeAndConstraints(base, vCxt::getShapeDecl).getRight()) {
-                    // FIXME here we need the union of satisfying triples on all supertypes
-                    if (! extendsSatisfies(constr, dataNode, satisfyingTriples.get(base), vCxt))
-                        return false;
-                }
-            }
-            for (ShapeExpr constr : constraints) {
-                if (! extendsSatisfies(constr, dataNode, satisfyingTriples.get(mainShape), vCxt))
-                    return false;
-            }
-
-            return true;
+        @Override
+        public Boolean visit(NodeConstraint nodeConstraint, Object alwaysNull) {
+            return satisfies(nodeConstraint, dataNode, vCxt);
         }
     }
 
 
 
-    static class ShapeExprExtendsEvalVisitor implements TypedShapeExprVisitor<Boolean, Set<Triple>> {
 
+
+    static class ExtendsShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Object> {
+
+        private final Node dataNode;
+        private final ShapeDecl shapeDecl;
+        private final ValidationContext vCxt;
+
+        ExtendsShapeExprEvalVisitor(Node dataNode, ShapeDecl shapeDecl, ValidationContext vCxt) {
+            this.dataNode = dataNode;
+            this.shapeDecl = shapeDecl;
+            this.vCxt = vCxt;
+        }
+
+        @Override
+        public Boolean visit(ShapeAnd shapeAnd, Object arg) {
+
+            // maps extended labels to their respective main shapes
+            Map<Node, Shape> baseMainShapes = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
+                    .collect(Collectors.toMap(ShapeDecl::getLabel,
+                            sd -> Util.mainShapeAndConstraints(sd.getShapeExpr(), vCxt::getShapeDecl).getLeft()
+            ));
+
+            // Retrieve the relevant neighbourhood
+            Set<Node> fwdPredicates = new HashSet<>();
+            Set<Node> invPredicates = new HashSet<>();
+
+            baseMainShapes.values().forEach(s ->
+                    AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
+                            vCxt::getTripleExpr, fwdPredicates, invPredicates));
+
+            // Retrieve the relevant neighbourhood and check closed constraint
+            Set<Triple> accMatchables = new HashSet<>();
+            Set<Triple> accNonMatchables = new HashSet<>();
+            Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
+                    accMatchables, accNonMatchables);
+
+            Shape mainShape = Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl).getLeft();
+            if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
+                return false;
+
+            Map<Node, Set<Triple>> satisfyingTriples = TripleExprEval.matchesExpr(accMatchables, mainShape,
+                    baseMainShapes, vCxt);
+
+            if (satisfyingTriples == null)
+                return false;
+
+            for (Node label : baseMainShapes.keySet()) {
+                ShapeDecl shapeDecl = vCxt.getShapeDecl(label);
+                for (ShapeExpr constr : Util.mainShapeAndConstraints(shapeDecl.getShapeExpr(), vCxt::getShapeDecl).getRight()) {
+                    Set<Triple> triples = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
+                            .map(ShapeDecl::getLabel)
+                            .flatMap(l -> satisfyingTriples.get(l).stream())
+                            .collect(Collectors.toSet());
+                    if (! satisfiesExtendsConstraint(constr, dataNode, triples, vCxt))
+                        return false;
+                }
+            }
+
+            for (ShapeExpr constr : Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl).getRight()) {
+                    if (! satisfiesExtendsConstraint(constr, dataNode, satisfyingTriples.get(shapeDecl.getLabel()), vCxt))
+                        return false;
+            }
+            return true;
+        }
+
+        @Override
+        public Boolean visit(Shape shape, Object arg) {
+            // FIXME
+            return null;
+        }
+
+        @Override
+        public Boolean visit(ShapeOr shapeOr, Object arg) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(ShapeNot shapeNot, Object arg) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(ShapeExprRef shapeExprRef, Object arg) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(ShapeExternal shapeExternal, Object arg) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(NodeConstraint nodeConstraint, Object arg) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+
+    static class ExtendsConstraintEvalVisitor implements TypedShapeExprVisitor<Boolean, Set<Triple>> {
+
+        // TODO here we should be able to give the neighbourhood as attribute
         private final ValidationContext vCxt;
         private final Node dataNode;
 
-        ShapeExprExtendsEvalVisitor (Node data, ValidationContext vCxt) {
+        ExtendsConstraintEvalVisitor(Node data, ValidationContext vCxt) {
             this.vCxt = vCxt;
             this.dataNode = data;
         }
@@ -211,7 +281,7 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef, Set<Triple> neigh) {
-            return extendsSatisfies(vCxt.getShapeDecl(shapeExprRef.getLabel()).getShapeExpr(),
+            return satisfiesExtendsConstraint(vCxt.getShapeDecl(shapeExprRef.getLabel()).getShapeExpr(),
                     dataNode, neigh, vCxt);
         }
 
@@ -230,7 +300,7 @@ public class ShapeExprEval {
                             triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
                     .collect(Collectors.toSet());
 
-            return null != TripleExprEval.matchesExpr(relevantNeigh, Collections.singleton(shape), shape, vCxt);
+            return TripleExprEval.matchesExpr(relevantNeigh, shape, vCxt);
         }
 
         @Override
