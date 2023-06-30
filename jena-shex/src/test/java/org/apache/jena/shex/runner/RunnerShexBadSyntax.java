@@ -75,6 +75,7 @@ public class RunnerShexBadSyntax extends AbstractRunnerFiles {
             fail("Parsed negative syntax test");
             return shapes;
         } catch (ShexParseException ex) {
+            System.out.println(filename);
             return null;
         }
     }

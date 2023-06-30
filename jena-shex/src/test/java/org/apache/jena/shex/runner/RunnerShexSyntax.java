@@ -62,7 +62,7 @@ public class RunnerShexSyntax extends AbstractRunnerFiles {
             return shapes;
         } catch (RuntimeException ex) {
             System.out.print("-- ");
-            System.out.println(FileOps.basename(filename));
+            System.out.println(filename);
             if ( ex.getMessage() != null )
                 System.out.println(ex.getMessage());
             else

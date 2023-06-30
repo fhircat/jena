@@ -28,7 +28,7 @@ ABSTRACT <H> EXTENDS @<G> {} AND /s.......H...$/
                                  { <p> [0 1 2 3 4 5     8 9]* }
          <I>                 { <q> [          5        ] } AND    /s........I..$/
 
-         <J> EXTENDS @<H> {}
+         <J> EXTENDS @<H> 
               EXTENDS @<I>
                                           { <q> [            6      ] }
                              AND /s.........J.$/

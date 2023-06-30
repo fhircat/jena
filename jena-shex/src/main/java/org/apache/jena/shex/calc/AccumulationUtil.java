@@ -28,12 +28,12 @@ public class AccumulationUtil {
 
     /** Accumulate the forward and backward predicates of a triple expression.
      * Follows triple expression references.
-     * @param tripleExpr The triple expression to explore
+     * @param tripleExprs The triple expressions to explore
      * @param tripleExprRefsDefs Retrieves the definition of a triple expression reference
      * @param accFwdPredicates The collection to which the forward predicates are added
      * @param accInvPredicates The collection to which the inverse predicates are added
      */
-    public static void accumulatePredicates(TripleExpr tripleExpr,
+    public static void accumulatePredicates(Collection<TripleExpr> tripleExprs,
                                             Function<Node, TripleExpr> tripleExprRefsDefs,
                                             Collection<Node> accFwdPredicates,
                                             Collection<Node> accInvPredicates) {
@@ -59,7 +59,7 @@ public class AccumulationUtil {
                 .processTripleExprsWith(invPredAccumulator)
                 .followTripleExprRefs(tripleExprRefsDefs)
                 .build();
-        tripleExpr.visit(walker);
+        tripleExprs.forEach(te -> te.visit(walker));
     }
 
     /** Accumulates the shape expression references that appear in a shape expression.

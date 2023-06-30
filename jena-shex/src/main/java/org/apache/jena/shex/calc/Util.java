@@ -8,14 +8,13 @@ import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.validation.ESet;
+import org.apache.jena.shex.validation.ValidationContext;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // different utilities, waiting to be moved to an appropriate place
 public class Util {
@@ -82,9 +81,15 @@ public class Util {
         return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getRight();
     }
 
-    public static void collectRelevantNeighbourhood(Graph graph, Node dataNode,
-                                                    Set<Node> fwdPredicates, Set<Node> invPredicates,
-                                                    Set<Triple> accMatchables, Set<Triple> accNonMatchables) {
+    public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
+                                                     Collection<TripleExpr> tripleExprs,
+                                                     Set<Triple> accMatchables, Set<Triple> accNonMatchables,
+                                                     ValidationContext vCxt) {
+
+        Set<Node> fwdPredicates = new HashSet<>();
+        Set<Node> invPredicates = new HashSet<>();
+        AccumulationUtil.accumulatePredicates(tripleExprs,
+                vCxt::getTripleExpr, fwdPredicates, invPredicates);
 
         // outgoing
         ExtendedIterator<Triple> outNeighbourhood = G.find(graph, dataNode, null, null);
@@ -98,6 +103,25 @@ public class Util {
         // incoming
         ExtendedIterator<Triple> inNeighbourhood = G.find(graph, null, null, dataNode);
         inNeighbourhood.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
+    }
+
+    public static Set<Triple> filterRelevantNeighbourhood(Set<Triple> neighbourhood,
+                                                          Node dataNode,
+                                                          TripleExpr tripleExpr,
+                                                          ValidationContext vCxt) {
+
+        Set<Node> fwdPredicates = new HashSet<>();
+        Set<Node> invPredicates = new HashSet<>();
+        AccumulationUtil.accumulatePredicates(List.of(tripleExpr),
+                vCxt::getTripleExpr, fwdPredicates, invPredicates);
+
+        return neighbourhood.stream()
+                .filter(triple ->
+                        triple.getSubject().equals(dataNode) && fwdPredicates.contains(triple.getPredicate())
+                                ||
+                                triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
+                .collect(Collectors.toSet());
+
     }
 
     public static void filterNeighbourhoodForPredicates (Set<Triple> neighbourhood, Node dataNode,
@@ -114,12 +138,13 @@ public class Util {
 
 
     public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
-        Pair<Shape, List<ShapeExpr>> mainAndConstr;
+        Shape mainShape;
         try {
-             mainAndConstr = mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs);
+             mainShape = mainShape(shapeExpr, shapeExprRefsDefs);
         } catch (ShexSchemaStructureException e) {
             return false;
         }
-        return ! mainAndConstr.getLeft().getExtends().isEmpty();
+        return ! mainShape.getExtends().isEmpty();
     }
+
 }

@@ -191,14 +191,14 @@ public class SchemaAnalysis {
         Set<Node> mainShapeInvPredicates = new HashSet<>();
         typeHierarchyGraph.getSupertypes(shapeDecl).forEach(sd ->
                 AccumulationUtil.accumulatePredicates(
-                        Util.mainShape(sd.getShapeExpr(), shapeDeclMap::get).getTripleExpr(),
+                        List.of(Util.mainShape(sd.getShapeExpr(), shapeDeclMap::get).getTripleExpr()),
                         tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 
         Set<Node> constraintShapesFwdPredicates = new HashSet<>();
         Set<Node> constraintShapesInvPredicates = new HashSet<>();
         shapesInConstraints.forEach(constraintShape ->
-            AccumulationUtil.accumulatePredicates(constraintShape.getTripleExpr(), tripleRefsMap::get,
+            AccumulationUtil.accumulatePredicates(List.of(constraintShape.getTripleExpr()), tripleRefsMap::get,
                     constraintShapesFwdPredicates, constraintShapesInvPredicates));
 
         return mainShapeFwdPredicates.containsAll(constraintShapesFwdPredicates)

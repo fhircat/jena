@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.validation;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
@@ -137,17 +138,10 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(Shape shape, Object alwaysNull) {
-            Set<Node> fwdPredicates = new HashSet<>();
-            Set<Node> invPredicates = new HashSet<>();
-
-            AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
-                    vCxt::getTripleExpr, fwdPredicates, invPredicates);
-
-            // Retrieve the relevant neighbourhood and check closed constraint
             Set<Triple> accMatchables = new HashSet<>();
             Set<Triple> accNonMatchables = new HashSet<>();
-            Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
-                    accMatchables, accNonMatchables);
+            Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode, List.of(shape.getTripleExpr()),
+                    accMatchables, accNonMatchables, vCxt);
 
             if (shape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
@@ -179,28 +173,28 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeAnd shapeAnd, Object arg) {
+            Pair<Shape, List<ShapeExpr>> mainAndConstr = Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl);
+            return _visit(mainAndConstr.getLeft(), mainAndConstr.getRight());
+        }
 
+        @Override
+        public Boolean visit(Shape shape, Object arg) {
+            return _visit(shape, List.of());
+        }
+
+        private Boolean _visit (Shape mainShape, List<ShapeExpr> constraints) {
             // maps extended labels to their respective main shapes
             Map<Node, Shape> baseMainShapes = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
                     .collect(Collectors.toMap(ShapeDecl::getLabel,
-                            sd -> Util.mainShapeAndConstraints(sd.getShapeExpr(), vCxt::getShapeDecl).getLeft()
-            ));
+                            sd -> Util.mainShape(sd.getShapeExpr(), vCxt::getShapeDecl)
+                    ));
 
-            // Retrieve the relevant neighbourhood
-            Set<Node> fwdPredicates = new HashSet<>();
-            Set<Node> invPredicates = new HashSet<>();
-
-            baseMainShapes.values().forEach(s ->
-                    AccumulationUtil.accumulatePredicates(s.getTripleExpr(),
-                            vCxt::getTripleExpr, fwdPredicates, invPredicates));
-
-            // Retrieve the relevant neighbourhood and check closed constraint
             Set<Triple> accMatchables = new HashSet<>();
             Set<Triple> accNonMatchables = new HashSet<>();
-            Util.collectRelevantNeighbourhood(vCxt.getGraph(), dataNode, fwdPredicates, invPredicates,
-                    accMatchables, accNonMatchables);
+            Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode,
+                    baseMainShapes.values().stream().map(Shape::getTripleExpr).collect(Collectors.toList()),
+                    accMatchables, accNonMatchables, vCxt);
 
-            Shape mainShape = Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl).getLeft();
             if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
                 return false;
 
@@ -212,7 +206,7 @@ public class ShapeExprEval {
 
             for (Node label : baseMainShapes.keySet()) {
                 ShapeDecl shapeDecl = vCxt.getShapeDecl(label);
-                for (ShapeExpr constr : Util.mainShapeAndConstraints(shapeDecl.getShapeExpr(), vCxt::getShapeDecl).getRight()) {
+                for (ShapeExpr constr : Util.constraints(shapeDecl.getShapeExpr(), vCxt::getShapeDecl)) {
                     Set<Triple> triples = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
                             .map(ShapeDecl::getLabel)
                             .flatMap(l -> satisfyingTriples.get(l).stream())
@@ -222,18 +216,13 @@ public class ShapeExprEval {
                 }
             }
 
-            for (ShapeExpr constr : Util.mainShapeAndConstraints(shapeAnd, vCxt::getShapeDecl).getRight()) {
-                    if (! satisfiesExtendsConstraint(constr, dataNode, satisfyingTriples.get(shapeDecl.getLabel()), vCxt))
-                        return false;
+            for (ShapeExpr constr : constraints) {
+                if (! satisfiesExtendsConstraint(constr, dataNode, satisfyingTriples.get(shapeDecl.getLabel()), vCxt))
+                    return false;
             }
             return true;
         }
 
-        @Override
-        public Boolean visit(Shape shape, Object arg) {
-            // FIXME
-            return null;
-        }
 
         @Override
         public Boolean visit(ShapeOr shapeOr, Object arg) {
@@ -288,18 +277,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(Shape shape, Set<Triple> neigh) {
 
-            Set<Node> fwdPredicates = new HashSet<>();
-            Set<Node> invPredicates = new HashSet<>();
-            AccumulationUtil.accumulatePredicates(shape.getTripleExpr(),
-                    vCxt::getTripleExpr, fwdPredicates, invPredicates);
-
-            Set<Triple> relevantNeigh = neigh.stream()
-                    .filter(triple ->
-                            triple.getSubject().equals(dataNode) && fwdPredicates.contains(triple.getPredicate())
-                            ||
-                            triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
-                    .collect(Collectors.toSet());
-
+            Set<Triple> relevantNeigh = Util.filterRelevantNeighbourhood(neigh, dataNode, shape.getTripleExpr(), vCxt);
             return TripleExprEval.matchesExpr(relevantNeigh, shape, vCxt);
         }
 
