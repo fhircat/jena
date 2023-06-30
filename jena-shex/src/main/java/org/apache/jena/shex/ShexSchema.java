@@ -59,7 +59,7 @@ public class ShexSchema {
     // TODO this shouldn't be here, but for now I need it for validating extends and no time to figure out where is more appropriate
     // Needs visibility to the shape declarations map
     public static TypeHierarchyGraph computeTypeHierarchyGraph (ShexSchema schema) {
-        return new TypeHierarchyGraph(Util.computeExtendsReferencesGraph(schema.shapeMap), schema.shapeMap);
+        return TypeHierarchyGraph.create(schema.shapeMap);
     }
 
     public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,

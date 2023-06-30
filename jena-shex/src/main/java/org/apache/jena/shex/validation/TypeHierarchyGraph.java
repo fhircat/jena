@@ -5,34 +5,56 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.calc.AccumulationUtil;
 import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExprRef;
-import org.jgrapht.Graphs;
+import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TypeHierarchyGraph {
 
-    private final DefaultDirectedGraph<THVertex, DefaultEdge> graph;
+    private DefaultDirectedGraph<THVertex, DefaultEdge> graph;
 
-    public TypeHierarchyGraph (DefaultDirectedGraph<Node, DefaultEdge> extendsReferencesGraph,
-                               Map<Node, ShapeDecl> shapeDeclMap) {
-        graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        for (DefaultEdge extendsRef : extendsReferencesGraph.edgeSet()) {
-            Node src = extendsReferencesGraph.getEdgeSource(extendsRef);
-            Node tgt = extendsReferencesGraph.getEdgeTarget(extendsRef);
-            Graphs.addEdgeWithVertices(graph,
-                    new THVertex(src, shapeDeclMap.get(src)),
-                    new THVertex(tgt, shapeDeclMap.get(tgt)));
-        }
+    private TypeHierarchyGraph(){}
+
+    public static TypeHierarchyGraph create (Map<Node, ShapeDecl> shapeDeclMap) {
+
+        TypeHierarchyGraph result = new TypeHierarchyGraph();
+        result.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+
+        shapeDeclMap.forEach((label, decl) -> {
+            result.graph.addVertex(new THVertex(decl));
+            List<Shape> accShapes = new ArrayList<>();
+            AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
+            for (Shape shape : accShapes)
+                for (ShapeExprRef extended : shape.getExtends())
+                    result.graph.addEdge(new THVertex(decl), new THVertex(shapeDeclMap.get(extended.getLabel())));
+        });
+        // Remove the isolated vertices, ie those that do not participate in the type hierarchy
+        List<THVertex> toBeRemoved = result.graph.vertexSet().stream()
+                .filter(v -> result.graph.degreeOf(v) == 0)
+                .collect(Collectors.toList());
+        result.graph.removeAllVertices(toBeRemoved);
+        return result;
+    }
+
+    public boolean hasCycles () {
+        CycleDetector<THVertex, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
+        return cycleDetector.detectCycles();
+    }
+
+    /** All shape declarations that participate in the type hierarchy, i.e. extend something or are extended. */
+    public Stream<ShapeDecl> extendableShapeDecls () {
+        return graph.vertexSet().stream().map(v -> v.shapeDecl);
     }
 
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
     public List<ShapeDecl> getNonAbstractSubtypes(ShapeDecl shapeDecl) {
         return nonAbstractAncestorsMap.computeIfAbsent(shapeDecl.getLabel(),
-                label -> getAncestors(new THVertex(label, shapeDecl)).stream()
+                label -> getAncestors(new THVertex(shapeDecl)).stream()
                         .map(thVertex -> thVertex.shapeDecl)
                         .filter(sd -> !sd.isAbstract())
                         .collect(Collectors.toList()));
@@ -44,7 +66,8 @@ public class TypeHierarchyGraph {
     // TODO should this return the shape declarations or only the labels ?
     public List<ShapeDecl> getSupertypes(ShapeDecl shapeDecl) {
         return supertypesMap.computeIfAbsent(shapeDecl.getLabel(),
-                label -> getDescendants(new THVertex(label, shapeDecl)).stream()
+                label -> getDescendants(new THVertex(shapeDecl))
+                        .stream()
                         .map(thVertex -> thVertex.shapeDecl)
                         .collect(Collectors.toList()));
     }
@@ -62,8 +85,8 @@ public class TypeHierarchyGraph {
 
     /** Computes ancestors or descendants of a node provided the appropriate functions */
     private Set<THVertex> getClosure (THVertex vertex,
-                                       Function<THVertex, Set<DefaultEdge>> adjacent,
-                                       Function<DefaultEdge, THVertex> opposite) {
+                                      Function<THVertex, Set<DefaultEdge>> adjacent,
+                                      Function<DefaultEdge, THVertex> opposite) {
         if (! graph.containsVertex(vertex))
             return Set.of(vertex);
 
@@ -83,34 +106,33 @@ public class TypeHierarchyGraph {
         return result;
     }
 
+    /** A vertex in the graph is basically a ShapeDecl.
+     * We however use this internal representation in order to avoid unnecessary hashCode and equals
+     * computations on graph vertices.
+     * This vertex class relies on the fact that the vertices are ShapeDecl with distinct labels,
+     * so hashCode is based only on labels.
+     * */
     private static class THVertex {
 
-        public final Node label;
-        public final ShapeDecl shapeDecl;
+       public final ShapeDecl shapeDecl;
 
-        THVertex(Node label, ShapeDecl shapeDecl) {
-            this.label = label;
+        THVertex(ShapeDecl shapeDecl) {
             this.shapeDecl = shapeDecl;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof THVertex)) return false;
-
-            THVertex thNode = (THVertex) o;
-
-            return label.equals(thNode.label);
+        public String toString() {
+            return THVertex.class.getSimpleName() + "[" + shapeDecl.getLabel() + "]";
         }
 
         @Override
         public int hashCode() {
-            return label.hashCode();
+            return shapeDecl.getLabel().hashCode();
         }
 
         @Override
-        public String toString() {
-            return THVertex.class.getSimpleName() + "[" + label + "]";
+        public boolean equals(Object obj) {
+            return (obj instanceof THVertex) && (((THVertex)obj).shapeDecl.getLabel() == shapeDecl.getLabel());
         }
     }
 

@@ -82,21 +82,6 @@ public class Util {
         return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getRight();
     }
 
-
-
-    public static DefaultDirectedGraph<Node, DefaultEdge> computeExtendsReferencesGraph(Map<Node, ShapeDecl> shapeDeclMap) {
-        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
-        shapeDeclMap.keySet().forEach(typeHierarchyGraph::addVertex);
-        shapeDeclMap.forEach((label, decl) -> {
-            List<Shape> accShapes = new ArrayList<>();
-            AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
-            for (Shape shape : accShapes)
-                for (ShapeExprRef extended : shape.getExtends())
-                    typeHierarchyGraph.addEdge(label, extended.getLabel());
-        });
-        return typeHierarchyGraph;
-    }
-
     public static void collectRelevantNeighbourhood(Graph graph, Node dataNode,
                                                     Set<Node> fwdPredicates, Set<Node> invPredicates,
                                                     Set<Triple> accMatchables, Set<Triple> accNonMatchables) {

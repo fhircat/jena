@@ -23,6 +23,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.validation.TypeHierarchyGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.alg.cycle.SzwarcfiterLauerSimpleCycles;
@@ -159,21 +160,16 @@ public class SchemaAnalysis {
     }
 
     private boolean checkExtendsCorrect () {
-        DefaultDirectedGraph<Node, DefaultEdge> typeHierarchyGraph = Util.computeExtendsReferencesGraph(shapeDeclMap);
-        CycleDetector<Node, DefaultEdge> cycleDetector = new CycleDetector<>(typeHierarchyGraph);
-        if (cycleDetector.detectCycles())
+        TypeHierarchyGraph typeHierarchyGraph = TypeHierarchyGraph.create(shapeDeclMap);
+        if (typeHierarchyGraph.hasCycles())
             throw new ShexSchemaStructureException("Cyclic extends");
 
-        return typeHierarchyGraph.vertexSet().stream()
-                // every label that extend another label or is extended
-                .filter(label -> typeHierarchyGraph.degreeOf(label) > 0)
-                // must be of the form mainShape AND constraints
-                .allMatch(label -> isMainShapeAndConstraints(shapeDeclMap.get(label).getShapeExpr()));
+        return typeHierarchyGraph.extendableShapeDecls()
+                .allMatch(sd -> isMainShapeAndConstraints(sd, typeHierarchyGraph));
     }
 
-    private boolean isMainShapeAndConstraints (ShapeExpr shapeExpr) {
-        Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(shapeExpr, shapeDeclMap::get);
-        Shape mainShape = mc.getLeft();
+    private boolean isMainShapeAndConstraints (ShapeDecl shapeDecl, TypeHierarchyGraph typeHierarchyGraph) {
+        Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(shapeDecl.getShapeExpr(), shapeDeclMap::get);
         List<ShapeExpr> constraints = mc.getRight();
 
         List<Shape> shapesInConstraints = new ArrayList<>();
@@ -182,17 +178,21 @@ public class SchemaAnalysis {
         if (shapesInConstraints.stream().anyMatch(shape -> ! shape.getExtends().isEmpty()))
             throw new ShexSchemaStructureException("Extendable shape with more than one extends");
 
-        if (! isConstraintPredicatesIncludedInMainShapePredicates (mainShape, shapesInConstraints))
+        if (! isConstraintPredicatesIncludedInMainShapePredicates (shapeDecl, shapesInConstraints, typeHierarchyGraph))
             throw new ShexSchemaStructureException("Extendable shape : Main shape does not contain all the predicates of the constraints");
 
         return true;
     }
 
-    private boolean isConstraintPredicatesIncludedInMainShapePredicates(Shape mainShape, List<Shape> shapesInConstraints) {
+    private boolean isConstraintPredicatesIncludedInMainShapePredicates(ShapeDecl shapeDecl,
+                                                                        List<Shape> shapesInConstraints,
+                                                                        TypeHierarchyGraph typeHierarchyGraph) {
         Set<Node> mainShapeFwdPredicates = new HashSet<>();
         Set<Node> mainShapeInvPredicates = new HashSet<>();
-        Util.mainShapesOfBases(mainShape, shapeDeclMap::get).forEach(baseShape ->
-                AccumulationUtil.collectPredicates(baseShape.getTripleExpr(), tripleRefsMap::get,
+        typeHierarchyGraph.getSupertypes(shapeDecl).forEach(sd ->
+                AccumulationUtil.accumulatePredicates(
+                        Util.mainShape(sd.getShapeExpr(), shapeDeclMap::get).getTripleExpr(),
+                        tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 
         Set<Node> constraintShapesFwdPredicates = new HashSet<>();
