@@ -49,10 +49,12 @@ public class ShapeExprEval {
             vCxt.startValidate(base, dataNode);
             try {
                 ShapeExpr shapeExpr = base.getShapeExpr();
-                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl))
-                    return satisfiesWithExtends(base, dataNode, vCxt); // TODO semantic actions and extends ?
-                else
-                    return satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
+                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl)
+                        && satisfiesWithExtends(base, dataNode, vCxt))
+                    return true;
+                    // TODO semantic actions and extends ?
+                else if (satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode))
+                    return true;
             } finally {
                 vCxt.finishValidate(base, dataNode);
             }
@@ -216,10 +218,11 @@ public class ShapeExprEval {
                 }
             }
 
+            /* TODO remove, already considered in the previous loop
             for (ShapeExpr constr : constraints) {
                 if (! satisfiesExtendsConstraint(constr, dataNode, satisfyingTriples.get(shapeDecl.getLabel()), vCxt))
                     return false;
-            }
+            }*/
             return true;
         }
 

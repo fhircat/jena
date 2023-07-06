@@ -56,7 +56,7 @@ public class Util {
 
         if (shapeExpr instanceof Shape) {
             mainShape = (Shape) shapeExpr;
-            constraints = Collections.emptyList();
+            constraints = List.of();
         } else if (! (shapeExpr instanceof ShapeAnd))
             throw new ShexSchemaStructureException("Extendable shape is neither a ShapeAnd nor a Shape");
         else {

@@ -74,7 +74,7 @@ public class TripleExprEval {
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
                 .collect(Collectors.toMap(Function.identity(),
                         t -> new ArrayList<>()));
-        for (SorbeTripleExpr sorbeTripleExpr :  toBeMatched) {
+        for (SorbeTripleExpr sorbeTripleExpr : toBeMatched) {
             // this loop is needed only for extends, but does no harm w/o extends
             Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
             pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
@@ -89,8 +89,7 @@ public class TripleExprEval {
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
                 if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt))
                     it.remove();
-            }
-        });
+            }});
 
         // 3. Check whether all non matching triples are allowed by extra
         Iterator<Map.Entry<Triple, List<TripleConstraint>>> it = preMatching.entrySet().iterator();
@@ -111,7 +110,7 @@ public class TripleExprEval {
         while (mit.hasNext()) {
             Map<Triple, TripleConstraint> matching = mit.next();
             boolean mainShapesAreSatisfied = toBeMatched.stream().allMatch(sorbeTripleExpr -> {
-                // this loop is needed only for extends, but does no harms w/o extends
+                // this loop is needed only for extends, but does no harm w/o extends
                 Cardinality interval = sorbeTripleExpr.computeInterval(matching);
                 return interval.min <= 1 && 1 <= interval.max
                         // the triple expression is satisfied by the matching, check semantic actions
@@ -197,7 +196,7 @@ public class TripleExprEval {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> e.getValue().getSorbeTripleConstraintsOfSorbeSubExpr(e.getValue().sorbe).stream()
-                                .flatMap(tc -> inverseMatching.get(tc).stream())
+                                .flatMap(tc -> inverseMatching.getOrDefault(tc, Set.of()).stream())
                                 .collect(Collectors.toSet())));
 
     }

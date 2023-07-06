@@ -25,8 +25,8 @@ public class TypeHierarchyGraph {
         TypeHierarchyGraph result = new TypeHierarchyGraph();
         result.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
+        shapeDeclMap.forEach((label, decl) -> result.graph.addVertex(new THVertex(decl)));
         shapeDeclMap.forEach((label, decl) -> {
-            result.graph.addVertex(new THVertex(decl));
             List<Shape> accShapes = new ArrayList<>();
             AccumulationUtil.accumulateShapesFollowShapeExprRefs(decl.getShapeExpr(), shapeDeclMap::get, accShapes);
             for (Shape shape : accShapes)
