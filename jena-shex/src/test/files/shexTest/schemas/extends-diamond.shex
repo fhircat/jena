@@ -1,0 +1,7 @@
+BASE <http://a.example/>
+
+<A>                 { <a> . }
+<B> EXTENDS @<A>    { <b> . }
+<C> EXTENDS @<A>    { <c> . }
+<D> EXTENDS @<B>
+    EXTENDS @<C> { <d> . }
