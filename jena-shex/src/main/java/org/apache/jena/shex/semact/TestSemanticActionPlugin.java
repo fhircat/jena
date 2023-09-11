@@ -102,14 +102,18 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
 
     private static String resolveStartVar(String varName) {
         if (varName.charAt(0) == '"')
-            return varName.replaceAll("\\\\(.)", "$1");
+            return getQuotedValue(varName);
 
         throw new RuntimeException(String.format("Start %s semantic action argument %s was not a literal", SemActIri, varName));
     }
 
+    private static String getQuotedValue(String varName) {
+        return varName.substring(1, varName.length() - 1).replaceAll("\\\\(.)", "$1");
+    }
+
     private static String resolveNodeVar(String varName, Node focus) {
         if (varName.charAt(0) == '"')
-            return varName.replaceAll("\\\\(.)", "$1");
+            return getQuotedValue(varName);
 
         Node pos;
         switch (varName) {
@@ -122,7 +126,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
 
     private static String resolveTripleVar(String varName, Triple triple) {
         if (varName.charAt(0) == '"')
-            return varName.replaceAll("\\\\(.)", "$1");
+            return getQuotedValue(varName);
 
         if (triple == null)
             return null;
