@@ -16428,7 +16428,8 @@
       sht:schema <../schemas/node_kind_example.shex> ;
       sht:map <node_kind_example_map.json> ;
       sht:data <node_kind_example.ttl>
-    ]
+    ] ;
+    mf:result <node_kind_example_results.json>
     .
 
 <#dependent_shape> a sht:ValidationTest ; # dependent_shape
@@ -16440,7 +16441,8 @@
       sht:schema <../schemas/dependent_shape.shex> ;
       sht:map <dependent_shape_map.json> ;
       sht:data <dependent_shape.ttl>
-    ]
+    ] ;
+    mf:result <dependent_shape_results.json>
     .
 
 <#recursion_example> a sht:ValidationTest ; # recursion_example
@@ -16452,7 +16454,8 @@
       sht:schema <../schemas/recursion_example.shex> ;
       sht:map <recursion_example_map.json> ;
       sht:data <recursion_example.ttl>
-    ]
+    ] ;
+    mf:result <recursion_example_results.json>
     .
 
 ## } ShapeMaps
