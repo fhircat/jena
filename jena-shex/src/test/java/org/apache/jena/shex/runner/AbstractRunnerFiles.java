@@ -116,7 +116,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
         BiPredicate<Path, BasicFileAttributes> predicate = (path,attr)->attr.isRegularFile() && path.toString().endsWith(".shex");
 
         List<String> files = new ArrayList<>();
-
+        List<String> skipped = new ArrayList<>();
         if ( includes.isEmpty() ) {
             try {
                 Files.find(src, 1, predicate)
@@ -125,7 +125,10 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
                     .filter(p -> {
                         if (selected == null) return true;
                         String fn = p.getFileName().toString();
-                        return selected.stream().filter(pattern -> pattern.matcher(fn).matches()).findAny().isPresent();
+                        if (selected.stream().filter(pattern -> pattern.matcher(fn).matches()).findAny().isPresent())
+                            return true;
+                        skipped.add(fn);
+                        return false;
                     })
                     .sorted()
                     .map(Path::toString)
@@ -133,6 +136,8 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (files.size() == 0)
+                throw new RuntimeException("TESTS pattern " + System.getenv("TESTS") + " matched none of " + skipped.stream().map(l -> "\n  " + l).collect(Collectors.joining()));
         } else {
             includes.forEach(fn->files.add(fn));
         }
@@ -144,18 +149,22 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
     private static IndentedWriter out = IndentedWriter.stdout;
 
     public static RunnerOneTest buildTest(String filename, Function<String, Runnable> maker, String prefix) {
-        Description description = Description.createSuiteDescription(filename);
+//        Description description = Description.createSuiteDescription(filename);
         Runnable runnable = maker.apply(filename);
         String name = StringUtils.isEmpty(prefix)
                 ? fixupName(filename)
                 : prefix+" "+fixupName(filename);
-        return new RunnerOneTest(filename, runnable);
+        return new RunnerOneTest(name, runnable);
     }
 
-    // Keep Eclipse happy.
     public static String fixupName(String string) {
+        // Keep Eclipse happy.
         string = string.replace('(', '[');
         string = string.replace(')', ']');
+
+        // Keep IntelliJ happy
+        string = string.replace(".shex", "");
+        string = string.replace(".", " ");
         return string;
     }
 

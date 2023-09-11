@@ -168,10 +168,16 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
         } else {
             selected = null; // Why does this have to be "effectively final"?
         }
+        List<String> skipped = new ArrayList<>();
         manifest.entries().forEach(entry->{
             String label = prepareTestLabel(entry, prefix);
             if (selected == null || selected.stream()
-                    .filter(pattern -> pattern.matcher(label).matches())
+                    .filter(pattern -> {
+                        if (pattern.matcher(label).matches())
+                            return true;
+                        skipped.add(label);
+                        return false;
+                    })
                     .findAny()
                     .isPresent()) {
                 Runnable runnable = maker.apply(entry);
@@ -181,6 +187,8 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
                 }
             }
         });
+        if (skipped.size() == manifest.entries().size())
+            throw new RuntimeException("TESTS pattern " + System.getenv("TESTS") + " did not match any of " + skipped.stream().map(l -> "\n  " + l).collect(Collectors.joining()));
     }
 
     public static String fixupName(String string) {
