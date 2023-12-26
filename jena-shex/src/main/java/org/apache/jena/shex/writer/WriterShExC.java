@@ -29,7 +29,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.RiotLib;
-import org.apache.jena.riot.writer.DirectiveStyle;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
