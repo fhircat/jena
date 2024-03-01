@@ -21,11 +21,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.riot.other.G;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.validation.ValidationContext;
+//import org.apache.jena.riot.other.G;
+import org.apache.jena.system.G;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
 import java.util.*;
