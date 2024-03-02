@@ -18,12 +18,6 @@
 
 package org.apache.jena.shex.parser;
 
-import static java.lang.String.format;
-
-import java.io.*;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.lib.IRILib;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -34,14 +28,20 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.calc.ExpressionWalker;
+import org.apache.jena.shex.calc.VoidShapeExprVisitor;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.parser.javacc.ParseException;
 import org.apache.jena.shex.parser.javacc.ShExJavacc;
 import org.apache.jena.shex.parser.javacc.TokenMgrError;
 import org.apache.jena.shex.sys.SysShex;
-import org.apache.jena.shex.calc.VoidShapeExprVisitor;
 import org.apache.jena.sparql.expr.nodevalue.XSDFuncOp;
 import org.apache.jena.sparql.util.Context;
+
+import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
+
+import static java.lang.String.format;
 
 /** Shape Expressions : Compact syntax */
 public class ShExC {

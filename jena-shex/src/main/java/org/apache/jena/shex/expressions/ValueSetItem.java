@@ -18,11 +18,11 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.Objects;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.sys.ShexLib;
+
+import java.util.Objects;
 
 public class ValueSetItem {
     String iriStr;

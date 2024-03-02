@@ -18,18 +18,15 @@
 
 package org.apache.jena.shex;
 
-import java.util.*;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.system.PrefixMap;
-import org.apache.jena.shex.calc.Util;
+import org.apache.jena.shex.calc.SchemaAnalysis;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.sys.SysShex;
-import org.apache.jena.shex.calc.SchemaAnalysis;
 import org.apache.jena.shex.validation.TypeHierarchyGraph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
+
+import java.util.*;
 
 /**
  * Shex Schema - a collection of shapes.

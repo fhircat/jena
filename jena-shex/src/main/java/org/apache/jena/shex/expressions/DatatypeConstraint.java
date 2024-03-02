@@ -18,17 +18,16 @@
 
 package org.apache.jena.shex.expressions;
 
-import static org.apache.jena.shex.sys.ShexLib.*;
-
-import java.util.Objects;
-
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.vocabulary.XSD;
+
+import java.util.Objects;
+
+import static org.apache.jena.shex.sys.ShexLib.displayStr;
 
 public class DatatypeConstraint extends NodeConstraintComponent {
     private final Node datatype;

@@ -18,12 +18,6 @@
 
 package org.apache.jena.shex;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.IRILib;
@@ -39,6 +33,12 @@ import org.apache.jena.shex.parser.ShExC;
 import org.apache.jena.shex.parser.ShExJ;
 import org.apache.jena.shex.sys.SysShex;
 import org.apache.jena.sys.JenaSystem;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <a href="https://shex.io/">ShEx</a>

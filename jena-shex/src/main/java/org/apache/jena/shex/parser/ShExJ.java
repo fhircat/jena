@@ -18,20 +18,20 @@
 
 package org.apache.jena.shex.parser;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonException;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.ShexRecord;
-import org.apache.jena.shex.ShapeMap;
+
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Shape Expressions : JSON syntax */
 public class ShExJ {

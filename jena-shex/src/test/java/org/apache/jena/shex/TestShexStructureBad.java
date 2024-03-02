@@ -23,7 +23,6 @@ import org.apache.jena.arq.junit.runners.Label;
 import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.riot.SysRIOT;
 import org.apache.jena.shex.runner.RunnerShexBadStructure;
-import org.apache.jena.shex.runner.RunnerShexBadSyntax;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;

@@ -18,11 +18,6 @@
 
 package org.apache.jena.shex.runner;
 
-import static org.junit.Assert.fail;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.io.IndentedLineBuffer;
 import org.apache.jena.atlas.io.IndentedWriter;
@@ -31,6 +26,11 @@ import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShexParseException;
 import org.apache.jena.shex.writer.WriterShExC;
 import org.junit.runners.model.InitializationError;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.Assert.fail;
 
 public class RunnerPrintShex extends org.apache.jena.shex.runner.AbstractRunnerFiles {
 

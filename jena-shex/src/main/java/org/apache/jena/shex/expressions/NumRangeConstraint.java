@@ -18,15 +18,15 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.Objects;
-import java.util.StringJoiner;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.riot.out.NodeFmtLib;
 import org.apache.jena.shex.ShexException;
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.VoidNodeConstraintComponentVisitor;
 import org.apache.jena.sparql.expr.NodeValue;
+
+import java.util.Objects;
+import java.util.StringJoiner;
 
 public class NumRangeConstraint extends NodeConstraintComponent {
 

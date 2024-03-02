@@ -18,9 +18,9 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.function.Supplier;
-
 import org.apache.jena.atlas.io.IndentedWriter;
+
+import java.util.function.Supplier;
 
 /** Misc internal code */
 // TODO not used in tests

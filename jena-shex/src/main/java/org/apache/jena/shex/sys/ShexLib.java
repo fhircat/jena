@@ -18,8 +18,6 @@
 
 package org.apache.jena.shex.sys;
 
-import java.io.OutputStream;
-
 import org.apache.jena.atlas.io.AWriter;
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.io.IndentedLineBuffer;
@@ -36,6 +34,8 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
+
+import java.io.OutputStream;
 
 public class ShexLib {
     /** Extract the fragment from a URI. Return "". */

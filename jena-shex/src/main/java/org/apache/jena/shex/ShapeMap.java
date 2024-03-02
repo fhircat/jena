@@ -18,12 +18,12 @@
 
 package org.apache.jena.shex;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
 
 /**
  * <a href="https://shexspec.github.io/shape-map/">ShEx shape map</a> used for both

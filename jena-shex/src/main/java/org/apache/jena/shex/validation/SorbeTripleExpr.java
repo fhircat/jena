@@ -25,9 +25,9 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.calc.AccumulationUtil;
 import org.apache.jena.shex.calc.ExpressionWalker;
-import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
 import org.apache.jena.shex.calc.TypedTripleExprVisitor;
+import org.apache.jena.shex.expressions.*;
 
 import java.util.*;
 import java.util.function.Function;

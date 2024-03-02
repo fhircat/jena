@@ -18,13 +18,13 @@
 
 package org.apache.jena.shex.validation;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.*;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class TripleExprEval {
 

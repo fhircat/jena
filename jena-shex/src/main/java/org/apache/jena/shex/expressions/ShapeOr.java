@@ -18,12 +18,12 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.List;
-import java.util.Objects;
-
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.shex.calc.VoidShapeExprVisitor;
+
+import java.util.List;
+import java.util.Objects;
 
 public class ShapeOr extends ShapeExpr {
 

@@ -18,11 +18,11 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.Objects;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.shex.calc.VoidShapeExprVisitor;
+
+import java.util.Objects;
 
 /** Shape expression that redirects. */
 public class ShapeExprRef extends ShapeExpr {

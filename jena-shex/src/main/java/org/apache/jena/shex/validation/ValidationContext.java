@@ -18,20 +18,18 @@
 
 package org.apache.jena.shex.validation;
 
-import java.lang.reflect.Type;
-import java.util.*;
-
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
-import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.sys.ReportItem;
+
+import java.util.*;
 
 /**
  * Context for a validation and collector of the results.

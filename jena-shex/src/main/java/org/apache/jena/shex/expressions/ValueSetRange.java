@@ -18,14 +18,14 @@
 
 package org.apache.jena.shex.expressions;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
+import org.apache.jena.sparql.util.NodeUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-
-import org.apache.jena.graph.Node;
-import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
-import org.apache.jena.sparql.util.NodeUtils;
 
 public class ValueSetRange {
     public ValueSetItem item; //TODO Hum... do we want these to be public fields? Better to add getters and setters

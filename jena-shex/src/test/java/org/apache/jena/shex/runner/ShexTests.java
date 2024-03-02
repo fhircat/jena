@@ -18,9 +18,6 @@
 
 package org.apache.jena.shex.runner;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.apache.jena.arq.junit.manifest.Manifest;
 import org.apache.jena.arq.junit.manifest.ManifestEntry;
 import org.apache.jena.arq.junit.manifest.Prefix;
@@ -35,6 +32,9 @@ import org.apache.jena.riot.system.stream.LocatorFile;
 import org.apache.jena.riot.system.stream.StreamManager;
 import org.apache.jena.shex.expressions.Sx2;
 import org.apache.jena.vocabulary.RDF;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ShexTests {
     static boolean VERBOSE = false;

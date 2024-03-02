@@ -18,6 +18,16 @@
 
 package org.apache.jena.shex.runner;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.arq.junit.runners.Directories;
+import org.apache.jena.arq.junit.runners.RunnerOneTest;
+import org.apache.jena.atlas.io.IndentedWriter;
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.ParentRunner;
+import org.junit.runners.model.InitializationError;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,18 +41,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.arq.junit.runners.Directories;
-import org.apache.jena.arq.junit.runners.RunnerOneTest;
-import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.reasoner.rulesys.builtins.Regex;
-import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.ParentRunner;
-import org.junit.runners.model.InitializationError;
 
 /**
  * Common super class for {@code @Runner(....)}

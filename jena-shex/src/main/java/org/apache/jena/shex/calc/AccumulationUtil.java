@@ -21,7 +21,9 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 
 public class AccumulationUtil {

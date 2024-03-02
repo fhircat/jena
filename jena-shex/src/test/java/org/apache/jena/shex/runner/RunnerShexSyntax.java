@@ -18,17 +18,16 @@
 
 package org.apache.jena.shex.runner;
 
+import org.apache.jena.atlas.io.IO;
+import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.parser.ShExC;
+import org.junit.runners.model.InitializationError;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.jena.atlas.io.IO;
-import org.apache.jena.atlas.lib.FileOps;
-import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.parser.ShExC;
-import org.junit.runners.model.InitializationError;
 
 public class RunnerShexSyntax extends AbstractRunnerFiles {
 

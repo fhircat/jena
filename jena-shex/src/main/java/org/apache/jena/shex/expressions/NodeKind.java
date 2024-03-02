@@ -18,9 +18,9 @@
 
 package org.apache.jena.shex.expressions;
 
-import java.util.Locale;
-
 import org.apache.jena.shex.ShexException;
+
+import java.util.Locale;
 
 public enum NodeKind {
     IRI("IRI"), BNODE("BNode"), NONLITERAL("NonLiteral"), LITERAL("Literal"), TRIPLE("Triple");

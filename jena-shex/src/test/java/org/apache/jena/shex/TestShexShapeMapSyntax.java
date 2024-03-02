@@ -18,17 +18,17 @@
 
 package org.apache.jena.shex;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.jena.atlas.lib.StrUtils;
+import org.apache.jena.shex.parser.ShExC;
+import org.apache.jena.shex.parser.ShexParseException;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.jena.atlas.lib.StrUtils;
-import org.apache.jena.shex.parser.ShexParseException;
-import org.apache.jena.shex.parser.ShExC;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TestShexShapeMapSyntax {
     @Test public void shape_map_1() {

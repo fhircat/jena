@@ -17,7 +17,6 @@
  */
 package org.apache.jena.shex.validation;
 
-import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExpr;
 
 import java.util.List;

@@ -18,17 +18,17 @@
 
 package org.apache.jena.shex.sys;
 
-import java.util.*;
-
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.atlas.lib.ListUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.ShapeExprEval;
 import org.apache.jena.shex.validation.ValidationContext;
-import org.apache.jena.shex.semact.SemanticActionPlugin;
+
+import java.util.*;
 
 class ShexValidatorImpl implements ShexValidator{
 

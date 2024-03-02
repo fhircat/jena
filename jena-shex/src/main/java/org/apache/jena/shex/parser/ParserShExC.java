@@ -18,15 +18,6 @@
 
 package org.apache.jena.shex.parser;
 
-import static org.apache.jena.shex.parser.ParserShExC.Inline.INLINE;
-import static org.apache.jena.shex.parser.ParserShExC.Inline.NOT_INLINE;
-import static org.apache.jena.sparql.util.NodeUtils.nullToAny;
-
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.atlas.lib.EscapeStr;
 import org.apache.jena.atlas.lib.InternalErrorException;
@@ -37,12 +28,21 @@ import org.apache.jena.irix.IRIs;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.lang.extra.LangParserBase;
 import org.apache.jena.riot.lang.extra.LangParserLib;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexRecord;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
+
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static org.apache.jena.shex.parser.ParserShExC.Inline.INLINE;
+import static org.apache.jena.shex.parser.ParserShExC.Inline.NOT_INLINE;
+import static org.apache.jena.sparql.util.NodeUtils.nullToAny;
 
 /** ShEx Compact syntax parser */
 public class ParserShExC extends LangParserBase {

@@ -20,12 +20,21 @@
 
 package org.apache.jena.shex.parser.javacc;
 
-import static org.apache.jena.shex.sys.SysShex.*;
-import org.apache.jena.shex.parser.*;
-import org.apache.jena.shex.expressions.*;
-import org.apache.jena.graph.*;
-import static org.apache.jena.riot.lang.extra.LangParserLib.*;
-import java.util.*;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.expressions.Cardinality;
+import org.apache.jena.shex.expressions.SemAct;
+import org.apache.jena.shex.expressions.ShapeExprRef;
+import org.apache.jena.shex.expressions.TripleExpr;
+import org.apache.jena.shex.parser.ParserShExC;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.jena.riot.lang.extra.LangParserLib.stripQuotes;
+import static org.apache.jena.riot.lang.extra.LangParserLib.stripQuotes3;
+import static org.apache.jena.shex.sys.SysShex.focusNode;
+import static org.apache.jena.shex.sys.SysShex.startNode;
 
 public class ShExJavacc extends ParserShExC implements ShExJavaccConstants {
 
