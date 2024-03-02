@@ -43,10 +43,7 @@ public class RunnerShexBadStructure extends AbstractRunnerFiles {
 
     private static Set<String> includes() {
         Set<String> includes = new HashSet<>();
-<<<<<<< HEAD
         //includes.add("src/test/files/shexTest/negativeStructure/recursiveDefinitionOfTripleExpr.shex");
-=======
->>>>>>> 7de05f24f6 (check schema validity with extends)
         return includes;
     }
 
