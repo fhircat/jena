@@ -51,12 +51,14 @@ public class ShapeExprEval {
             vCxt.startValidate(base, dataNode);
             try {
                 ShapeExpr shapeExpr = base.getShapeExpr();
-                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl)
-                        && satisfiesWithExtends(base, dataNode, vCxt))
-                    return true;
-                    // TODO semantic actions and extends ?
-                else if (satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode))
-                    return true;
+                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl)) {
+                    if (satisfiesWithExtends(base, dataNode, vCxt))
+                        return true;
+                        // TODO semantic actions and extends ?
+                } else {
+                    if (satisfies(shapeExpr, dataNode, vCxt) && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode))
+                        return true;
+                }
             } finally {
                 vCxt.finishValidate(base, dataNode);
             }
@@ -69,7 +71,8 @@ public class ShapeExprEval {
         return shapeDeclWithExtends.getShapeExpr().visit(evaluator, null);
     }
 
-    /*package*/ static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
+    /*package*/
+    static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt) {
 
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, vCxt);
         return shapeExpr.visit(evaluator, null);
@@ -82,9 +85,9 @@ public class ShapeExprEval {
         return constr.visit(evaluator, neigh);
     }
 
-    private static boolean satisfies (NodeConstraint nodeConstraint, Node dataNode, ValidationContext vCxt) {
+    private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode, ValidationContext vCxt) {
         NodeConstraintComponentEvalVisitor componentEval = new NodeConstraintComponentEvalVisitor(dataNode);
-        return nodeConstraint.getComponents().stream().allMatch( ncc -> {
+        return nodeConstraint.getComponents().stream().allMatch(ncc -> {
             ReportItem error = ncc.visit(componentEval);
             if (error != null)
                 vCxt.reportEntry(error);
@@ -97,7 +100,7 @@ public class ShapeExprEval {
         private final ValidationContext vCxt;
         private final Node dataNode;
 
-        ShapeExprEvalVisitor (Node data, ValidationContext vCxt) {
+        ShapeExprEvalVisitor(Node data, ValidationContext vCxt) {
             this.vCxt = vCxt;
             this.dataNode = data;
         }
@@ -128,7 +131,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef, Object alwaysNull) {
             ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
-            if ( vCxt.cycle(dataNode, shapeDecl) )
+            if (vCxt.cycle(dataNode, shapeDecl))
                 return true;
             else
                 return satisfies(shapeDecl, dataNode, vCxt);
@@ -147,7 +150,7 @@ public class ShapeExprEval {
             Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode, List.of(shape.getTripleExpr()),
                     accMatchables, accNonMatchables, vCxt);
 
-            if (shape.isClosed() && ! accNonMatchables.isEmpty())
+            if (shape.isClosed() && !accNonMatchables.isEmpty())
                 return false;
 
             return TripleExprEval.matchesExpr(accMatchables, shape, vCxt);
@@ -158,9 +161,6 @@ public class ShapeExprEval {
             return satisfies(nodeConstraint, dataNode, vCxt);
         }
     }
-
-
-
 
 
     static class ExtendsShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Object> {
@@ -186,7 +186,7 @@ public class ShapeExprEval {
             return _visit(shape, List.of());
         }
 
-        private Boolean _visit (Shape mainShape, List<ShapeExpr> constraints) {
+        private Boolean _visit(Shape mainShape, List<ShapeExpr> constraints) {
             // maps extended labels to their respective main shapes
             Map<Node, Shape> baseMainShapes = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
                     .collect(Collectors.toMap(ShapeDecl::getLabel,
@@ -199,7 +199,7 @@ public class ShapeExprEval {
                     baseMainShapes.values().stream().map(Shape::getTripleExpr).collect(Collectors.toList()),
                     accMatchables, accNonMatchables, vCxt);
 
-            if (mainShape.isClosed() && ! accNonMatchables.isEmpty())
+            if (mainShape.isClosed() && !accNonMatchables.isEmpty())
                 return false;
 
             Map<Node, Set<Triple>> satisfyingTriples = TripleExprEval.matchesExpr(accMatchables, mainShape,
@@ -215,7 +215,7 @@ public class ShapeExprEval {
                             .map(ShapeDecl::getLabel)
                             .flatMap(l -> satisfyingTriples.get(l).stream())
                             .collect(Collectors.toSet());
-                    if (! satisfiesExtendsConstraint(constr, dataNode, triples, vCxt))
+                    if (!satisfiesExtendsConstraint(constr, dataNode, triples, vCxt))
                         return false;
                 }
             }
@@ -338,19 +338,19 @@ public class ShapeExprEval {
             // TODO Bad.
             return satisfied ? null
                     : new ReportItem(nodeKindCstr + " : Expected " + nodeKind + " for " + displayStr(dataNode),
-                                     dataNode);
+                    dataNode);
         }
 
         @Override
         public ReportItem visit(DatatypeConstraint datatypeCstr) {
-            if (! dataNode.isLiteral()) {
-                return new ReportItem(datatypeCstr+" : Not a literal", dataNode);
+            if (!dataNode.isLiteral()) {
+                return new ReportItem(datatypeCstr + " : Not a literal", dataNode);
             }
 
             if (datatypeCstr.getDatatypeURI().equals(dataNode.getLiteralDatatypeURI())) {
                 // Must be valid for the type
-                if ( ! datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm()) ) {
-                    String errMsg = datatypeCstr+" : Not valid value : Node "+displayStr(dataNode);
+                if (!datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm())) {
+                    String errMsg = datatypeCstr + " : Not valid value : Node " + displayStr(dataNode);
                     return new ReportItem(errMsg, dataNode);
                 }
             } else {
@@ -362,23 +362,23 @@ public class ShapeExprEval {
 
         @Override
         public ReportItem visit(NumLengthConstraint numLengthCstr) {
-            if ( ! dataNode.isLiteral() ) {
+            if (!dataNode.isLiteral()) {
                 String msg = format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode));
                 return new ReportItem(msg, dataNode);
             }
 
             RDFDatatype rdfDT = dataNode.getLiteralDatatype();
-            if ( ! ( rdfDT instanceof XSDDatatype) ) {
+            if (!(rdfDT instanceof XSDDatatype)) {
                 String msg = format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(dataNode));
                 return new ReportItem(msg, dataNode);
             }
 
-            if ( XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT) ) {
+            if (XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT)) {
                 String msg = format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(dataNode));
                 return new ReportItem(msg, dataNode);
             }
             String lexicalForm = dataNode.getLiteralLexicalForm();
-            if ( ! rdfDT.isValid(lexicalForm) ) {
+            if (!rdfDT.isValid(lexicalForm)) {
                 String msg = format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(dataNode));
                 return new ReportItem(msg, dataNode);
             }
@@ -387,53 +387,53 @@ public class ShapeExprEval {
             int idx = lexicalForm.indexOf('.');
 
             switch (numLengthCstr.getLengthType()) {
-                case FRACTIONDIGITS : {
+                case FRACTIONDIGITS: {
                     // Does not include trailing zeros.
-                    if ( idx < 0 ) {
+                    if (idx < 0) {
                         return null;
                     }
                     //int before = idx;
-                    int after = lexicalForm.length()-idx-1;
-                    for(int i = N-1 ; i > idx ; i-- ) {
-                        if ( lexicalForm.charAt(i) != '0' )
+                    int after = lexicalForm.length() - idx - 1;
+                    for (int i = N - 1; i > idx; i--) {
+                        if (lexicalForm.charAt(i) != '0')
                             break;
                         after--;
                     }
-                    if ( after <= numLengthCstr.getLength() ) {
+                    if (after <= numLengthCstr.getLength()) {
                         return null;
                     }
                     break;
                 }
-                case TOTALDIGITS : {
+                case TOTALDIGITS: {
                     // Canonical form.
                     int start = 0;
                     char ch1 = lexicalForm.charAt(0);
-                    if ( ch1 == '+' || ch1 == '-' )
+                    if (ch1 == '+' || ch1 == '-')
                         start++;
                     // Leading zeros
-                    for( int i = start ; i < N ; i++ ) {
-                        if ( lexicalForm.charAt(i) != '0' )
+                    for (int i = start; i < N; i++) {
+                        if (lexicalForm.charAt(i) != '0')
                             break;
                         start++;
                     }
-                    int finish = N ;
+                    int finish = N;
                     // Trailing zeros
-                    if ( idx >= 0 ) {
+                    if (idx >= 0) {
                         finish--;
-                        for(int i = N-1 ; i > idx ; i-- ) {
-                            if ( lexicalForm.charAt(i) != '0' )
+                        for (int i = N - 1; i > idx; i--) {
+                            if (lexicalForm.charAt(i) != '0')
                                 break;
                             finish--;
                         }
                     }
-                    int digits = finish-start;
+                    int digits = finish - start;
 
-                    if ( digits <= numLengthCstr.getLength() ) {
+                    if (digits <= numLengthCstr.getLength()) {
                         return null;
                     }
                     break;
                 }
-                default :
+                default:
                     break;
             }
 
@@ -444,25 +444,33 @@ public class ShapeExprEval {
 
         @Override
         public ReportItem visit(NumRangeConstraint numRangeCstr) {
-            if ( ! dataNode.isLiteral() ) {
+            if (!dataNode.isLiteral()) {
                 return new ReportItem("NumRange: Not a literal number", dataNode);
             }
             NodeValue nv = NodeValue.makeNode(dataNode);
             int r = NodeValue.compare(nv, numRangeCstr.getNumericValue());
 
-            switch(numRangeCstr.getRangeKind()) {
+            switch (numRangeCstr.getRangeKind()) {
 
-                case MAXEXCLUSIVE :
-                    if ( r < 0 ) {return null;}
+                case MAXEXCLUSIVE:
+                    if (r < 0) {
+                        return null;
+                    }
                     break;
-                case MAXINCLUSIVE :
-                    if ( r <= 0 ) {return null;}
+                case MAXINCLUSIVE:
+                    if (r <= 0) {
+                        return null;
+                    }
                     break;
-                case MINEXCLUSIVE :
-                    if ( r > 0 ) {return null;}
+                case MINEXCLUSIVE:
+                    if (r > 0) {
+                        return null;
+                    }
                     break;
-                case MININCLUSIVE :
-                    if ( r >= 0 ) {return null;}
+                case MININCLUSIVE:
+                    if (r >= 0) {
+                        return null;
+                    }
                     break;
             }
             String msg = format("Expected %s %s : got = %s", numRangeCstr.getRangeKind().label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(dataNode));
@@ -471,15 +479,15 @@ public class ShapeExprEval {
 
         @Override
         public ReportItem visit(StrRegexConstraint strRegexCstr) {
-            if ( dataNode.isBlank() ) {
-                String msg = toString()+": Blank node: "+displayStr(dataNode);
+            if (dataNode.isBlank()) {
+                String msg = toString() + ": Blank node: " + displayStr(dataNode);
                 return new ReportItem(msg, dataNode);
             }
             String str = NodeFunctions.str(dataNode);
-            if ( strRegexCstr.getPattern().matcher(str).find() ) {
+            if (strRegexCstr.getPattern().matcher(str).find()) {
                 return null;
             }
-            String msg = strRegexCstr+": Does not match: '"+str+"'";
+            String msg = strRegexCstr + ": Does not match: '" + str + "'";
             return new ReportItem(msg, dataNode);
         }
 
@@ -487,20 +495,26 @@ public class ShapeExprEval {
         public ReportItem visit(StrLengthConstraint strLengthCstr) {
             StrLengthKind lengthType = strLengthCstr.getLengthType();
             int length = strLengthCstr.getLength();
-            if ( ! dataNode.isLiteral() && ! dataNode.isURI() ) {
+            if (!dataNode.isLiteral() && !dataNode.isURI()) {
                 String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(dataNode));
                 return new ReportItem(msg, dataNode);
             }
             String str = NodeFunctions.str(dataNode);
             switch (lengthType) {
-                case LENGTH :
-                    if ( str.length() == length ) {return null;}
+                case LENGTH:
+                    if (str.length() == length) {
+                        return null;
+                    }
                     break;
-                case MAXLENGTH :
-                    if ( str.length() <= length ) {return null;}
+                case MAXLENGTH:
+                    if (str.length() <= length) {
+                        return null;
+                    }
                     break;
-                case MINLENGTH :
-                    if ( str.length() >= length ) {return null;}
+                case MINLENGTH:
+                    if (str.length() >= length) {
+                        return null;
+                    }
                     break;
             }
 
@@ -511,8 +525,8 @@ public class ShapeExprEval {
         @Override
         public ReportItem visit(ValueConstraint valueCstr) {
             boolean b = valueCstr.getValueSetRanges().stream()
-                    .anyMatch(valueSetRange->validateRange(valueSetRange, dataNode));
-            if ( !b ) {
+                    .anyMatch(valueSetRange -> validateRange(valueSetRange, dataNode));
+            if (!b) {
                 return new ReportItem("Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr, null);
             }
             return null;
@@ -520,10 +534,10 @@ public class ShapeExprEval {
 
         private boolean validateRange(ValueSetRange valueSetRange, Node data) {
             boolean b1 = valueSetRange.included(data);
-            if ( ! b1 )
+            if (!b1)
                 return false;
             boolean b2 = valueSetRange.excluded(data);
-            if ( b2 )
+            if (b2)
                 return false;
             // OK
             return true;
