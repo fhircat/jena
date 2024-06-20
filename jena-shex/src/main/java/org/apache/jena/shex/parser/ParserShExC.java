@@ -437,8 +437,8 @@ public class ParserShExC extends LangParserBase {
         TripleExpr tripleExpr2 = tripleExpr;
         if ( cardinality != null )
             tripleExpr2 = TripleExprCardinality.create(tripleExpr, cardinality, semActs);
-        else
-            tripleExpr2.setSemActs(semActs);
+        else if ( !semActs.isEmpty() )
+            tripleExpr2 = TripleExprCardinality.create(tripleExpr, new Cardinality(1, 1), semActs);
         push(tripleExprStack, tripleExpr2);
         if ( label != null )
             tripleExprRefs.put(label, tripleExpr2);

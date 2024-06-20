@@ -125,8 +125,8 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
 
     @Override
     public void visit(TripleExprCardinality tripleExprCardinality) {
-        process(tripleExprCardinality);
         tripleExprCardinality.getSubExpr().visit(this);
+        process(tripleExprCardinality);
     }
 
     @Override

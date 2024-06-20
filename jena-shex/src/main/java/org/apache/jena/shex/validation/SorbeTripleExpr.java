@@ -121,6 +121,7 @@ import java.util.stream.Collectors;
         return originSubExprsWithSemActs.stream()
                 .map(originSubExpr -> new ImmutablePair<>(originSubExpr,
                         triplesMatchedInOriginSubExpr(matching, originSubExpr, vCxt)))
+                .filter(p -> !p.getRight().isEmpty())
                 .collect(Collectors.toList());
     }
 
@@ -396,7 +397,9 @@ import java.util.stream.Collectors;
                 if (remainingForUnbounded != null)
                     newSubExprs.add(remainingForUnbounded);
 
-                return EachOf.create(newSubExprs, null);
+                return newSubExprs.size() == 1
+                ? TripleExprCardinality.create(newSubExprs.get(0), tripleExprCardinality.getCardinality(), tripleExprCardinality.getSemActs())
+                : EachOf.create(newSubExprs, null);
             }
         }
     }
