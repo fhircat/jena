@@ -83,7 +83,7 @@ public abstract class AbstractRunnerFiles extends ParentRunner<Runner> {
             if (testsDirEnv != null) {
                 File override = new File(testsDirEnv);
                 if (!override.exists())
-                    throw new InitializationError("Can't resolve " + Path.of("").toAbsolutePath().toString());
+                    throw new InitializationError("Can't resolve " + Path.of(testsDirEnv).toAbsolutePath().toString());
                 String subDir = new File(directory).getName();
                 Path overriddenPath = Path.of(testsDirEnv, subDir);
                 File overridden = new File(String.valueOf(overriddenPath));
