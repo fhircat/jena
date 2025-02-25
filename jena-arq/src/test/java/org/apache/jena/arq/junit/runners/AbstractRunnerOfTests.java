@@ -18,6 +18,8 @@
 
 package org.apache.jena.arq.junit.runners;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.arq.junit.manifest.*;
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.atlas.lib.ArrayUtils;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.junit.EarlReport;
 import org.apache.jena.sparql.vocabulary.VocabTestQuery;
@@ -209,6 +212,17 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
     }
 
     private static String[] getManifests(Class<? > klass) throws InitializationError {
+        String testsDirEnv = System.getenv("TESTS_DIR");
+        if (testsDirEnv != null) {
+            File override = new File(testsDirEnv);
+            if (!override.exists())
+                throw new InitializationError("Can't resolve " + Path.of("").toAbsolutePath().toString());
+            File manifest = new File(testsDirEnv, "manifest.ttl");
+            String absoluteManifestPath = manifest.getAbsolutePath();
+            if (!manifest.exists())
+                throw new InitializationError("No such manifest file " + absoluteManifestPath);
+            return new String[]{absoluteManifestPath};
+        }
         Manifests annotation = klass.getAnnotation(Manifests.class);
         if ( annotation == null ) {
             throw new InitializationError(String.format("class '%s' must have a @Manifests annotation", klass.getName()));
