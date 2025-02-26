@@ -35,10 +35,8 @@ import java.util.*;
  * Context for a validation and collector of the results.
  */
 public class ValidationContext {
-    // TODO Generation of reports is not tested
     private final ShexSchema schema;
     private final Graph data;
-    private ValidationContext parentCtx = null;
     private final Map<String, SemanticActionPlugin> semActPluginIndex;
     private final SorbeFactory sorbeFactory;
     private final TypeHierarchyGraph typeHierarchyGraph;
@@ -53,14 +51,13 @@ public class ValidationContext {
     }
 
     public ValidationContext(Graph data, ShexSchema schema, Map<String, SemanticActionPlugin> semActPluginIndex) {
-            this(null, data, schema, new ArrayDeque<>(), semActPluginIndex, new SorbeFactory(schema));
+            this(data, schema, new ArrayDeque<>(), semActPluginIndex, new SorbeFactory(schema));
     }
 
-    private ValidationContext(ValidationContext parentCtx, Graph data, ShexSchema schema,
+    private ValidationContext(Graph data, ShexSchema schema,
                               Deque<ValidationStackElement> progress,
                               Map<String, SemanticActionPlugin> semActPluginIndex,
                               SorbeFactory sorbeFactory) {
-        this.parentCtx = parentCtx;
         this.data = data;
         this.schema = schema;
         this.semActPluginIndex = semActPluginIndex;
@@ -68,18 +65,6 @@ public class ValidationContext {
         this.validationStack.addAll(progress); // TODO copying the stack ?
         this.sorbeFactory = sorbeFactory;
         this.typeHierarchyGraph = ShexSchema.computeTypeHierarchyGraph(schema);
-    }
-
-    public ValidationContext getParent() {
-        return parentCtx;
-    }
-
-    public ValidationContext getRoot() {
-        ValidationContext parent = this.parentCtx;
-        while (parent != null) {
-            parent = this.getParent();
-        }
-        return (parent != null) ? parent : this;
     }
 
     public TripleExpr getTripleExpr(Node label) {
@@ -106,7 +91,7 @@ public class ValidationContext {
      */
     public ValidationContext create() {
         // Fresh ShexReport.Builder
-        return new ValidationContext(this, this.data, this.schema,
+        return new ValidationContext(this.data, this.schema,
                 this.validationStack, this.semActPluginIndex, this.sorbeFactory);
     }
 
@@ -172,7 +157,7 @@ public class ValidationContext {
         reportBuilder.getReports().forEach(reportLine -> other.shexReport(reportLine));
     }
 
-    private void shexReport(ShexRecord reportLine) {
+    private void shexReport(ShapeMapElement reportLine) {
         reportBuilder.shexReport(reportLine);
     }
 
@@ -186,7 +171,7 @@ public class ValidationContext {
     /**
      * Current state.
      */
-    public List<ShexRecord> getShexReportItems() {
+    public List<ShapeMapElement> getShexReportItems() {
         return reportBuilder.getReports();
     }
 
@@ -194,7 +179,7 @@ public class ValidationContext {
         reportBuilder.addReportItem(item);
     }
 
-    public void shexReport(ShexRecord entry, Node focusNode, ShexStatus result, String reason) {
+    public void shexReport(ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
         reportBuilder.shexReport(entry, focusNode, result, reason);
     }
 

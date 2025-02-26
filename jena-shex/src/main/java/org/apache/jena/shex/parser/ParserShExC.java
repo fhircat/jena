@@ -30,7 +30,7 @@ import org.apache.jena.riot.lang.extra.LangParserBase;
 import org.apache.jena.riot.lang.extra.LangParserLib;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShapeMap;
-import org.apache.jena.shex.ShexRecord;
+import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.sys.SysShex;
@@ -903,7 +903,7 @@ public class ParserShExC extends LangParserBase {
 
     // ---- Shex Shape map
 
-    private List<ShexRecord> associations = new ArrayList<>();
+    private List<ShapeMapElement> associations = new ArrayList<>();
 
     public void parseShapeMapStart() {}
 
@@ -921,11 +921,11 @@ public class ParserShExC extends LangParserBase {
     protected void association(Node n, Triple t, Node label) {
         if ( n != null && t != null )
             throw new ShexParseException("Both node and triple in shape association");
-        ShexRecord assoc;
+        ShapeMapElement assoc;
         if ( n != null )
-            assoc = new ShexRecord(n, label);
+            assoc = new ShapeMapElement(n, label);
         else if ( t != null )
-            assoc = new ShexRecord(t, label);
+            assoc = new ShapeMapElement(t, label);
         else
             throw new ShexParseException("No node nor triple in shape association");
         associations.add(assoc);

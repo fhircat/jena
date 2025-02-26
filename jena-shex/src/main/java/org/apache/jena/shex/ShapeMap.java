@@ -31,18 +31,18 @@ import java.util.List;
  */
 public class ShapeMap {
 
-    protected final List<ShexRecord> associations;
+    protected final List<ShapeMapElement> associations;
 
-    public static ShapeMap create(List<ShexRecord> associations) {
+    public static ShapeMap create(List<ShapeMapElement> associations) {
         associations = new ArrayList<>(associations);
         return new ShapeMap(associations);
     }
 
-    private ShapeMap(List<ShexRecord> associations) {
+    private ShapeMap(List<ShapeMapElement> associations) {
         this.associations = associations;
     }
 
-    public List<ShexRecord> entries() {
+    public List<ShapeMapElement> entries() {
         return Collections.unmodifiableList(associations);
     }
 
@@ -60,7 +60,7 @@ public class ShapeMap {
 
     public static class Builder {
 
-        private List<ShexRecord> records = new ArrayList<>();
+        private List<ShapeMapElement> records = new ArrayList<>();
 
         Builder() {}
 
@@ -69,12 +69,12 @@ public class ShapeMap {
         }
 
         public Builder add(Node focus, Node shapeRef) {
-            records.add(new ShexRecord(focus, shapeRef));
+            records.add(new ShapeMapElement(focus, shapeRef));
             return this;
         }
 
         public Builder add(Triple pattern, Node shapeRef) {
-            records.add(new ShexRecord(pattern, shapeRef));
+            records.add(new ShapeMapElement(pattern, shapeRef));
             return this;
         }
 

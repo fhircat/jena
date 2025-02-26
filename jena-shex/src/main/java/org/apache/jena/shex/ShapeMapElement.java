@@ -26,27 +26,29 @@ import org.apache.jena.shex.sys.SysShex;
 /**
  * {@code ShexShapeRecord} is an entry in a {@linkplain ShapeMap} used for both targeting shapes and reporting violations.
  */
-public class ShexRecord {
-//  node: an RDF node, or a triple pattern which is used to select RDF nodes.
+public class ShapeMapElement {
+//  nodeSelector / patternSelector : an RDF node, or a triple pattern which is used to select RDF nodes.
+//  focusSelector :
 //  shape: ShEx shapeExprLabel or the string "START" for the start shape expression.
 //  status: [default="conformant"] "nonconformant" or "conformant".
 //  reason: [optional] a string stating a reason for failure or success.
 //  appInfo: [optional] an application-specific JSON-LD structure
 
-    public final Node node;
-    public final Triple pattern;
+    public final Node nodeSelector;
+    public final Triple patternSelector;
+    public final Node focusSelector;
     public final Node shapeExprLabel;
     public final ShexStatus status;
     public final String reason;
-    public final Node focus;
+
 //  public final String appInfo;
 
-    public ShexRecord(Node node, Node shapeExprLabel) {
+    public ShapeMapElement(Node node, Node shapeExprLabel) {
         this(node, null, shapeExprLabel);
     }
 
-    public ShexRecord(Triple pattern, Node shapeExprLabel) {
-        this(null, pattern, shapeExprLabel);
+    public ShapeMapElement(Triple patternSelector, Node shapeExprLabel) {
+        this(null, patternSelector, shapeExprLabel);
         // Check triples for "FOCUS"
         if ( !isSubjectFocus() && ! isObjectFocus() )
             throw new ShexException("Triple pattern must have either subject or object as FOCUS");
@@ -54,39 +56,39 @@ public class ShexRecord {
             throw new ShexException("Triple pattern must one one of subject or object as FOCUS");
     }
 
-    private ShexRecord(Node node, Triple pattern, Node shapeExprLabel) {
-        this(node, pattern, shapeExprLabel, null, null, null);
+    private ShapeMapElement(Node node, Triple patternSelector, Node shapeExprLabel) {
+        this(node, patternSelector, shapeExprLabel, null, null, null);
     }
 
-    public ShexRecord(ShexRecord assoc, Node focusNode, ShexStatus status, String reason) {
+    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, String reason) {
         // Reporting form.
-        this(assoc.node, assoc.pattern, assoc.shapeExprLabel, focusNode, status, reason);
+        this(assoc.nodeSelector, assoc.patternSelector, assoc.shapeExprLabel, focusNode, status, reason);
     }
 
-    private ShexRecord(Node node, Triple pattern, Node shapeExprLabel, Node focusNode, ShexStatus status, String reason) {
+    private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel, Node focusNode, ShexStatus status, String reason) {
         super();
-        this.node = node;
-        this.pattern = pattern;
+        this.nodeSelector = node;
+        this.patternSelector = pattern;
         this.shapeExprLabel = shapeExprLabel;
         this.status = status;
-        this.focus = focusNode;
+        this.focusSelector = focusNode;
         this.reason = reason;
     }
 
     public boolean isSubjectFocus() {
-        return pattern != null && SysShex.focusNode.equals(pattern.getSubject());
+        return patternSelector != null && SysShex.focusNode.equals(patternSelector.getSubject());
     }
 
     public boolean isObjectFocus() {
-        return pattern != null && SysShex.focusNode.equals(pattern.getObject());
+        return patternSelector != null && SysShex.focusNode.equals(patternSelector.getObject());
     }
 
     public Triple asMatcher() {
-        if ( pattern == null )
+        if ( patternSelector == null )
             return null;
-        return Triple.create(n(pattern.getSubject()),
-                             n(pattern.getPredicate()),
-                             n(pattern.getObject()));
+        return Triple.create(n(patternSelector.getSubject()),
+                             n(patternSelector.getPredicate()),
+                             n(patternSelector.getObject()));
     }
 
     private Node n(Node node) {
@@ -97,8 +99,8 @@ public class ShexRecord {
     public String toString() {
         StringBuilder sBuff = new StringBuilder();
         String str = strTarget();
-        if ( focus != null )
-            str = str+" "+ShexLib.displayStr(focus);
+        if ( focusSelector != null )
+            str = str+" "+ShexLib.displayStr(focusSelector);
         if ( status != null )
             str = str+" "+status;
         if ( reason != null )
@@ -107,13 +109,13 @@ public class ShexRecord {
     }
 
     public String strTarget() {
-        if ( pattern != null ) {
+        if ( patternSelector != null ) {
             return String.format("{ %s %s %s } @ %s",
-                                 str(pattern.getSubject()), str(pattern.getPredicate()), str(pattern.getObject()),
+                                 str(patternSelector.getSubject()), str(patternSelector.getPredicate()), str(patternSelector.getObject()),
                                  str(shapeExprLabel));
         }
-        if ( node != null ) {
-            return String.format("%s @ %s", str(node), str(shapeExprLabel));
+        if ( nodeSelector != null ) {
+            return String.format("%s @ %s", str(nodeSelector), str(shapeExprLabel));
         }
         return "ShexShapeAssociation/null";
     }

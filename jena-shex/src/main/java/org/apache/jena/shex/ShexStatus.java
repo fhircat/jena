@@ -19,7 +19,7 @@
 package org.apache.jena.shex;
 
 /**
- * Status in a {@link ShexRecord} recording whether the item passed
+ * Status in a {@link ShapeMapElement} recording whether the item passed
  * validation or not.
  */
 public enum ShexStatus {

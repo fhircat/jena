@@ -40,14 +40,16 @@ import java.util.function.Consumer;
 public class ShexReport {
     private final Collection<ReportItem> entries;
     private final Resource resultResource;
-    private final List<ShexRecord> reports;
+    private final List<ShapeMapElement> reports;
     private final boolean conforms;
+
+
 
     public static Builder create() {
         return new Builder();
     }
 
-    private ShexReport(Collection<ReportItem> entries, List<ShexRecord> reports, PrefixMapping prefixes) {
+    private ShexReport(Collection<ReportItem> entries, List<ShapeMapElement> reports, PrefixMapping prefixes) {
         this(entries, reports, generate(entries, prefixes));
     }
 
@@ -56,7 +58,7 @@ public class ShexReport {
         return null;
     }
 
-    private ShexReport(Collection<ReportItem> entries, List<ShexRecord> reports, Resource resultResource) {
+    private ShexReport(Collection<ReportItem> entries, List<ShapeMapElement> reports, Resource resultResource) {
         this.entries = new ArrayList<>(entries);
         this.reports = new ArrayList<>(reports);
         this.resultResource = resultResource;
@@ -73,7 +75,7 @@ public class ShexReport {
     //public boolean hasEntries() { return ! entries.isEmpty(); }
     public boolean hasReports() { return ! reports.isEmpty(); }
 
-    public void forEachReport(Consumer<ShexRecord> action) {
+    public void forEachReport(Consumer<ShapeMapElement> action) {
         reports.forEach(action);
     }
 
@@ -96,7 +98,7 @@ public class ShexReport {
     public static class Builder {
 
         private final List<ReportItem> entries = new ArrayList<>();
-        private final List<ShexRecord> reports = new ArrayList<>();
+        private final List<ShapeMapElement> reports = new ArrayList<>();
         private PrefixMapping prefixes = new PrefixMappingImpl();
 
         public Builder() { }
@@ -109,19 +111,19 @@ public class ShexReport {
         public boolean hasReports() { return ! reports.isEmpty(); }
 
         public List<ReportItem> getItems() { return entries; }
-        public List<ShexRecord> getReports() { return reports; }
+        public List<ShapeMapElement> getReports() { return reports; }
 
         public void addReportItem(ReportItem e) {
             entries.add(e);
         }
 
         /** Create a new report line item from an exists (shex map) entry and add it to the reports */
-        public void shexReport(ShexRecord entry, Node focusNode, ShexStatus result, String reason) {
-            ShexRecord ssa = new ShexRecord(entry, focusNode, result, reason);
+        public void shexReport(ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
+            ShapeMapElement ssa = new ShapeMapElement(entry, focusNode, result, reason);
             shexReport(ssa);
         }
 
-        public void shexReport(ShexRecord entry) {
+        public void shexReport(ShapeMapElement entry) {
             reports.add(entry);
         }
 

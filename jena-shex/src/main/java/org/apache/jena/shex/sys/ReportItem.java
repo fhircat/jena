@@ -19,29 +19,44 @@
 package org.apache.jena.shex.sys;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.ShexStatus;
+import org.apache.jena.shex.expressions.Expression;
+
+import java.util.Set;
 
 /**
  * Result of validation of a constraint.
  */
 public class ReportItem {
     private final String message;
-    private final Node value;
+    private final Node node;
+    private Set<Triple> neigh;
+    private Expression expr;
+    private ShapeDecl shapeDecl; // TODO needed for reporting on checking subtypes
+    // TODO a level of reporting might be considered
 
+    // TODO constructor used for node constraints only for now
     public ReportItem(String message, Node value) {
-        this.message = message;
-        this.value = value;
+        this.message = "NC: " + message;
+        this.node = value;
+    }
+
+    public ReportItem(String message) {
+        this(message, null);
     }
 
     public String getMessage() {
         return message;
     }
 
-    public Node getValue() {
-        return value;
+    public Node getNode() {
+        return node;
     }
 
     @Override
     public String toString() {
-        return message+" ("+ShexLib.displayStr(value)+")";
+        return message+" ("+ShexLib.displayStr(node)+")";
     }
 }

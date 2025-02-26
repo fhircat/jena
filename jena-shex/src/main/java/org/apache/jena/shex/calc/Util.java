@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 // different utilities, waiting to be moved to an appropriate place
 public class Util {
 
+    // TODO move below as util for another util
     /** Dereferences until a non reference is found. */
     public static ShapeExpr dereference (ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
         ShapeExpr expr = shapeExpr;
@@ -45,6 +46,7 @@ public class Util {
         return expr;
     }
 
+    // TODO no usages
     /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
     public static List<Shape> mainShapesOfBases(ShapeExpr extendableShape, Function<Node, ShapeDecl> shapeExprRefsDefs) {
         List<Shape> result = new ArrayList<>();
@@ -98,6 +100,9 @@ public class Util {
         return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getRight();
     }
 
+    /** Partitions the triples of the neighbourhood of the node between those whose predicate appears in
+     * the tripleExprs, and those whose predicate does not appear.*/
+    // TODO  accNonMatchables are used only to test whether they are empty, so we do not really need to collect them
     public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
                                                      Collection<TripleExpr> tripleExprs,
                                                      Set<Triple> accMatchables, Set<Triple> accNonMatchables,
@@ -122,6 +127,7 @@ public class Util {
         inNeighbourhood.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
     }
 
+    // TODO 1 usage, give it a better name
     public static Set<Triple> filterRelevantNeighbourhood(Set<Triple> neighbourhood,
                                                           Node dataNode,
                                                           TripleExpr tripleExpr,

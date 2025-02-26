@@ -24,6 +24,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.ShapeExprEval;
 import org.apache.jena.shex.validation.ValidationContext;
@@ -51,7 +52,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(shapeMap);
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
-        List<ShexRecord> reports = new ArrayList<>();
+        List<ShapeMapElement> reports = new ArrayList<>();
         shapeMap.entries().forEach(mapEntry->{
             Collection<Node> focusNodes = focusNodes(dataGraph, mapEntry);
             if ( focusNodes == null )
@@ -73,7 +74,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(focus);
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
-        ShexRecord entry = new ShexRecord(focus, shapeRef);
+        ShapeMapElement entry = new ShapeMapElement(focus, shapeRef);
         ShexSchema schemaWithImports = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, schemaWithImports, semanticActionPluginIndex);
 
@@ -93,7 +94,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
         Objects.requireNonNull(focus);
-        ShexRecord entry = new ShexRecord(focus, shape.getLabel());
+        ShapeMapElement entry = new ShapeMapElement(focus, shape.getLabel());
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         boolean started = vCxt.dispatchStartSemanticAction(shapes, vCxt);
@@ -109,7 +110,7 @@ class ShexValidatorImpl implements ShexValidator{
         Objects.requireNonNull(focus);
         shapes = shapes.importsClosure();
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
-        List<ShexRecord> reports = new ArrayList<>();
+        List<ShapeMapElement> reports = new ArrayList<>();
         boolean isValid = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         shapeMap.entries().forEach(mapEntry->{
             validateOneShapeRecord(vCxt, mapEntry, focus);
@@ -120,7 +121,7 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Execute validation if the focus node is in the scope of the shapeRecord.
-    private static boolean validateOneShapeRecord(ValidationContext vCxt, ShexRecord shapeRecord, Node focusNode) {
+    private static boolean validateOneShapeRecord(ValidationContext vCxt, ShapeMapElement shapeRecord, Node focusNode) {
         Collection<Node> focusNodes = focusNodes(vCxt.getGraph(), shapeRecord);
         if ( focusNodes == null )
             throw new InternalErrorException("Shex shape mapping has no node and no pattern");
@@ -129,11 +130,11 @@ class ShexValidatorImpl implements ShexValidator{
         return validationStep(vCxt, shapeRecord, shapeRecord.shapeExprLabel, focusNode);
     }
 
-    private static Collection<Node> focusNodes(Graph graph, ShexRecord  mapRecord) {
-        if ( mapRecord.node != null ) {
-            return List.of(mapRecord.node);
+    private static Collection<Node> focusNodes(Graph graph, ShapeMapElement mapRecord) {
+        if ( mapRecord.nodeSelector != null ) {
+            return List.of(mapRecord.nodeSelector);
         }
-        if ( mapRecord.pattern != null ) {
+        if ( mapRecord.patternSelector != null ) {
             Triple t = mapRecord.asMatcher();
             Collection<Node> focusNodes = graph.find(t)
                     .mapWith(triple->focusFromRecord(mapRecord, triple))
@@ -143,7 +144,7 @@ class ShexValidatorImpl implements ShexValidator{
         return null;
     }
 
-    private static Node focusFromRecord(ShexRecord mapRecord, Triple triple) {
+    private static Node focusFromRecord(ShapeMapElement mapRecord, Triple triple) {
         if ( mapRecord.isSubjectFocus() )
             return triple.getSubject();
         if ( mapRecord.isObjectFocus() )
@@ -152,7 +153,7 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Entry point for all validation.
-    private static boolean validationStep(ValidationContext vCxt, ShexRecord mapEntry, Node shapeRef, Node focus) {
+    private static boolean validationStep(ValidationContext vCxt, ShapeMapElement mapEntry, Node shapeRef, Node focus) {
         track(mapEntry.shapeExprLabel, focus);
         // Isolate.
         ShapeDecl shape = vCxt.getShapeDecl(shapeRef);
@@ -169,13 +170,16 @@ class ShexValidatorImpl implements ShexValidator{
     }
 
     // Worker.
-    private static boolean validationStepWorker(ValidationContext vCxt, ShexRecord mapEntry, ShapeDecl shape,
+    private static boolean validationStepWorker(ValidationContext vCxt, ShapeMapElement mapEntry, ShapeDecl shapeDecl,
                                                 Node shapeRef, Node focus) {
+        // TODO adapt to new reporting mechanism
+
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
-        vCxtInner.startValidate(shape, focus);
-        boolean isValid = ShapeExprEval.satisfies(shape, focus, vCxtInner);
-        vCxtInner.finishValidate(shape, focus);
+        //vCxtInner.startValidate(shapeDecl, focus);
+        ShexReport2 shexReport = ShapeExprEval.satisfies(shapeDecl, focus, vCxtInner);
+        //vCxtInner.finishValidate(shapeDecl, focus);
+        boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
         if ( ! isValid ) {
             atLeastOneReportItem(vCxtInner, focus);
             vCxtInner.copyInto(vCxt); // Report items.
@@ -184,7 +188,7 @@ class ShexValidatorImpl implements ShexValidator{
         return isValid;
     }
 
-    private static void createShexReportLine(ValidationContext vCxt, ShexRecord mapEntry, boolean conforms, Node shapeRef, Node focus) {
+    private static void createShexReportLine(ValidationContext vCxt, ShapeMapElement mapEntry, boolean conforms, Node shapeRef, Node focus) {
         // Shex shapes report.
         if ( conforms ) {
             report(vCxt, mapEntry, focus, ShexStatus.conformant, null);
@@ -207,7 +211,7 @@ class ShexValidatorImpl implements ShexValidator{
         }
     }
 
-    private static void report(ValidationContext vCxt, ShexRecord entry, Node focusNode, ShexStatus result, String reason) {
+    private static void report(ValidationContext vCxt, ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
         vCxt.shexReport(entry, focusNode, result, reason);
     }
 

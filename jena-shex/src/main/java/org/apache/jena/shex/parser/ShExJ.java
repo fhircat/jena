@@ -26,7 +26,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shex.ShapeMap;
 import org.apache.jena.shex.ShexException;
-import org.apache.jena.shex.ShexRecord;
+import org.apache.jena.shex.ShapeMapElement;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
@@ -46,16 +46,16 @@ public class ShExJ {
         JsonValue x = JSON.parseAny(input);
         if ( ! x.isArray() )
             throw new ShexException("Shex shape map: not a JSON array");
-        List<ShexRecord> associations = new ArrayList<>();
+        List<ShapeMapElement> associations = new ArrayList<>();
         x.getAsArray().forEach(j->{
             if ( !j.isObject() ) {}
-            ShexRecord a = parseShapeMapEntry(j.getAsObject());
+            ShapeMapElement a = parseShapeMapEntry(j.getAsObject());
             associations.add(a);
         });
         return ShapeMap.create(associations);
     }
 
-    private static ShexRecord parseShapeMapEntry(JsonObject obj) {
+    private static ShapeMapElement parseShapeMapEntry(JsonObject obj) {
         // Just enough to parse the maps in the validation test suite.
 
         // Full:
@@ -78,7 +78,7 @@ public class ShExJ {
 //            String appInfo = getStrOrNull(obj, "appInfo");
             Node nodeFocus = NodeFactory.createURI(uri);
             Node nodeShape = NodeFactory.createURI(shapeURI);
-            return new ShexRecord(nodeFocus, nodeShape);
+            return new ShapeMapElement(nodeFocus, nodeShape);
         } catch (JsonException ex) {
             throw new ShexException("Failed to parse shape map entry: "+JSON.toStringFlat(obj));
         }

@@ -27,7 +27,7 @@ import org.apache.jena.riot.out.NodeFormatter;
 import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
-import org.apache.jena.shex.ShexRecord;
+import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.vocabulary.OWL;
@@ -106,12 +106,12 @@ public class ShexLib {
         } finally { out.flush(); }
     }
 
-    private static void printReport(AWriter out, ShexRecord reportEntry) {
+    private static void printReport(AWriter out, ShapeMapElement reportEntry) {
         String target = reportEntry.strTarget();
 
         ShexStatus status = reportEntry.status;
         String reason = reportEntry.reason;
-        Node focusNode = reportEntry.focus;
+        Node focusNode = reportEntry.focusSelector;
 
         switch (status) {
             case conformant :

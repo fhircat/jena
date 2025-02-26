@@ -79,8 +79,7 @@ public class TypeHierarchyGraph {
     private final Map<Node, List<ShapeDecl>> nonAbstractAncestorsMap = new HashMap<>();
 
 
-    /* Duplicates-free list of the subtypes (ie extended shape declarations), including the given shape declaration. */
-    // TODO should this return the shape declarations or only the labels ?
+    /* Duplicates-free list of the supertypes (ie extended shape declarations), including the given shape declaration. */
     public List<ShapeDecl> getSupertypes(ShapeDecl shapeDecl) {
         return supertypesMap.computeIfAbsent(shapeDecl.getLabel(),
                 label -> getDescendants(new THVertex(shapeDecl))
