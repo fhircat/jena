@@ -1,0 +1,28 @@
+# @base <https://raw.githubusercontent.com/shexSpec/shexTest/master/validation/manifest> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
+@prefix sht:     <http://www.w3.org/ns/shacl/test-suite#> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+
+# entries
+<> a mf:Manifest ;
+    rdfs:comment "ShEx validation tests" ;
+    mf:entries
+    (
+## empty
+        <#1val1INTEGER_Lab>
+    ) .
+
+<#1val1INTEGER_Lab> a sht:ValidationFailure ;
+    mf:name "1val1INTEGER_Lab" ;
+    sht:trait sht:NumericEquivalence ;
+    rdfs:comment "<S> { <p1> [0] } on { <s1> <p1> 'ab' }" ;
+    mf:status mf:Unapproved ;
+    mf:action [
+      sht:schema <schema.shex> ;
+      sht:shape <http://a.example/S1> ;
+      sht:data <data.ttl> ;
+      sht:focus <http://a.example/s1>
+    ] ;
+    .
