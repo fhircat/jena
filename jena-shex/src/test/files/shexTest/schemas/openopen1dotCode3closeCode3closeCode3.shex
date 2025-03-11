@@ -1,0 +1,13 @@
+<http://a.example/S1> {
+  (
+    (
+      <http://a.example/p1> . %<http://shex.io/extensions/Test/>{ print("A") %}
+                              %<http://shex.io/extensions/Test/>{ print("B") %}
+                              %<http://shex.io/extensions/Test/>{ print("C") %}
+    ) %<http://shex.io/extensions/Test/>{ print("D") %}
+      %<http://shex.io/extensions/Test/>{ print("E") %}
+      %<http://shex.io/extensions/Test/>{ print("F") %}
+  ) %<http://shex.io/extensions/Test/>{ print("G") %}
+    %<http://shex.io/extensions/Test/>{ print("H") %}
+    %<http://shex.io/extensions/Test/>{ print("I") %}
+}

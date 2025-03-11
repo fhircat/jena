@@ -24,6 +24,7 @@ import org.apache.jena.shex.calc.TypedTripleExprVisitor;
 class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
 
     /*package*/ static Cardinality ZERO_INTERVAL = new Cardinality(0, 0);
+    /*package*/ static Cardinality ONE_INTERVAL = new Cardinality(1, 1);
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
     private final Bag bag;
@@ -93,6 +94,9 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
         }
         if (card.equals(ZERO_INTERVAL))
             return sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality) ? Cardinality.STAR : EMPTY_INTERVAL;
+
+        if (card.equals(ONE_INTERVAL) && tripleExprCardinality.getSemActs() != null && !tripleExprCardinality.getSemActs().isEmpty()) // the only reason we have a TripleExprCardinality of {1,1} is if there are SemActs
+            return subExpr.visit(this);
 
         throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
     }
