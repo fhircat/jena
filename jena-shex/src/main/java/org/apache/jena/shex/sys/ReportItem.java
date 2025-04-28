@@ -21,14 +21,16 @@ package org.apache.jena.shex.sys;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
 
 import java.util.Set;
 
 /**
- * Result of validation of a constraint.
+ * Information about validation of an expression on a node.
  */
+/* TODO not satisfactory. In this version does not allow to create items for node constraint components, but
+    adding a third possibility (already ShapeDecl and Expression) would be too much
+    Should possibly be an interface with different implementations.  */
 public class ReportItem {
     private final String message;
     private final Node node;
@@ -37,14 +39,14 @@ public class ReportItem {
     private ShapeDecl shapeDecl; // TODO needed for reporting on checking subtypes
     // TODO a level of reporting might be considered
 
-    // TODO constructor used for node constraints only for now
-    public ReportItem(String message, Node value) {
-        this.message = "NC: " + message;
-        this.node = value;
-    }
-
-    public ReportItem(String message) {
-        this(message, null);
+    // TODO shoud be package visibility, the ReportItem and ShexReport should be in the same package
+    public ReportItem(String message, Node node, Set<Triple> subNeighbourhood,
+                      Expression expression, ShapeDecl shapeDecl) {
+        this.message = message;
+        this.node = node;
+        this.neigh = subNeighbourhood;
+        this.expr = expression;
+        this.shapeDecl = shapeDecl;
     }
 
     public String getMessage() {

@@ -20,7 +20,6 @@ package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.ShexReport2;
 import org.apache.jena.shex.expressions.*;
 
 import java.util.*;
@@ -45,7 +44,9 @@ public class TripleExprEval {
                                                              Set<Node> extraPredicates,
                                                              Collection<SorbeTripleExpr> toBeMatched,
                                                              ValidationContext vCxt,
-                                                             ShexReport2 shexReport) {
+                                                             AShexReport report,
+                                                             ShapeExpr exprForReport /* TODO replace*/,
+                                                             Node nodeForReport /*TODO replace*/) {
 
         // 1. With every triple, associate all the triple constraints that this triple could match
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
@@ -64,7 +65,7 @@ public class TripleExprEval {
                 TripleConstraint tc = it.next();
                 ShapeExpr valueExpr = tc.getValueExpr();
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt, shexReport))
+                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt, report))
                     it.remove();
             }});
 
@@ -75,7 +76,8 @@ public class TripleExprEval {
             if (e.getValue().isEmpty()) {
                 // the triple satisfies none of the triple constraints
                 if (! extraPredicates.contains(e.getKey().getPredicate())) {
-                    shexReport.addReport("The triple matches none of the triples constraints and is not allowed by extra" + e.getKey() );
+                    report.addInfoFailure(exprForReport, nodeForReport, triples,
+                            "The triple matches none of the triples constraints and is not allowed by extra" + e.getKey());
                     // should satisfy extra
                     return null;
                 } else
@@ -100,23 +102,28 @@ public class TripleExprEval {
             if (mainShapesAreSatisfied)
                 return matching;
         }
-        shexReport.addReport("The triples / neighbourhood of the node did not satisfy the ???");
+        // TODO
+        report.addInfoFailure(exprForReport, nodeForReport, triples,
+                "The triples / neighbourhood of the node did not satisfy the expression");
         return null;
     }
 
     /*package*/ static boolean matchesShapeWithoutExtends(Set<Triple> triples,
                                                           Shape shape,
                                                           ValidationContext vCxt,
-                                                          ShexReport2 shexReport) {
+                                                          AShexReport shexReport,
+                                                          Node nodeForReport /* TODO replace */) {
 
-        return null != matchesExpr(triples, shape.getExtras(), Set.of(vCxt.getSorbe(shape.getTripleExpr())), vCxt, shexReport);
+        return null != matchesExpr(triples, shape.getExtras(), Set.of(vCxt.getSorbe(shape.getTripleExpr())), vCxt,
+                shexReport, shape, nodeForReport);
     }
 
     /*package*/ static Map<Node, Set<Triple>> matchesShapeWithExtends(Set<Triple> triples,
                                                                       Shape shape,
                                                                       Map<Node, Shape> baseMainShapes,
                                                                       ValidationContext vCxt,
-                                                                      ShexReport2 shexReport) {
+                                                                      AShexReport report,
+                                                                      Node nodeForReport /* TODO replace*/ ) {
 
         Map<Node, SorbeTripleExpr> correspondingSorbe = baseMainShapes.entrySet().stream()
                 .collect(Collectors.toMap(
@@ -124,7 +131,7 @@ public class TripleExprEval {
                         e -> vCxt.getSorbe(e.getValue().getTripleExpr())));
 
         Map<Triple, TripleConstraint> satisfyingMatching = matchesExpr(triples, shape.getExtras(),
-                correspondingSorbe.values(), vCxt, shexReport);
+                correspondingSorbe.values(), vCxt, report, shape, nodeForReport);
 
         if (null != satisfyingMatching)
             return groupByLabel(correspondingSorbe, satisfyingMatching);

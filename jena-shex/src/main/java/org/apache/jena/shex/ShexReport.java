@@ -41,8 +41,15 @@ public class ShexReport {
     private final Collection<ReportItem> entries;
     private final Resource resultResource;
     private final List<ShapeMapElement> reports;
-    private final boolean conforms;
+    public boolean conforms;
 
+
+    public ShexReport(boolean isConformant) {
+        this.conforms = isConformant;
+        this.resultResource = null;
+        entries = new ArrayList<>();
+        reports = new ArrayList<>();
+    }
 
 
     public static Builder create() {
@@ -128,7 +135,8 @@ public class ShexReport {
         }
 
         public ShexReport build() {
-            return new ShexReport(entries, reports, prefixes);
+            ShexReport r = new ShexReport(entries, reports, prefixes);
+            return r;
         }
 
     }

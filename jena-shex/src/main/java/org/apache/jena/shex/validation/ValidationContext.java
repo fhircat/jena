@@ -116,7 +116,7 @@ public class ValidationContext {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
                 if (!semActPlugin.evaluateStart(semAct, schema)) {
-                    vCxt.reportEntry(new ReportItem(String.format("%s start shape failed", semActIri), null));
+                    vCxt.reportEntry(String.format("%s start shape failed", semActIri));
                     return true;
                 }
             }
@@ -179,12 +179,19 @@ public class ValidationContext {
         reportBuilder.addReportItem(item);
     }
 
+    // TODO Intermediary to compile validation, remove
+    public void reportEntry (String message) {
+        // Does nothing
+    }
+
     public void shexReport(ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
         reportBuilder.shexReport(entry, focusNode, result, reason);
+
     }
 
     public ShexReport generateReport() {
         return reportBuilder.build();
+
     }
 
     public SorbeTripleExpr getSorbe(TripleExpr tripleExpr) {
