@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
 /** A SORBE triple expression is a triple expression that satisfies:
  * <ul>
  *     <li>it does not contain triple expression references</li>
- *     <li>cardinalities other than ?, *, + are appear only on triple constraints</li>
- *     <li>cardinality + is appears only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
+ *     <li>cardinalities other than ?, *, + appear only on triple constraints</li>
+ *     <li>cardinality + appears only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
  * </ul>
  *
  * <p>
@@ -49,8 +49,8 @@ import java.util.stream.Collectors;
  * Such equivalent SORBE triple expression is constructed using {@link #create(TripleExpr, ShexSchema)}.
  * </p><p>
  * When copying occurs, all occurrences of the triple constraint <pre>tc1</pre> in the SORBE triple expression <em>originate</em> from the triple constraint <pre>tc1</pre> from the origin expression.
- * Given a sub-expression of the <em>origin</em> triple expression, we can retrieve all triple constraints
- * This origin information is used to determine which triples matched the
+ * Given a sub-expression of the <em>origin</em> triple expression, we can retrieve all triple constraints.
+ * This origin information is used to determine which triples matched which triple constraint from <em>origin</em>.
  * </p>
  */
 /*package*/ class SorbeTripleExpr {
@@ -125,7 +125,7 @@ import java.util.stream.Collectors;
     }
 
     // ---------------------------------------------------------------------------------------------------------
-    // Accessors and memoized informations
+    // Accessors and memoized information
     // ---------------------------------------------------------------------------------------------------------
 
     /** The triple constraints of this SORBE triple expression. Memorized. */
@@ -400,7 +400,4 @@ import java.util.stream.Collectors;
             }
         }
     }
-
-
-
 }

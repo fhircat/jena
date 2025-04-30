@@ -38,7 +38,7 @@ public class MatchingsIterator implements Iterator<Map<Triple, TripleConstraint>
     /** Used for the iteration: 0 <= currentIndexes[i] < sizes[i] */
     private final int[] currentIndexes;
     
-    public MatchingsIterator(Map<Triple, List<TripleConstraint>> preMatching, List<Triple> domain) {
+    public MatchingsIterator(Map<Triple, List<TripleConstraint>> preMatching) {
 
         neighbourhood = new ArrayList<>(preMatching.size());
         allMatching = new ArrayList<>(preMatching.size());

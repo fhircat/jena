@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex.validation;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
@@ -32,10 +33,7 @@ import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -45,7 +43,7 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 public class ShapeExprEval {
 
     public static void satisfies (ShapeDecl shapeDecl, Node dataNode,
-                                         ValidationContext vCxt, AShexReport report) {
+                                  ValidationContext vCxt, AShexReport report) {
         report.setSatisfies(_satisfies(shapeDecl, dataNode, vCxt, report, false));
     }
 
@@ -58,14 +56,9 @@ public class ShapeExprEval {
             vCxt.startValidate(base, dataNode);
             try {
                 ShapeExpr shapeExpr = base.getShapeExpr();
-                if (Util.hasExtends(shapeExpr, vCxt::getShapeDecl)) {
-                    // TODO semantic actions and extends
-                    result = satisfiesWithExtends(base, dataNode, vCxt, report);
-                } else {
-                    // TODO report for semantic actions
-                    result = satisfies(shapeExpr, dataNode, vCxt, report)
-                            && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
-                }
+                // TODO report for semantic actions
+                result = satisfies(shapeExpr, dataNode, vCxt, report)
+                        && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
             } finally { // TODO What exception could we have here ?
                 vCxt.finishValidate(base, dataNode);
             }
@@ -78,66 +71,78 @@ public class ShapeExprEval {
     static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt,
                              AShexReport report) {
 
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, vCxt);
+        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, null, vCxt);
         return shapeExpr.visit(evaluator, report);
     }
 
-    private static boolean satisfiesWithExtends(ShapeDecl shapeDeclWithExtends, Node dataNode,
-                                                ValidationContext vCxt, AShexReport parentReport) {
+    /** triples can be null. */
+    private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
+                                          ValidationContext vCxt, AShexReport report) {
 
-        // maps extended labels to their respective main shapes
-        Map<Node, Shape> baseMainShapes = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDeclWithExtends).stream()
-                .collect(Collectors.toMap(ShapeDecl::getLabel,
-                        sd -> Util.mainShape(sd.getShapeExpr(), vCxt::getShapeDecl)
-                ));
+        AShexReport childReport = report.createChild(dataNode, shape, null);
 
+        // 1. Determine the shapes to be satisfied (several if the shape is with extends)
+        //    and the corresponding constraints if the shape is with extends
+        Map<Node, TripleExpr> mainTripleExprs = new HashMap<>();
+        Map<Node, List<ShapeExpr>> constraints = new HashMap<>();
+        mainTripleExprs.put(null, shape.getTripleExpr());
+        for (ShapeExprRef ref: shape.getExtends()) {
+            for (ShapeDecl superType: vCxt.getTypeHierarchyGraph().getSupertypes(vCxt.getShapeDecl(ref.getLabel()))) {
+                Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(superType.getShapeExpr(), vCxt::getShapeDecl);
+                mainTripleExprs.put(superType.getLabel(), mc.getLeft().getTripleExpr());
+                constraints.put(superType.getLabel(), mc.getRight());
+            }
+        }
+
+        // 2. Extract the neighbourhood of the node relevant for satisfying that shape
         Set<Triple> accMatchables = new HashSet<>();
         Set<Triple> accNonMatchables = new HashSet<>();
-        Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode,
-                baseMainShapes.values().stream().map(Shape::getTripleExpr).collect(Collectors.toList()),
-                accMatchables, accNonMatchables, vCxt);
+        if (null == triples) {  // Validating the whole neighbourhood
+            Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode,
+                    mainTripleExprs.values(),
+                    accMatchables, accNonMatchables, vCxt);
+        } else {   // Validating only part of the neighbourhood
+            accMatchables = triples;
+        }
 
-        Shape mainShape = baseMainShapes.get(shapeDeclWithExtends.getLabel());
-        AShexReport mainShapeReport = parentReport.createChild(dataNode, mainShape, null);
-        if (mainShape.isClosed() && !accNonMatchables.isEmpty()) {
-            mainShapeReport.addInfoFailure(mainShape, dataNode, accMatchables,
+        // 3. Check if the closed constraint is satisfied, if any
+        if (shape.isClosed() && !accNonMatchables.isEmpty()) {
+            report.addInfoFailure(shape, dataNode, accMatchables,
                     "CLOSED required but forbidden triples");
             return false;
         }
 
-        // TODO iteration here (see below)
-        Map<Node, Set<Triple>> satisfyingTriples = TripleExprEval.matchesShapeWithExtends(
-                accMatchables, mainShape,
-                baseMainShapes, vCxt, mainShapeReport, dataNode);
+        // 4. Find a matching that satisfies the shape, and the constraints in case of extends
+        Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(accMatchables, shape,
+                mainTripleExprs, vCxt, childReport, shape, dataNode);
 
-        // TODO here, the triple expr part of the ext. hierarchy is checked. For better error reportig,
-        //      we should explore the reason of the failure with non sorbe validation
-        if (satisfyingTriples == null) {
-            mainShapeReport.addInfoFailure(mainShape, dataNode, accMatchables,
-                    "The neighbourhood didn't match the triple expressions of the extension hierarchy");
-            return false;
+        while (splitsIt.hasNext()) {
+            Map<Node, Set<Triple>> split = splitsIt.next();
+            if (splitSatisfiesConstraints(split, constraints, vCxt, report, dataNode)) {
+                report.setSatisfies(true);
+                return true;
+            }
         }
 
-        // TODO: potential bug here
-        //       it may be the case that a first splitting (found above) did satisfy the
-        //       triple expressions, but does not allow to satisfy the constraints
-        //       but another splitting allows to satisfy the constraints
-        //       So, we would need an iterator over all the possible ways of satisfying the
-        //       triple expressions, until none remains
-        // TODO: a test case for that potential bug
-        // TODO: here, the constraints of the current ShapeDecl are treated as constraints of a shape with extends
-        //       In semantics defined in ESWC, they are treated as usual AND. Should we treat them apart here?
-        //       In particular, are the errors part of the main shape report, or of the general report ?
-        for (Node label : baseMainShapes.keySet()) {
-            ShapeDecl shapeDecl = vCxt.getShapeDecl(label);
-            for (ShapeExpr constr : Util.constraints(shapeDecl.getShapeExpr(), vCxt::getShapeDecl)) {
-                Set<Triple> triples = vCxt.getTypeHierarchyGraph().getSupertypes(shapeDecl).stream()
-                        .map(ShapeDecl::getLabel)
-                        .flatMap(l -> satisfyingTriples.get(l).stream())
-                        .collect(Collectors.toSet());
-                if (!satisfiesExtendsConstraint(constr, dataNode, triples, vCxt, mainShapeReport)) {
-                    mainShapeReport.addInfoFailure(constr, dataNode, triples,
-                            "The part of the neighbourhood did not match the constraints");
+        report.setSatisfies(false);
+        report.addInfoFailure(shape, dataNode, null, "Shape not satisfied by the triples");
+        return false;
+    }
+
+    private static boolean splitSatisfiesConstraints (Map<Node, Set<Triple>> split,
+                                                      Map<Node, List<ShapeExpr>> constraints,
+                                                      ValidationContext vCxt,
+                                                      AShexReport report,
+                                                      Node nodeForReport) {
+        Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
+        for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
+            for (ShapeExpr constr : e.getValue()) {
+                Set<Triple> triples = relevantTriples.putIfAbsent(e.getKey(),
+                        vCxt.getTypeHierarchyGraph().getSupertypes(vCxt.getShapeDecl(e.getKey())).stream()
+                            .map(ShapeDecl::getLabel)
+                            .flatMap(l -> split.get(l).stream())
+                            .collect(Collectors.toSet()));
+                if (!satisfiesExtendsConstraint(constr, nodeForReport, triples, vCxt, report /* TODO which report is that? */)) {
                     return false;
                 }
             }
@@ -146,14 +151,13 @@ public class ShapeExprEval {
     }
 
     private static boolean satisfiesExtendsConstraint(ShapeExpr constr, Node node,
-                                                      Set<Triple> neigh,
+                                                      Set<Triple> triples,
                                                       ValidationContext vCxt,
                                                       AShexReport report) {
-        ExtendsConstraintEvalVisitor evaluator = new ExtendsConstraintEvalVisitor(node, vCxt, neigh);
+        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, triples, vCxt);
         return constr.visit(evaluator, report);
     }
 
-    // TODO parameter vCxt not used
     private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode,
                                      AShexReport report) {
         NodeConstraintComponentEvalVisitor componentEval =
@@ -161,22 +165,25 @@ public class ShapeExprEval {
         return nodeConstraint.getComponents().stream().allMatch(ncc -> ncc.visit(componentEval));
     }
 
+
     // TODO report for all visit functions
     static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, AShexReport> {
 
         private final ValidationContext vCxt;
         private final Node dataNode;
+        private final Set<Triple> triples;
 
-        ShapeExprEvalVisitor(Node data, ValidationContext vCxt) {
+        ShapeExprEvalVisitor(Node dataNode, Set<Triple> triples, ValidationContext vCxt) {
             this.vCxt = vCxt;
-            this.dataNode = data;
+            this.dataNode = dataNode;
+            this.triples = triples;
         }
 
         @Override
         public Boolean visit(ShapeAnd shapeAnd, AShexReport report) {
             for (ShapeExpr se : shapeAnd.getShapeExprs()) {
                 if (! se.visit(this, report)) {
-                    report.addInfoFailure(shapeAnd, dataNode, null, "AND not satisfied");
+                    report.addInfoFailure(shapeAnd, dataNode, triples, "AND not satisfied");
                     return false;
                 }
             }
@@ -189,13 +196,13 @@ public class ShapeExprEval {
                 if (se.visit(this, report))
                     return true;
             }
-            report.addInfoFailure(shapeOr, dataNode, null, "None of the OR disjuncts was satisfied");            return false;
+            report.addInfoFailure(shapeOr, dataNode, triples, "None of the OR disjuncts was satisfied");            return false;
         }
 
         @Override
         public Boolean visit(ShapeNot shapeNot, AShexReport report) {
             if (shapeNot.getShapeExpr().visit(this, report)) {
-                report.addInfoFailure(shapeNot, dataNode, null, "Negated expression is satisfied");
+                report.addInfoFailure(shapeNot, dataNode, triples, "Negated expression is satisfied");
                 return false;
             } else
                 return true;
@@ -210,7 +217,7 @@ public class ShapeExprEval {
                 return true;
             else {
                 // TODO report needed ?
-                report.addInfoFailure(shapeExprRef, dataNode, null, "Shape reference not satisfied");
+                report.addInfoFailure(shapeExprRef, dataNode, triples, "Shape reference not satisfied");
                 return false;
             }
         }
@@ -218,31 +225,13 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExternal shapeExternal, AShexReport report) {
             // TODO shape external never satisfied
-            report.addInfoFailure(shapeExternal, dataNode, null, "Shape external not supported, never satisfied");
+            report.addInfoFailure(shapeExternal, dataNode, triples, "Shape external not supported, never satisfied");
             return false;
         }
 
         @Override
         public Boolean visit(Shape shape, AShexReport report) {
-            Set<Triple> accMatchables = new HashSet<>();
-            Set<Triple> accNonMatchables = new HashSet<>();
-            Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode, List.of(shape.getTripleExpr()),
-                    accMatchables, accNonMatchables, vCxt);
-
-            // TODO we do not want to create the child here, only in specific methods
-            //      this specific method could also deal with shapes with extends / wo extends
-            AShexReport myReport = report.createChild(dataNode, shape, null);
-            if (shape.isClosed() && !accNonMatchables.isEmpty()) {
-                myReport.addInfoFailure(shape, dataNode, null, "CLOSED but forbidden triples were found");
-                return false;
-            } else {
-                boolean matches = TripleExprEval.matchesShapeWithoutExtends(accMatchables, shape, vCxt, myReport, dataNode);
-                myReport.setSatisfies(matches);
-                if (! matches)
-                    myReport.addInfoFailure(shape, dataNode, null,
-                            "The neighbourhood of the node did not match the triple expression of the shape");
-                return matches;
-            }
+            return satisfiesShape(shape, dataNode, triples, vCxt, report);
         }
 
         @Override
@@ -250,6 +239,7 @@ public class ShapeExprEval {
             return satisfies(nodeConstraint, dataNode, report);
         }
     }
+    /*
 
     // TODO How is this different from the "normal" ShapeExprEval, except for working on neighbourhood instead of a node ?
     // TODO Might be worth extending on ShapeExprEval if the methods become more complex with error reporting, but same as in ShapeExprEval
@@ -305,7 +295,7 @@ public class ShapeExprEval {
             throw new UnsupportedOperationException();
         }
 
-    }
+    } */
 
     static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
 
