@@ -71,17 +71,28 @@ public class ShapeExprEval {
     static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt,
                              AShexReport report) {
 
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, null, vCxt);
-        return shapeExpr.visit(evaluator, report);
+        return satisfies(shapeExpr, node, null, vCxt, report);
     }
 
-    /** triples can be null. */
+    /** Validate a node's neighboughood or a set of triples against a shape expression.
+     * If triples is null, the whole node's neighbourhood is considered. */
+    private static boolean satisfies(ShapeExpr constr,
+                                     Node node,
+                                     Set<Triple> triples,
+                                     ValidationContext vCxt,
+                                     AShexReport report) {
+        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, triples, vCxt);
+        return constr.visit(evaluator, report);
+    }
+
+    /** Validates a node's neighbourhood or a set of triples against a shape.
+     * If triples is null, the whole node's neighbourhood is considered. */
     private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
                                           ValidationContext vCxt, AShexReport report) {
 
         AShexReport childReport = report.createChild(dataNode, shape, null);
 
-        // 1. Determine the shapes to be satisfied (several if the shape is with extends)
+        // 1. Collect the shapes to be satisfied (several if the shape is with extends)
         //    and the corresponding constraints if the shape is with extends
         Map<Node, TripleExpr> mainTripleExprs = new HashMap<>();
         Map<Node, List<ShapeExpr>> constraints = new HashMap<>();
@@ -112,7 +123,7 @@ public class ShapeExprEval {
             return false;
         }
 
-        // 4. Find a matching that satisfies the shape, and the constraints in case of extends
+        // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
         Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(accMatchables, shape,
                 mainTripleExprs, vCxt, childReport, shape, dataNode);
 
@@ -125,10 +136,13 @@ public class ShapeExprEval {
         }
 
         report.setSatisfies(false);
-        report.addInfoFailure(shape, dataNode, null, "Shape not satisfied by the triples");
+        report.addInfoFailure(shape, dataNode, triples,
+                "Shape not satisfied by the triples.");
         return false;
     }
 
+    /** Check whether a splitting of the triples between the supertypes also satisfies the constraints
+     * of each supertype. */
     private static boolean splitSatisfiesConstraints (Map<Node, Set<Triple>> split,
                                                       Map<Node, List<ShapeExpr>> constraints,
                                                       ValidationContext vCxt,
@@ -142,20 +156,12 @@ public class ShapeExprEval {
                             .map(ShapeDecl::getLabel)
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
-                if (!satisfiesExtendsConstraint(constr, nodeForReport, triples, vCxt, report /* TODO which report is that? */)) {
+                if (!satisfies(constr, nodeForReport, triples, vCxt, report /* TODO which report is that? */)) {
                     return false;
                 }
             }
         }
         return true;
-    }
-
-    private static boolean satisfiesExtendsConstraint(ShapeExpr constr, Node node,
-                                                      Set<Triple> triples,
-                                                      ValidationContext vCxt,
-                                                      AShexReport report) {
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, triples, vCxt);
-        return constr.visit(evaluator, report);
     }
 
     private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode,
@@ -239,63 +245,6 @@ public class ShapeExprEval {
             return satisfies(nodeConstraint, dataNode, report);
         }
     }
-    /*
-
-    // TODO How is this different from the "normal" ShapeExprEval, except for working on neighbourhood instead of a node ?
-    // TODO Might be worth extending on ShapeExprEval if the methods become more complex with error reporting, but same as in ShapeExprEval
-    static class ExtendsConstraintEvalVisitor implements TypedShapeExprVisitor<Boolean, AShexReport> {
-
-        private final ValidationContext vCxt;
-        private final Node dataNode;
-        private final Set<Triple> neigh;
-
-        ExtendsConstraintEvalVisitor(Node data, ValidationContext vCxt, Set<Triple> neigh) {
-            this.vCxt = vCxt;
-            this.dataNode = data;
-            this.neigh = neigh;
-        }
-
-        @Override
-        public Boolean visit(ShapeAnd shapeAnd, AShexReport report) {
-            return shapeAnd.getShapeExprs().stream().allMatch(se ->
-                    se.visit(this, report));
-        }
-
-        @Override
-        public Boolean visit(ShapeExprRef shapeExprRef, AShexReport report) {
-            return satisfiesExtendsConstraint(vCxt.getShapeDecl(shapeExprRef.getLabel()).getShapeExpr(),
-                    dataNode, neigh, vCxt, report);
-        }
-
-        @Override
-        public Boolean visit(Shape shape, AShexReport report) {
-            Set<Triple> relevantNeigh = Util.filterRelevantNeighbourhood(neigh, dataNode, shape.getTripleExpr(), vCxt);
-            return TripleExprEval.matchesShapeWithoutExtends(relevantNeigh, shape, vCxt, report, dataNode);
-        }
-
-        @Override
-        public Boolean visit(NodeConstraint nodeConstraint, AShexReport report) {
-            return satisfies(nodeConstraint, dataNode, report);
-        }
-
-        @Override
-        public Boolean visit(ShapeOr shapeOr, AShexReport report) {
-            // TODO this could be supported for contexts, see ESWC paper
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Boolean visit(ShapeNot shapeNot, AShexReport report) {
-            // TODO this could be supported for contexts, see ESWC paper
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Boolean visit(ShapeExternal shapeExternal, AShexReport shexReport) {
-            throw new UnsupportedOperationException();
-        }
-
-    } */
 
     static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
 

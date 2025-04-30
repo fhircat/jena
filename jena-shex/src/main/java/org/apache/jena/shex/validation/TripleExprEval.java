@@ -27,6 +27,13 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/** Utilities for matching triple expressions.
+ *
+ * Vocabulary:
+ * - a pre-matching is a Map<Triple, List<TripleConstraint>>. Typically, preMatching.get(t) are triple constraints that could possibly be matched with triple, for instance having the same predicate.
+ * - a matching is a Map<Triple, TripleConstraint> that with every triple associates a unique triple constraint to which it is matched. For instance, a pre-matching can be seen as a set of matchings obtained by choosing a single triple constraint for every triple.
+ * - a split is a Map<Node, Set<Triple>> that with a node representing a shape expression label associates a set of triples. It is used to indicate which triples are matched with which supertypes of a given shape.
+ */
 public class TripleExprEval {
 
     // TODO remove debug code
@@ -40,14 +47,25 @@ public class TripleExprEval {
         DEBUG_cardinalityOf = debug;
     }
 
-
-    /* package */ static Iterator<Map<Node, Set<Triple>>> correctSplitsIterator(Set<Triple> triples,
+    /** Iterator over all valid splittings of a set of triples between the triple expressions along the supertypes of a shape.
+     * A split is valid if the set of triples split.get(supertypeLabel) satisfies the triple expression baseTripleExprs.get(supertypeLabel)
+     *
+     * @param triples The set of triples to be split
+     * @param shape The shape that is being validated
+     * @param baseTripleExprs The triple expressions of the shape's supertypes, indexed by the supertype's labels
+     * @param vCxt
+     * @param report
+     * @param exprForReport
+     * @param nodeForReport
+     * @return An element of this iterator associates a subset of triples with every supertype label key of baseTripleExprs
+     */
+    static Iterator<Map<Node, Set<Triple>>> correctSplitsIterator(Set<Triple> triples,
                                                                   Shape shape,
                                                                   Map<Node, TripleExpr> baseTripleExprs,
                                                                   ValidationContext vCxt,
                                                                   AShexReport report,
                                                                   ShapeExpr exprForReport, /* TODO replace */
-                                                                      Node nodeForReport /* TODO replace*/) {
+                                                                  Node nodeForReport /* TODO replace*/) {
         Map<Node, SorbeTripleExpr> toBeMatched = new HashMap<>(baseTripleExprs.size());
         for (Map.Entry<Node, TripleExpr> e: baseTripleExprs.entrySet()) {
             toBeMatched.put(e.getKey(), vCxt.getSorbe(e.getValue()));
@@ -96,13 +114,13 @@ public class TripleExprEval {
         return preMatching;
     }
 
-    /**
-     * Removes from the pre matching the extra triples (i.e. captured by an extra predicate)
+    /** Removes the extra triples from the pre-matching.
      * Returns the unmatched triples that are not allowed by extra, or null if no such exist.
+     * Un unmatched triple is a triple with preMatching(triple).isEmpty(). An unmatched triple is an extra triple if its predicate is in extraPredicates. Otherwise, it indicates an error.
      *
-     * @param preMatching
-     * @param extraPredicates
-     * @return
+     * @param preMatching A pre-matching to be filtered.
+     * @param extraPredicates Define the triples that are allowed by extra.
+     * @return null if all unmatched triples are extra, or the set of non-extra unmatched triples otherwise (ie those that correspond to errors)
      */
     private static Set<Triple> filterExtra(Map<Triple, List<TripleConstraint>> preMatching,
                                            Set<Node> extraPredicates) {
@@ -119,18 +137,17 @@ public class TripleExprEval {
     }
 
 
-    /** A map that with every shape expr label from correspondingSorbe associates the triples that
-     * in satisfyingMatching are mapped to a triple constraint from the main shape of the label.
+    /** With every shape expression label l from expressions.keySet(), associates the triples t from matching.keySet() s.t. matching.get(t) is a sub-expression of expressions.get(l).
      *
-     * @param correspondingSorbe contains null as key
-     * @param satisfyingMatching
+     * @param expressions Can contain null as key.
+     * @param matching
      * @return
      */
-    private static Map<Node, Set<Triple>> groupByLabel(Map<Node, SorbeTripleExpr> correspondingSorbe,
-                                                       Map<Triple, TripleConstraint> satisfyingMatching) {
-        // TODO: correspondingSorbe contains the null key for the base shape. The same holds for the returned map
+    private static Map<Node, Set<Triple>> groupByLabel(Map<Node, SorbeTripleExpr> expressions,
+                                                       Map<Triple, TripleConstraint> matching) {
+        // TODO: expressions contains the null key for the base shape. The same holds for the returned map
         // With every triple constraint associates the set of triples matched to it
-        EMap<TripleConstraint, Set<Triple>> inverseMatching = satisfyingMatching.entrySet().stream()
+        EMap<TripleConstraint, Set<Triple>> inverseMatching = matching.entrySet().stream()
                 .collect(Collectors.groupingBy(
                         Map.Entry::getValue,
                         EMap::new,
@@ -139,7 +156,7 @@ public class TripleExprEval {
         // With every label associates the set of triples matched to some triple constraint the SORBE associated
         // to this label
         Map<Node, Set<Triple>> result = new HashMap<>();
-        for (Map.Entry<Node, SorbeTripleExpr> e: correspondingSorbe.entrySet()) {
+        for (Map.Entry<Node, SorbeTripleExpr> e: expressions.entrySet()) {
             result.put(e.getKey(),
                     e.getValue().getSorbeTripleConstraintsOfSorbeSubExpr(e.getValue().sorbe).stream()
                             .flatMap(tc -> inverseMatching.getOrDefault(tc, Set.of()).stream())
@@ -150,6 +167,7 @@ public class TripleExprEval {
 
 
 
+    /** Matches every triple to the list of expressions that have the same predicate. */
     private static Map<Triple, List<TripleConstraint>> predicateBasedPreMatching (Set<Triple> triples,
                                                                                  Collection<SorbeTripleExpr> toBeMatched) {
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
@@ -163,6 +181,7 @@ public class TripleExprEval {
         return preMatching;
     }
 
+    /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t, by recursively validating t's object against the triple constraint's object constraint.*/
     private static void filterRecursiveValidation (Map<Triple, List<TripleConstraint>> preMatching,
                                                   ValidationContext vCxt,
                                                   AShexReport report) {
@@ -177,6 +196,7 @@ public class TripleExprEval {
             }});
     }
 
+    /* The triples that are unmatched in preMatching, i.e. which associated value is an empty list.*/
     private static Set<Triple> unmatchedTriples(Map<Triple, List<TripleConstraint>> preMatching) {
 
         return preMatching.entrySet().stream()
@@ -185,12 +205,14 @@ public class TripleExprEval {
                 .collect(Collectors.toSet());
     }
 
+    /** The triples among unmatchedTriples which predicate is not in extraPredicates. */
     private static Set<Triple> forbiddenByExtra(Set<Triple> unmatchedTriples, Set<Node> extraPredicates) {
         return unmatchedTriples.stream()
                 .filter(t ->  !extraPredicates.contains(t.getPredicate()))
                 .collect(Collectors.toSet());
     }
 
+    /** Checs whether a matching satisfies a hierarchy of triple expressions. */
     private static boolean matchingSatisfiesTripleExpression_sorbe(Map<Triple, TripleConstraint> matching,
                                                                   Collection<SorbeTripleExpr> toBeMatched,
                                                                   ValidationContext vCxt) {
@@ -205,7 +227,5 @@ public class TripleExprEval {
                             .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue()));
         });
     }
-
-
 
 }
