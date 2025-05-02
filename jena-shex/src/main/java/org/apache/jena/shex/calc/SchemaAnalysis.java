@@ -164,8 +164,8 @@ public class SchemaAnalysis {
         if (typeHierarchyGraph.hasCycles())
             throw new ShexSchemaStructureException("Cyclic extends");
 
-        return typeHierarchyGraph.extendableShapeDecls()
-                .allMatch(sd -> isMainShapeAndConstraints(sd, typeHierarchyGraph));
+        return typeHierarchyGraph.extendableShapeLabels()
+                .allMatch(l -> isMainShapeAndConstraints(shapeDeclMap.get(l), typeHierarchyGraph));
     }
 
     private boolean isMainShapeAndConstraints (ShapeDecl shapeDecl, TypeHierarchyGraph typeHierarchyGraph) {
@@ -184,14 +184,15 @@ public class SchemaAnalysis {
         return true;
     }
 
+    // TODO this requirement is not included in ESWC
     private boolean isConstraintPredicatesIncludedInMainShapePredicates(ShapeDecl shapeDecl,
                                                                         List<Shape> shapesInConstraints,
                                                                         TypeHierarchyGraph typeHierarchyGraph) {
         Set<Node> mainShapeFwdPredicates = new HashSet<>();
         Set<Node> mainShapeInvPredicates = new HashSet<>();
-        typeHierarchyGraph.getSupertypes(shapeDecl).forEach(sd ->
+        typeHierarchyGraph.getSupertypes(shapeDecl.getLabel()).forEach(l ->
                 AccumulationUtil.accumulatePredicates(
-                        List.of(Util.mainShape(sd.getShapeExpr(), shapeDeclMap::get).getTripleExpr()),
+                        List.of(Util.mainShape(shapeDeclMap.get(l).getShapeExpr(), shapeDeclMap::get).getTripleExpr()),
                         tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 

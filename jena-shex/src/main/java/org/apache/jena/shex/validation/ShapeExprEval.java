@@ -52,15 +52,15 @@ public class ShapeExprEval {
         if (createChildReport)
             report = report.createChild(dataNode, null, shapeDecl);
         boolean result = false;
-        for (ShapeDecl base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl)) {
-            vCxt.startValidate(base, dataNode);
+        for (Node base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl.getLabel())) {
+            vCxt.startValidate(vCxt.getShapeDecl(base), dataNode);
             try {
-                ShapeExpr shapeExpr = base.getShapeExpr();
+                ShapeExpr shapeExpr = vCxt.getShapeDecl(base).getShapeExpr();
                 // TODO report for semantic actions
                 result = satisfies(shapeExpr, dataNode, vCxt, report)
                         && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
             } finally { // TODO What exception could we have here ?
-                vCxt.finishValidate(base, dataNode);
+                vCxt.finishValidate(vCxt.getShapeDecl(base), dataNode);
             }
         }
         report.setSatisfies(result);
@@ -98,10 +98,10 @@ public class ShapeExprEval {
         Map<Node, List<ShapeExpr>> constraints = new HashMap<>();
         mainTripleExprs.put(null, shape.getTripleExpr());
         for (ShapeExprRef ref: shape.getExtends()) {
-            for (ShapeDecl superType: vCxt.getTypeHierarchyGraph().getSupertypes(vCxt.getShapeDecl(ref.getLabel()))) {
-                Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(superType.getShapeExpr(), vCxt::getShapeDecl);
-                mainTripleExprs.put(superType.getLabel(), mc.getLeft().getTripleExpr());
-                constraints.put(superType.getLabel(), mc.getRight());
+            for (Node superType: vCxt.getTypeHierarchyGraph().getSupertypes(ref.getLabel())) {
+                Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(vCxt.getShapeDecl(superType).getShapeExpr(), vCxt::getShapeDecl);
+                mainTripleExprs.put(superType, mc.getLeft().getTripleExpr());
+                constraints.put(superType, mc.getRight());
             }
         }
 
@@ -152,8 +152,7 @@ public class ShapeExprEval {
         for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
             for (ShapeExpr constr : e.getValue()) {
                 Set<Triple> triples = relevantTriples.putIfAbsent(e.getKey(),
-                        vCxt.getTypeHierarchyGraph().getSupertypes(vCxt.getShapeDecl(e.getKey())).stream()
-                            .map(ShapeDecl::getLabel)
+                        vCxt.getTypeHierarchyGraph().getSupertypes(e.getKey()).stream()
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
                 if (!satisfies(constr, nodeForReport, triples, vCxt, report /* TODO which report is that? */)) {
