@@ -191,7 +191,7 @@ public class TripleExprEval {
                 TripleConstraint tc = it.next();
                 ShapeExpr valueExpr = tc.getValueExpr();
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                if (!ShapeExprEval.satisfies(valueExpr, opposite, vCxt, report))
+                if (!ShapeExprEval.satisfies(opposite, valueExpr, vCxt, report))
                     it.remove();
             }});
     }

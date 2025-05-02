@@ -42,47 +42,39 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 
 public class ShapeExprEval {
 
-    public static void satisfies (ShapeDecl shapeDecl, Node dataNode,
-                                  ValidationContext vCxt, AShexReport report) {
-        report.setSatisfies(_satisfies(shapeDecl, dataNode, vCxt, report, false));
+
+    public static boolean satisfies (Node dataNode, ShapeExpr expr,
+                                     ValidationContext vCxt, AShexReport report) {
+        return satisfies(dataNode, expr, null, vCxt, report);
     }
 
-    private static boolean _satisfies(ShapeDecl shapeDecl, Node dataNode, ValidationContext vCxt,
-                                      AShexReport report, boolean createChildReport) {
-        if (createChildReport)
-            report = report.createChild(dataNode, null, shapeDecl);
+    private static boolean satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
+                                     ValidationContext vCxt, AShexReport report) {
         boolean result = false;
-        for (Node base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(shapeDecl.getLabel())) {
-            vCxt.startValidate(vCxt.getShapeDecl(base), dataNode);
-            try {
-                ShapeExpr shapeExpr = vCxt.getShapeDecl(base).getShapeExpr();
-                // TODO report for semantic actions
-                result = satisfies(shapeExpr, dataNode, vCxt, report)
-                        && vCxt.dispatchShapeExprSemanticAction(shapeExpr, dataNode);
-            } finally { // TODO What exception could we have here ?
-                vCxt.finishValidate(vCxt.getShapeDecl(base), dataNode);
+        if (expr instanceof ShapeExprRef ref) {
+            for (Node base : vCxt.getTypeHierarchyGraph().getNonAbstractSubtypes(ref.getLabel())) {
+                if (neigh == null && vCxt.cycle(dataNode, vCxt.getShapeDecl(ref.getLabel())))
+                    return true;
+                AShexReport childReport = report.createChild(dataNode, ShapeExprRef.create(base));
+                vCxt.startValidate(vCxt.getShapeDecl(base), dataNode);
+                try {
+                    ShapeExpr refExpr = vCxt.getShapeDecl(base).getShapeExpr();
+                    // TODO report for semantic actions
+                    result = satisfies(dataNode, refExpr, null, vCxt, childReport)
+                            && vCxt.dispatchShapeExprSemanticAction(refExpr, dataNode);
+                } finally { // TODO What exception could we have here ?
+                    vCxt.finishValidate(vCxt.getShapeDecl(base), dataNode);
+                }
+                if (result)
+                    break;
             }
+        }
+        else {
+            ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(dataNode, neigh, vCxt);
+            result = expr.visit(evaluator, report);
         }
         report.setSatisfies(result);
         return result;
-    }
-
-    /*package*/
-    static boolean satisfies(ShapeExpr shapeExpr, Node node, ValidationContext vCxt,
-                             AShexReport report) {
-
-        return satisfies(shapeExpr, node, null, vCxt, report);
-    }
-
-    /** Validate a node's neighboughood or a set of triples against a shape expression.
-     * If triples is null, the whole node's neighbourhood is considered. */
-    private static boolean satisfies(ShapeExpr constr,
-                                     Node node,
-                                     Set<Triple> triples,
-                                     ValidationContext vCxt,
-                                     AShexReport report) {
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, triples, vCxt);
-        return constr.visit(evaluator, report);
     }
 
     /** Validates a node's neighbourhood or a set of triples against a shape.
@@ -90,7 +82,7 @@ public class ShapeExprEval {
     private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
                                           ValidationContext vCxt, AShexReport report) {
 
-        AShexReport childReport = report.createChild(dataNode, shape, null);
+        AShexReport childReport = report.createChild(dataNode, shape);
 
         // 1. Collect the shapes to be satisfied (several if the shape is with extends)
         //    and the corresponding constraints if the shape is with extends
@@ -155,7 +147,7 @@ public class ShapeExprEval {
                         vCxt.getTypeHierarchyGraph().getSupertypes(e.getKey()).stream()
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
-                if (!satisfies(constr, nodeForReport, triples, vCxt, report /* TODO which report is that? */)) {
+                if (!satisfies(nodeForReport, constr, triples, vCxt, report /* TODO which report is that? */)) {
                     return false;
                 }
             }
@@ -215,16 +207,7 @@ public class ShapeExprEval {
 
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef, AShexReport report) {
-            ShapeDecl shapeDecl = vCxt.getShapeDecl(shapeExprRef.getLabel());
-            if (vCxt.cycle(dataNode, shapeDecl))
-                return true;
-            else if (_satisfies(shapeDecl, dataNode, vCxt, report, true))
-                return true;
-            else {
-                // TODO report needed ?
-                report.addInfoFailure(shapeExprRef, dataNode, triples, "Shape reference not satisfied");
-                return false;
-            }
+            return satisfies(dataNode, shapeExprRef, triples, vCxt, report);
         }
 
         @Override

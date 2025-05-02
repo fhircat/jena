@@ -6,6 +6,8 @@ import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExpr;
+import org.apache.jena.shex.expressions.ShapeExprRef;
+
 import java.util.Set;
 
 /**
@@ -13,12 +15,12 @@ import java.util.Set;
  */
 public class ExhaustiveShexReporter extends AShexReport {
 
-    public static ExhaustiveShexReporter create(ShapeDecl shapeDecl, Node node) {
-        return new ExhaustiveShexReporter(node, null, shapeDecl, null);
+    public static ExhaustiveShexReporter create(Node node, ShapeDecl shapeDecl) {
+        return new ExhaustiveShexReporter(node, ShapeExprRef.create(shapeDecl.getLabel()), null);
     }
 
-    protected ExhaustiveShexReporter(Node node, ShapeExpr expr, ShapeDecl shapeDecl, AShexReport parent) {
-        super(node, expr, shapeDecl, parent);
+    protected ExhaustiveShexReporter(Node node, ShapeExpr expr, AShexReport parent) {
+        super(node, expr, parent);
     }
 
     @Override
@@ -32,7 +34,7 @@ public class ExhaustiveShexReporter extends AShexReport {
     }
 
     @Override
-    public AShexReport createChild(Node node, ShapeExpr expr, ShapeDecl shapeDecl) {
-        return new ExhaustiveShexReporter(node, expr, shapeDecl, this);
+    public AShexReport createChild(Node node, ShapeExpr expr) {
+        return new ExhaustiveShexReporter(node, expr, this);
     }
 }

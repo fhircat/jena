@@ -23,32 +23,28 @@ public abstract class AShexReport {
             registered infos. */
 
     public final Node node;
-    private ShexStatus status = null;
-    private final List<ReportInfo> infos = new ArrayList<>();
-    // One of expr and shapeDecl is not null
     public final ShapeExpr expr;
-    public final ShapeDecl shapeDecl;
     public final AShexReport parent;
     private final List<AShexReport> children = new ArrayList<>();
 
-    protected AShexReport(Node node, ShapeExpr expr, ShapeDecl shapeDecl, AShexReport parent) {
-        if (expr == null && shapeDecl == null)
-            throw new IllegalArgumentException("Either expr or shapeDecl is required.");
-        if (expr != null &&
-                ! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
-            throw new IllegalArgumentException("Expression must be an atomic shaphe expression (node constraint, shape, or reference).");
+    private ShexStatus status = null;
+    private final List<ReportInfo> infos = new ArrayList<>();
+
+    protected AShexReport(Node node, ShapeExpr expr, AShexReport parent) {
+        if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
+            throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference).");
         this.node = node;
         this.expr = expr;
-        this.shapeDecl = shapeDecl;
         this.parent = parent;
     }
 
     // TODO these create a ReportInfo, for success with some dummy message
     // subNeighbourhood is null if non relevant, TODO javadoc
+    // TODO why do we need to give an expression and a node while the report already has those ?
     public abstract void addInfoSuccess(Expression expr, Node node, Set<Triple> subNeighbourhood);
     public abstract void addInfoFailure(Expression expr, Node node, Set<Triple> subNeighbourhood, String errorMessage);
 
-    public abstract AShexReport createChild(Node node, ShapeExpr expr, ShapeDecl shapeDecl);
+    public abstract AShexReport createChild(Node node, ShapeExpr expr);
 
     public void setSatisfies (boolean satisfies) {
         this.status = satisfies ? ShexStatus.conformant : ShexStatus.nonconformant;
@@ -71,9 +67,9 @@ public abstract class AShexReport {
     }
 
     /**
-     * The {@link ShapeDecl} or atomic {@link ShapeExpr} to which the report is associated.
+     * The {@link ShapeExpr} to which the report is associated.
      */
-    public Object getSchemaElement() {
-        return expr != null ? expr : shapeDecl;
+    public ShapeExpr getSchapeExpr() {
+        return expr;
     }
 }

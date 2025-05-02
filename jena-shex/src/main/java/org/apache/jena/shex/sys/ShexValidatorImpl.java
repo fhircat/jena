@@ -187,8 +187,8 @@ class ShexValidatorImpl implements ShexValidator {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         //vCxtInner.startValidate(shapeDecl, focus);
-        AShexReport shexReport = ExhaustiveShexReporter.create(shapeDecl, focus);
-        ShapeExprEval.satisfies(shapeDecl, focus, vCxtInner, shexReport);
+        AShexReport shexReport = ExhaustiveShexReporter.create(focus, shapeDecl);
+        ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
         //vCxtInner.finishValidate(shapeDecl, focus);
         boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
         if (!isValid) {
