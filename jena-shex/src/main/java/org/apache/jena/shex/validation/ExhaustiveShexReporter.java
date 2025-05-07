@@ -3,6 +3,7 @@ package org.apache.jena.shex.validation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.Shape;
 import org.apache.jena.shex.expressions.ShapeExpr;
@@ -24,13 +25,13 @@ public class ExhaustiveShexReporter extends AShexReport {
     }
 
     @Override
-    public void addInfoSuccess(Expression expr, Node node, Set<Triple> subNeighbourhood) {
-
+    public void addInfoSuccess(Expression expr, Set<Triple> subNeighbourhood) {
+        infos.add(new ReportInfoImpl(expr, subNeighbourhood, ShexStatus.conformant, ""));
     }
 
     @Override
-    public void addInfoFailure(Expression expr, Node node, Set<Triple> subNeighbourhood, String errorMessage) {
-
+    public void addInfoFailure(Expression expr, Set<Triple> subNeighbourhood, String errorMessage) {
+        infos.add(new ReportInfoImpl(expr, subNeighbourhood, ShexStatus.nonconformant, errorMessage));
     }
 
     @Override

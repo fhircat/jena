@@ -28,7 +28,7 @@ public abstract class AShexReport {
     private final List<AShexReport> children = new ArrayList<>();
 
     private ShexStatus status = null;
-    private final List<ReportInfo> infos = new ArrayList<>();
+    protected final List<ReportInfo> infos = new ArrayList<>();
 
     protected AShexReport(Node node, ShapeExpr expr, AShexReport parent) {
         if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
@@ -40,9 +40,8 @@ public abstract class AShexReport {
 
     // TODO these create a ReportInfo, for success with some dummy message
     // subNeighbourhood is null if non relevant, TODO javadoc
-    // TODO why do we need to give an expression and a node while the report already has those ?
-    public abstract void addInfoSuccess(Expression expr, Node node, Set<Triple> subNeighbourhood);
-    public abstract void addInfoFailure(Expression expr, Node node, Set<Triple> subNeighbourhood, String errorMessage);
+    public abstract void addInfoSuccess(Expression expr, Set<Triple> subNeighbourhood);
+    public abstract void addInfoFailure(Expression expr, Set<Triple> subNeighbourhood, String errorMessage);
 
     public abstract AShexReport createChild(Node node, ShapeExpr expr);
 
@@ -71,5 +70,26 @@ public abstract class AShexReport {
      */
     public ShapeExpr getSchapeExpr() {
         return expr;
+    }
+
+    @Override
+    public String toString() {
+        return toString(0);
+    }
+
+    private String toString(int indent) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Report: node=%s, expr=%s, status=%s", node, expr, status));
+        for (ReportInfo info : infos) {
+            sb.append(" ".repeat(indent));
+            sb.append("i:");
+            sb.append(info.toString());
+            sb.append("\n");
+        }
+        for (AShexReport child : children) {
+            sb.append(" ".repeat(indent));
+            sb.append(String.format("- %s", child.toString(indent + 2)));
+        }
+        return sb.toString();
     }
 }

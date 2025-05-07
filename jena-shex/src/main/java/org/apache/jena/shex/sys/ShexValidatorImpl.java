@@ -219,7 +219,7 @@ class ShexValidatorImpl implements ShexValidator {
                                              Node focus, AShexReport shexReport) {
         // Ensure at least one entry.
         if (vCxt.getReportItems().isEmpty()) {
-            shexReport.addInfoFailure(exprForReport, focus, null, "Failed");
+            shexReport.addInfoFailure(exprForReport, null, "Failed");
         }
     }
 

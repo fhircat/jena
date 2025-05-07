@@ -24,7 +24,6 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFmtLib;
-import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.shex.calc.Util;
@@ -110,7 +109,7 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !accNonMatchables.isEmpty()) {
-            report.addInfoFailure(shape, dataNode, accMatchables,
+            report.addInfoFailure(shape, accMatchables,
                     "CLOSED required but forbidden triples");
             return false;
         }
@@ -128,7 +127,7 @@ public class ShapeExprEval {
         }
 
         report.setSatisfies(false);
-        report.addInfoFailure(shape, dataNode, triples,
+        report.addInfoFailure(shape, triples,
                 "Shape not satisfied by the triples.");
         return false;
     }
@@ -180,7 +179,7 @@ public class ShapeExprEval {
         public Boolean visit(ShapeAnd shapeAnd, AShexReport report) {
             for (ShapeExpr se : shapeAnd.getShapeExprs()) {
                 if (! se.visit(this, report)) {
-                    report.addInfoFailure(shapeAnd, dataNode, triples, "AND not satisfied");
+                    report.addInfoFailure(shapeAnd, triples, "AND not satisfied");
                     return false;
                 }
             }
@@ -193,13 +192,13 @@ public class ShapeExprEval {
                 if (se.visit(this, report))
                     return true;
             }
-            report.addInfoFailure(shapeOr, dataNode, triples, "None of the OR disjuncts was satisfied");            return false;
+            report.addInfoFailure(shapeOr, triples, "None of the OR disjuncts was satisfied");            return false;
         }
 
         @Override
         public Boolean visit(ShapeNot shapeNot, AShexReport report) {
             if (shapeNot.getShapeExpr().visit(this, report)) {
-                report.addInfoFailure(shapeNot, dataNode, triples, "Negated expression is satisfied");
+                report.addInfoFailure(shapeNot, triples, "Negated expression is satisfied");
                 return false;
             } else
                 return true;
@@ -213,7 +212,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExternal shapeExternal, AShexReport report) {
             // TODO shape external never satisfied
-            report.addInfoFailure(shapeExternal, dataNode, triples, "Shape external not supported, never satisfied");
+            report.addInfoFailure(shapeExternal, triples, "Shape external not supported, never satisfied");
             return false;
         }
 
@@ -253,7 +252,7 @@ public class ShapeExprEval {
 
             // TODO Bad.
             if (!satisfied)
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         nodeKindCstr + " : Expected " + nodeKind + " for " + displayStr(dataNode));
             return satisfied;
         }
@@ -261,7 +260,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(DatatypeConstraint datatypeCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         datatypeCstr + " : Not a literal");
                 return false;
             }
@@ -269,12 +268,12 @@ public class ShapeExprEval {
             if (datatypeCstr.getDatatypeURI().equals(dataNode.getLiteralDatatypeURI())) {
                 // Must be valid for the type
                 if (!datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm())) {
-                    report.addInfoFailure(parentConstraint, dataNode, null,
+                    report.addInfoFailure(parentConstraint, null,
                             datatypeCstr + " : Not valid value : Node " + displayStr(dataNode));
                     return false;
                 }
             } else {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         datatypeCstr + " -- Wrong datatype: " + strDatatype(dataNode) + " for focus node: " + displayStr(dataNode));
                 return false;
             }
@@ -284,26 +283,26 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(NumLengthConstraint numLengthCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             RDFDatatype rdfDT = dataNode.getLiteralDatatype();
             if (!(rdfDT instanceof XSDDatatype)) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             if (XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT)) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
             String lexicalForm = dataNode.getLiteralLexicalForm();
             if (!rdfDT.isValid(lexicalForm)) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
@@ -364,14 +363,14 @@ public class ShapeExprEval {
 
             String msg = format("Expected %s %d : got = %d", numLengthCstr.getLengthType().label(),
                     numLengthCstr.getLength(), lexicalForm.length());
-            report.addInfoFailure(parentConstraint, dataNode, null, msg);
+            report.addInfoFailure(parentConstraint, null, msg);
             return false;
         }
 
         @Override
         public Boolean visit(NumRangeConstraint numRangeCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(parentConstraint, dataNode, null,
+                report.addInfoFailure(parentConstraint, null,
                         "NumRange: Not a literal number");
                 return false;
             }
@@ -402,7 +401,7 @@ public class ShapeExprEval {
                     break;
             }
             String msg = format("Expected %s %s : got = %s", numRangeCstr.getRangeKind().label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(dataNode));
-            report.addInfoFailure(parentConstraint, dataNode, null, msg);
+            report.addInfoFailure(parentConstraint, null, msg);
             return false;
         }
 
@@ -410,7 +409,7 @@ public class ShapeExprEval {
         public Boolean visit(StrRegexConstraint strRegexCstr) {
             if (dataNode.isBlank()) {
                 String msg = toString() + ": Blank node: " + displayStr(dataNode);
-                report.addInfoFailure(parentConstraint, dataNode, null, msg);
+                report.addInfoFailure(parentConstraint, null, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -418,7 +417,7 @@ public class ShapeExprEval {
                 return true;
             }
             String msg = strRegexCstr + ": Does not match: '" + str + "'";
-            report.addInfoFailure(parentConstraint, dataNode, null, msg);
+            report.addInfoFailure(parentConstraint, null, msg);
             return false;
         }
 
@@ -428,7 +427,7 @@ public class ShapeExprEval {
             int length = strLengthCstr.getLength();
             if (!dataNode.isLiteral() && !dataNode.isURI()) {
                 String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(dataNode));
-                report.addInfoFailure(parentConstraint, dataNode, null, msg);
+                report.addInfoFailure(parentConstraint, null, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -451,7 +450,7 @@ public class ShapeExprEval {
             }
 
             String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-            report.addInfoFailure(parentConstraint, dataNode, null, msg);
+            report.addInfoFailure(parentConstraint, null, msg);
             return false;
         }
 
@@ -461,7 +460,7 @@ public class ShapeExprEval {
                     .anyMatch(valueSetRange -> validateRange(valueSetRange, dataNode));
             if (!b) {
                 // TODO why is dataNode null ?
-                report.addInfoFailure(parentConstraint, null, null,
+                report.addInfoFailure(parentConstraint, null,
                         "Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr);
                 return false;
             }
