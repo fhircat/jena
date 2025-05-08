@@ -45,7 +45,7 @@ public class ValidationContext {
 
     private final Deque<ValidationStackElement> validationStack;
 
-    private final ShexReport.Builder reportBuilder = ShexReport.create();
+    private final ShexReportOld.Builder reportBuilder = ShexReportOld.create();
 
     /** @deprecated Use method {@link #create()} */
     @Deprecated
@@ -192,7 +192,7 @@ public class ValidationContext {
 
     }
 
-    public ShexReport generateReport() {
+    public ShexReportOld generateReport() {
         return reportBuilder.build();
 
     }

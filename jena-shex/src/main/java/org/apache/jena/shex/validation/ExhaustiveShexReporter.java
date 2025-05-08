@@ -18,8 +18,10 @@ public class ExhaustiveShexReporter extends AShexReport {
 
     // TODO make a real factory
     public static ExhaustiveShexReporter factory() {
-        return ExhaustiveShexReporter.create(null, (ShapeDecl) null);
+        return new ExhaustiveShexReporter();
     }
+
+    private ExhaustiveShexReporter(){}
 
     public ExhaustiveShexReporter create (Node node, ShapeExpr expr) {
         return new ExhaustiveShexReporter(node, expr, null);
@@ -29,7 +31,7 @@ public class ExhaustiveShexReporter extends AShexReport {
         return new ExhaustiveShexReporter(node, ShapeExprRef.create(shapeDecl.getLabel()), null);
     }
 
-    protected ExhaustiveShexReporter(Node node, ShapeExpr expr, AShexReport parent) {
+    protected ExhaustiveShexReporter(Node node, ShapeExpr expr, ShexReport parent) {
         super(node, expr, parent);
     }
 

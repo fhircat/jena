@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.jena.shex;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.graph.Graph;
@@ -25,6 +25,8 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.shared.impl.PrefixMappingImpl;
+import org.apache.jena.shex.ShapeMapElement;
+import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.sys.ReportItem;
 
 import java.util.ArrayList;
@@ -37,14 +39,14 @@ import java.util.function.Consumer;
  * This has a ShEx <a href ="https://shexspec.github.io/shape-map/#shapemap-structure">defined structure</a> (one item per shape)
  * and also all the validation item reports, more in the style of SHACL.
  */
-public class ShexReport {
+public class ShexReportOld {
     private final Collection<ReportItem> entries;
     private final Resource resultResource;
     private final List<ShapeMapElement> reports;
     public boolean conforms;
 
 
-    public ShexReport(boolean isConformant) {
+    public ShexReportOld(boolean isConformant) {
         this.conforms = isConformant;
         this.resultResource = null;
         entries = new ArrayList<>();
@@ -56,7 +58,7 @@ public class ShexReport {
         return new Builder();
     }
 
-    private ShexReport(Collection<ReportItem> entries, List<ShapeMapElement> reports, PrefixMapping prefixes) {
+    private ShexReportOld(Collection<ReportItem> entries, List<ShapeMapElement> reports, PrefixMapping prefixes) {
         this(entries, reports, generate(entries, prefixes));
     }
 
@@ -65,7 +67,7 @@ public class ShexReport {
         return null;
     }
 
-    private ShexReport(Collection<ReportItem> entries, List<ShapeMapElement> reports, Resource resultResource) {
+    private ShexReportOld(Collection<ReportItem> entries, List<ShapeMapElement> reports, Resource resultResource) {
         this.entries = new ArrayList<>(entries);
         this.reports = new ArrayList<>(reports);
         this.resultResource = resultResource;
@@ -134,8 +136,8 @@ public class ShexReport {
             reports.add(entry);
         }
 
-        public ShexReport build() {
-            ShexReport r = new ShexReport(entries, reports, prefixes);
+        public ShexReportOld build() {
+            ShexReportOld r = new ShexReportOld(entries, reports, prefixes);
             return r;
         }
 

@@ -67,7 +67,7 @@ public class SysShex {
         pz.forEach(p -> {
             p.getUris().forEach(u -> iriToPlugin.put(u, p));
         });
-        ShexValidator ret = new ShexValidatorImpl(iriToPlugin);
+        ShexValidator ret = new ShexValidatorImpl2(iriToPlugin);
         return ret;
     }
 }

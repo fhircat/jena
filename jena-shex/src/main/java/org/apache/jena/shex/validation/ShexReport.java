@@ -1,18 +1,21 @@
-package org.apache.jena.shex;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShapeMapElement;
+import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.validation.ReportInfo;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
-public interface ShexReport2 {
+public interface ShexReport {
 
     // TODO to be replaced by a factory method
-    ShexReport2 create(Node node, ShapeExpr shapeExpr);
+    ShexReport create(Node node, ShapeExpr shapeExpr);
 
     Node getNode();
     ShapeExpr getShapeExpr();
@@ -20,10 +23,10 @@ public interface ShexReport2 {
 
     void setSatisfies(boolean satisfies);
 
-    ShexReport2 getParent();
-    void setParent(ShexReport2 parent);  // TODO can be set only once
+    ShexReport getParent();
+    void setParent(ShexReport parent);  // TODO can be set only once
 
-    List<ShexReport2> getChildren();
+    List<ShexReport> getChildren();
 
     // TODO these create a ReportInfo, for success with some dummy message
     // subNeighbourhood is null if non relevant, TODO javadoc
@@ -36,4 +39,15 @@ public interface ShexReport2 {
     default boolean hasReports() {
         return getStatus() == ShexStatus.conformant;
     }
+
+    // TODO quick fix
+    default void forEachReport(Consumer<ShapeMapElement> action) {
+        throw new UnsupportedOperationException("not yet implemented");
+    }
+
+    // TODO quick fix
+    default boolean conforms() {
+        return getStatus() == ShexStatus.conformant;
+    }
+
 }

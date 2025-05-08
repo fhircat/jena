@@ -53,7 +53,8 @@ class ShexValidatorImpl implements ShexValidator {
      */
     @Override
     public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap) {
-        Objects.requireNonNull(dataGraph);
+        throw new UnsupportedOperationException("deprecated");
+        /*Objects.requireNonNull(dataGraph);
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(shapeMap);
         shapes = shapes.importsClosure();
@@ -68,7 +69,7 @@ class ShexValidatorImpl implements ShexValidator {
                 results.add(validationStep(vCxt, mapEntry, mapEntry.shapeExprLabel, focus));
             }
         });
-        return new ShexReport(results.stream().allMatch(it -> it));
+        return new ShexReport(results.stream().allMatch(it -> it));*/
     }
 
     /**
@@ -76,7 +77,8 @@ class ShexValidatorImpl implements ShexValidator {
      */
     @Override
     public ShexReport validate(Graph dataGraph, ShexSchema shapes, Node shapeRef, Node focus) {
-        Objects.requireNonNull(shapeRef);
+        throw new UnsupportedOperationException("deprecated");
+        /*Objects.requireNonNull(shapeRef);
         Objects.requireNonNull(focus);
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
@@ -90,7 +92,7 @@ class ShexValidatorImpl implements ShexValidator {
         else
             isValid = validationStep(vCxt, entry, shapeRef, focus);
 
-        return new ShexReport(isValid);
+        return new ShexReport(isValid);*/
     }
 
     /**
@@ -98,7 +100,8 @@ class ShexValidatorImpl implements ShexValidator {
      */
     @Override
     public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeDecl shape, Node focus) {
-        Objects.requireNonNull(shape);
+        throw new UnsupportedOperationException("deprecated");
+        /*Objects.requireNonNull(shape);
         Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
         Objects.requireNonNull(focus);
@@ -107,12 +110,13 @@ class ShexValidatorImpl implements ShexValidator {
         ValidationContext vCxt = new ValidationContext(dataGraph, shapes, semanticActionPluginIndex);
         boolean started = vCxt.dispatchStartSemanticAction(shapes, vCxt);
         boolean isValid = validationStep(vCxt, entry, entry.shapeExprLabel, focus);
-        return new ShexReport(isValid);
+        return new ShexReport(isValid);*/
     }
 
     @Override
     public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node focus) {
-        Objects.requireNonNull(shapes);
+        throw new UnsupportedOperationException("deprecated");
+        /*Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
         Objects.requireNonNull(shapeMap);
         Objects.requireNonNull(focus);
@@ -125,7 +129,7 @@ class ShexValidatorImpl implements ShexValidator {
         });
 
         ShexReport report = vCxt.generateReport();
-        return report;
+        return report;*/
     }
 
     // Execute validation if the focus node is in the scope of the shapeRecord.

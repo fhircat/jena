@@ -3,7 +3,6 @@ package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
-import org.apache.jena.shex.ShexReport2;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
 
@@ -15,9 +14,9 @@ import java.util.List;
  * Result of validating a node against a {@link ShapeDecl} or a {@link Shape}.
  * Is a hierarchic structure.
  */
-public abstract class AShexReport implements ShexReport2 {
+public abstract class AShexReport implements ShexReport {
 
-    /* TODO make ShexReport2 subclass of this one, and call it ExhaustiveShapeReporter or something like that
+    /* TODO make ShexReport subclass of this one, and call it ExhaustiveShapeReporter or something like that
             ie all report infos are registered. Possibly, make also a minimal implementation that ignores all
             registered infos. */
 
@@ -25,12 +24,12 @@ public abstract class AShexReport implements ShexReport2 {
     private final ShapeExpr expr;
     private ShexStatus status = null;
 
-    private ShexReport2 parent = null;
-    private final List<ShexReport2> children = new ArrayList<>();
+    private ShexReport parent = null;
+    private final List<ShexReport> children = new ArrayList<>();
 
     protected final List<ReportInfo> infos = new ArrayList<>();
 
-    protected AShexReport(Node node, ShapeExpr expr, AShexReport parent) {
+    protected AShexReport(Node node, ShapeExpr expr, ShexReport parent) {
         if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
             throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference).");
         this.node = node;
@@ -38,8 +37,14 @@ public abstract class AShexReport implements ShexReport2 {
         this.parent = parent;
     }
 
+    // TODO quick fix for factory, to remove
+    protected AShexReport() {
+        this.node = null;
+        this.expr = null;
+    }
+
     @Override
-    public void setParent (ShexReport2 parent) {
+    public void setParent (ShexReport parent) {
         if (this.parent != null)
             throw new IllegalStateException("Can't set parent twice");
         this.parent = parent;
@@ -63,12 +68,12 @@ public abstract class AShexReport implements ShexReport2 {
     }
 
     @Override
-    public List<ShexReport2> getChildren() {
+    public List<ShexReport> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
     @Override
-    public ShexReport2 getParent() {
+    public ShexReport getParent() {
         return parent;
     }
 
@@ -96,7 +101,7 @@ public abstract class AShexReport implements ShexReport2 {
             sb.append(info.toString());
             sb.append("\n");
         }
-        for (ShexReport2 child : children) {
+        for (ShexReport child : children) {
             sb.append(" ".repeat(indent));
             // TODO indentation
             sb.append(String.format("- %s", child.toString()));

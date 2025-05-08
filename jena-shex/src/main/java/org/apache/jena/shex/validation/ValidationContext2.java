@@ -4,7 +4,7 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.ShexReport2;
+import org.apache.jena.shex.validation.ShexReport;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
@@ -30,7 +30,7 @@ public class ValidationContext2 {
         this.semActPluginIndex = semActPluginIndex;
 
         if (fixedSchema) this.schemaMem = new ShexSchemaMem(schema);
-        else this.schemaMem = null;
+        else this.schemaMem = new ShexSchemaMem(schema);
         if (fixedGraph) this.typing = new Typing();
         else this.typing = new EmptyTyping();
 
@@ -40,11 +40,12 @@ public class ValidationContext2 {
 
 
     // Used from public
-    public ShexReport2 validate(Node focus, ShapeExprRef shapeExprRef, ShexReport2 factory) {
+    public ShexReport validate(Node focus, ShapeExprRef shapeExprRef, ShexReport factory) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
-        ShexReport2 r = typing.get(focus, shapeExprLabel);
-        if (r != null) return new ShexReportReference(r);
+        ShexReport r = typing.get(focus, shapeExprLabel);
+        if (r != null)
+            return new ShexReportReference(r);
 
         // The node/label pair is on the stack
         if (stack.contains(focus, shapeExprLabel)) {
@@ -73,7 +74,7 @@ public class ValidationContext2 {
         return r;
     }
 
-    public ShexReport2 validate(Collection<Pair<Node, Node>> shapeMap) {
+    public ShexReport validate(Collection<Pair<Node, Node>> shapeMap) {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
@@ -183,33 +184,33 @@ public class ValidationContext2 {
 
     private class Typing {
 
-        private Map<Pair<Node, Node>, ShexReport2> typing = new HashMap<>();
+        private Map<Pair<Node, Node>, ShexReport> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
-        ShexReport2 get(Node focus, Node shapeExprLabel) {
+        ShexReport get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
     }
 
     private class EmptyTyping extends Typing {
 
-        final ShexReport2 get(Node focus, Node shapeExprLabel) {
+        final ShexReport get(Node focus, Node shapeExprLabel) {
             return null;
         }
     }
 
-    private static class ShexReportReference implements ShexReport2 {
+    private static class ShexReportReference implements ShexReport {
 
-        private ShexReport2 parent = null;
-        private final ShexReport2 report;
+        private ShexReport parent = null;
+        private final ShexReport report;
 
-        ShexReportReference(ShexReport2 report) {
+        ShexReportReference(ShexReport report) {
             super();
             this.report = report;
         }
 
         @Override
-        public void setParent(ShexReport2 parent) {
+        public void setParent(ShexReport parent) {
             if (this.parent != null) {
                 throw new IllegalStateException("Can't set parent twice");
             }
@@ -232,7 +233,7 @@ public class ValidationContext2 {
         }
 
         @Override
-        public ShexReport2 create(Node node, ShapeExpr shapeExpr) {
+        public ShexReport create(Node node, ShapeExpr shapeExpr) {
             throw new UnsupportedOperationException();
         }
 
@@ -254,12 +255,12 @@ public class ValidationContext2 {
 
 
         @Override
-        public ShexReport2 getParent() {
+        public ShexReport getParent() {
             return parent;
         }
 
         @Override
-        public List<ShexReport2> getChildren() {
+        public List<ShexReport> getChildren() {
             return report.getChildren();
         }
 
