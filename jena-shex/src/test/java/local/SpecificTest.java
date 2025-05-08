@@ -5,6 +5,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.expressions.ShapeExprRef;
+import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.validation.*;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
@@ -20,7 +21,9 @@ public class SpecificTest {
         String schemaFile = "2RefS1-IS2.shex";
         String graphFile = "In1_Ip1_In2.In2_Ip2_LX.ttl";
         List<String> focusShapePairs = new ArrayList<>();
+        // Shape
         focusShapePairs.add("http://a.example/S1");
+        // Focus node
         focusShapePairs.add("http://a.example/n1");
         focusShapePairs.add("valid");
         /*
@@ -35,7 +38,7 @@ public class SpecificTest {
         ShexSchema sch = ShExC.parse(DIR + "schemas/" + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + "validation/" +  graphFile).getGraph();
 
-        List<ShexReportElement> reports = new ArrayList<>();
+        List<ShexReport> reports = new ArrayList<>();
 
         Iterator<String> it = focusShapePairs.iterator();
         while (it.hasNext()) {
@@ -43,16 +46,14 @@ public class SpecificTest {
             Node focus = ResourceFactory.createResource(it.next()).asNode();
             String exp = it.next();
 
-            ValidationContext2 vCxt = new ValidationContext2(sch, graph,false, false, null);
-            ShexReportElement factory = ExhaustiveShexReportElement.factory();
-
-            ShexReportElement report = vCxt.validate(focus, ShapeExprRef.create(shape), factory);
-            System.out.println("Expected: " + exp + "  Result: " + report.getStatus());
+            ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+            ShexReport report = v.validate(graph, sch, shape, focus);
+            System.out.println("Expected: " + exp + "  Result: " + report.getElements().get(0).getStatus());
 
             reports.add(report);
         }
         System.out.println("-----------------------------------");
-        for (ShexReportElement report : reports)
+        for (ShexReport report : reports)
             System.out.println(report);
     }
 }

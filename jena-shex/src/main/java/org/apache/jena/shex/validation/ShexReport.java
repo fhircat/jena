@@ -25,6 +25,10 @@ public class ShexReport {
         return elements.size() > 0;
     }
 
+    public List<ShexReportElement> getElements() {
+        return elements;
+    }
+
     // TODO quick fix
     public void forEachReport(Consumer<ShapeMapElement> action) {
         throw new UnsupportedOperationException("not implemented yet");

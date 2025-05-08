@@ -37,8 +37,6 @@ public class ValidationContext2 {
         this.stack = new ValidationStack();
     }
 
-
-
     // Used from public
     public ShexReportElement validate(Node focus, ShapeExprRef shapeExprRef, ShexReportElement factory) {
         // The node has already been validated against this label and the result is known
