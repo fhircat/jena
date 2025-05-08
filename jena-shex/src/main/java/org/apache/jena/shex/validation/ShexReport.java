@@ -8,46 +8,32 @@ import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.validation.ReportInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public interface ShexReport {
+public class ShexReport {
 
-    // TODO to be replaced by a factory method
-    ShexReport create(Node node, ShapeExpr shapeExpr);
+    private List<ShexReportElement> elements = new ArrayList<>();
 
-    Node getNode();
-    ShapeExpr getShapeExpr();
-    ShexStatus getStatus();
+    public void addElement(ShexReportElement element) {
+        elements.add(element);
+    }
 
-    void setSatisfies(boolean satisfies);
-
-    ShexReport getParent();
-    void setParent(ShexReport parent);  // TODO can be set only once
-
-    List<ShexReport> getChildren();
-
-    // TODO these create a ReportInfo, for success with some dummy message
-    // subNeighbourhood is null if non relevant, TODO javadoc
-    // subExpr is null if non relevant, TODO make it precise and javadoc
-    void addInfoSuccess(String message, Expression subExpr, Set<Triple> subNeighbourhood);
-    void addInfoFailure(String errorMessage, Expression expr, Set<Triple> subNeighbourhood);
-
-    List<ReportInfo> getInfos();
-
-    default boolean hasReports() {
-        return getStatus() == ShexStatus.conformant;
+    public boolean hasReports() {
+        return elements.size() > 0;
     }
 
     // TODO quick fix
-    default void forEachReport(Consumer<ShapeMapElement> action) {
-        throw new UnsupportedOperationException("not yet implemented");
+    public void forEachReport(Consumer<ShapeMapElement> action) {
+        throw new UnsupportedOperationException("not implemented yet");
+        //elements.forEach(action);
     }
 
     // TODO quick fix
-    default boolean conforms() {
-        return getStatus() == ShexStatus.conformant;
-    }
+   public boolean conforms() {
+        return elements.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
+   }
 
 }

@@ -4,7 +4,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
-import org.apache.jena.shex.validation.ShexReport;
+import org.apache.jena.shex.validation.ShexReportElement;
 import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.validation.*;
 
@@ -25,11 +25,15 @@ public class ShexValidatorImpl2 implements ShexValidator {
 
     @Override
     public ShexReport validate(Graph graphData, ShexSchema schema, Node shapeExprLabel, Node focus) {
+        schema = schema.importsClosure();
         // TODO for now without memoization
         ValidationContext2 vCxt = new ValidationContext2(schema, graphData,
                 false, false, semanticActionPluginIndex);
-        ShexReport factory = ExhaustiveShexReporter.factory();
-        return vCxt.validate(focus, ShapeExprRef.create(shapeExprLabel), factory);
+        ShexReportElement factory = ExhaustiveShexReportElement.factory();
+        ShexReportElement r = vCxt.validate(focus, ShapeExprRef.create(shapeExprLabel), factory);
+        ShexReport report = new ShexReport();
+        report.addElement(r);
+        return report;
     }
 
     @Override

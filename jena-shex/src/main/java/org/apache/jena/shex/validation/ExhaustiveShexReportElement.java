@@ -14,24 +14,24 @@ import java.util.Set;
 /**
  * The result of validating a node against a {@link ShapeDecl} or {@link Shape}.
  */
-public class ExhaustiveShexReporter extends AShexReport {
+public class ExhaustiveShexReportElement extends AbstractShexReportElement {
 
     // TODO make a real factory
-    public static ExhaustiveShexReporter factory() {
-        return new ExhaustiveShexReporter();
+    public static ExhaustiveShexReportElement factory() {
+        return new ExhaustiveShexReportElement();
     }
 
-    private ExhaustiveShexReporter(){}
+    private ExhaustiveShexReportElement(){}
 
-    public ExhaustiveShexReporter create (Node node, ShapeExpr expr) {
-        return new ExhaustiveShexReporter(node, expr, null);
+    public ExhaustiveShexReportElement create (Node node, ShapeExpr expr) {
+        return new ExhaustiveShexReportElement(node, expr, null);
     }
 
-    public static ExhaustiveShexReporter create(Node node, ShapeDecl shapeDecl) {
-        return new ExhaustiveShexReporter(node, ShapeExprRef.create(shapeDecl.getLabel()), null);
+    public static ExhaustiveShexReportElement create(Node node, ShapeDecl shapeDecl) {
+        return new ExhaustiveShexReportElement(node, ShapeExprRef.create(shapeDecl.getLabel()), null);
     }
 
-    protected ExhaustiveShexReporter(Node node, ShapeExpr expr, ShexReport parent) {
+    protected ExhaustiveShexReportElement(Node node, ShapeExpr expr, ShexReportElement parent) {
         super(node, expr, parent);
     }
 
@@ -46,7 +46,7 @@ public class ExhaustiveShexReporter extends AShexReport {
     }
 
     @Override
-    public AShexReport createChild(Node node, ShapeExpr expr) {
-        return new ExhaustiveShexReporter(node, expr, this);
+    public AbstractShexReportElement createChild(Node node, ShapeExpr expr) {
+        return new ExhaustiveShexReportElement(node, expr, this);
     }
 }

@@ -14,7 +14,7 @@ import java.util.List;
  * Result of validating a node against a {@link ShapeDecl} or a {@link Shape}.
  * Is a hierarchic structure.
  */
-public abstract class AShexReport implements ShexReport {
+public abstract class AbstractShexReportElement implements ShexReportElement {
 
     /* TODO make ShexReport subclass of this one, and call it ExhaustiveShapeReporter or something like that
             ie all report infos are registered. Possibly, make also a minimal implementation that ignores all
@@ -24,12 +24,12 @@ public abstract class AShexReport implements ShexReport {
     private final ShapeExpr expr;
     private ShexStatus status = null;
 
-    private ShexReport parent = null;
-    private final List<ShexReport> children = new ArrayList<>();
+    private ShexReportElement parent = null;
+    private final List<ShexReportElement> children = new ArrayList<>();
 
     protected final List<ReportInfo> infos = new ArrayList<>();
 
-    protected AShexReport(Node node, ShapeExpr expr, ShexReport parent) {
+    protected AbstractShexReportElement(Node node, ShapeExpr expr, ShexReportElement parent) {
         if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
             throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference).");
         this.node = node;
@@ -38,19 +38,19 @@ public abstract class AShexReport implements ShexReport {
     }
 
     // TODO quick fix for factory, to remove
-    protected AShexReport() {
+    protected AbstractShexReportElement() {
         this.node = null;
         this.expr = null;
     }
 
     @Override
-    public void setParent (ShexReport parent) {
+    public void setParent (ShexReportElement parent) {
         if (this.parent != null)
             throw new IllegalStateException("Can't set parent twice");
         this.parent = parent;
     }
 
-    public abstract AShexReport createChild(Node node, ShapeExpr expr);
+    public abstract AbstractShexReportElement createChild(Node node, ShapeExpr expr);
 
     @Override
     public void setSatisfies(boolean satisfies) {
@@ -68,12 +68,12 @@ public abstract class AShexReport implements ShexReport {
     }
 
     @Override
-    public List<ShexReport> getChildren() {
+    public List<ShexReportElement> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
     @Override
-    public ShexReport getParent() {
+    public ShexReportElement getParent() {
         return parent;
     }
 
@@ -101,7 +101,7 @@ public abstract class AShexReport implements ShexReport {
             sb.append(info.toString());
             sb.append("\n");
         }
-        for (ShexReport child : children) {
+        for (ShexReportElement child : children) {
             sb.append(" ".repeat(indent));
             // TODO indentation
             sb.append(String.format("- %s", child.toString()));

@@ -24,7 +24,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFmtLib;
-import org.apache.jena.shex.validation.ShexReport;
+import org.apache.jena.shex.validation.ShexReportElement;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
@@ -45,17 +45,17 @@ public class ShapeExprEval {
 
 
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
-                                     ValidationContext2 vCxt, ShexReport report) {
+                                     ValidationContext2 vCxt, ShexReportElement report) {
         return satisfies(dataNode, expr, null, vCxt, report);
     }
 
-    private static ShexReport nodeSatisfiesRefExact (Node dataNode, ShapeExprRef ref,
-                                                      ValidationContext2 vCxt, ShexReport reportFactory) {
+    private static ShexReportElement nodeSatisfiesRefExact (Node dataNode, ShapeExprRef ref,
+                                                      ValidationContext2 vCxt, ShexReportElement reportFactory) {
         return vCxt.validate(dataNode, ref, reportFactory);
     }
 
     private static boolean neighSatisfiesRefExact (Node commonFocus, Set<Triple> neigh, ShapeExprRef ref,
-                                                   ValidationContext2 vCxt, ShexReport report) {
+                                                   ValidationContext2 vCxt, ShexReportElement report) {
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(commonFocus, neigh, vCxt);
         return vCxt.getDefinition(ref.getLabel()).visit(evaluator, report);
     }
@@ -65,12 +65,12 @@ public class ShapeExprEval {
 
 
     private static boolean satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
-                                     ValidationContext2 vCxt, ShexReport report) {
+                                     ValidationContext2 vCxt, ShexReportElement report) {
         boolean result = false;
         if (expr instanceof ShapeExprRef ref) {
             for (Node base : vCxt.getNonAbstractSubtypes(ref.getLabel())) {
                 if (neigh == null) {
-                    ShexReport r = nodeSatisfiesRefExact(dataNode, ShapeExprRef.create(base), vCxt, report);
+                    ShexReportElement r = nodeSatisfiesRefExact(dataNode, ShapeExprRef.create(base), vCxt, report);
                     r.setParent(report);
                     if (ShexStatus.conformant == r.getStatus())
                         return true;
@@ -90,9 +90,9 @@ public class ShapeExprEval {
     /** Validates a node's neighbourhood or a set of triples against a shape.
      * If triples is null, the whole node's neighbourhood is considered. */
     private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
-                                          ValidationContext2 vCxt, ShexReport report) {
+                                          ValidationContext2 vCxt, ShexReportElement report) {
 
-        ShexReport childReport = report.create(dataNode, shape);
+        ShexReportElement childReport = report.create(dataNode, shape);
         childReport.setParent(report);
 
         // 1. Collect the shapes to be satisfied (several if the shape is with extends)
@@ -149,7 +149,7 @@ public class ShapeExprEval {
     private static boolean splitSatisfiesConstraints (Map<Node, Set<Triple>> split,
                                                       Map<Node, List<ShapeExpr>> constraints,
                                                       ValidationContext2 vCxt,
-                                                      ShexReport report,
+                                                      ShexReportElement report,
                                                       Node nodeForReport) {
         Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
         for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
@@ -167,7 +167,7 @@ public class ShapeExprEval {
     }
 
     private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode,
-                                     ShexReport report) {
+                                     ShexReportElement report) {
         NodeConstraintComponentEvalVisitor componentEval =
                 new NodeConstraintComponentEvalVisitor(dataNode, report, nodeConstraint);
         return nodeConstraint.getComponents().stream().allMatch(ncc -> ncc.visit(componentEval));
@@ -175,7 +175,7 @@ public class ShapeExprEval {
 
 
     // TODO report for all visit functions
-    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, ShexReport> {
+    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, ShexReportElement> {
 
         private final ValidationContext2 vCxt;
         private final Node dataNode;
@@ -188,7 +188,7 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeAnd shapeAnd, ShexReport report) {
+        public Boolean visit(ShapeAnd shapeAnd, ShexReportElement report) {
             for (ShapeExpr se : shapeAnd.getShapeExprs()) {
                 if (! se.visit(this, report)) {
                     report.addInfoFailure("AND not satisfied", shapeAnd, triples);
@@ -199,7 +199,7 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeOr shapeOr, ShexReport report) {
+        public Boolean visit(ShapeOr shapeOr, ShexReportElement report) {
             for (ShapeExpr se : shapeOr.getShapeExprs()) {
                 if (se.visit(this, report))
                     return true;
@@ -208,7 +208,7 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeNot shapeNot, ShexReport report) {
+        public Boolean visit(ShapeNot shapeNot, ShexReportElement report) {
             if (shapeNot.getShapeExpr().visit(this, report)) {
                 report.addInfoFailure("Negated expression is satisfied", shapeNot, triples);
                 return false;
@@ -217,24 +217,24 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeExprRef shapeExprRef, ShexReport report) {
+        public Boolean visit(ShapeExprRef shapeExprRef, ShexReportElement report) {
             return satisfies(dataNode, shapeExprRef, triples, vCxt, report);
         }
 
         @Override
-        public Boolean visit(ShapeExternal shapeExternal, ShexReport report) {
+        public Boolean visit(ShapeExternal shapeExternal, ShexReportElement report) {
             // TODO shape external never satisfied
             report.addInfoFailure("Shape external not supported, never satisfied", shapeExternal, triples);
             return false;
         }
 
         @Override
-        public Boolean visit(Shape shape, ShexReport report) {
+        public Boolean visit(Shape shape, ShexReportElement report) {
             return satisfiesShape(shape, dataNode, triples, vCxt, report);
         }
 
         @Override
-        public Boolean visit(NodeConstraint nodeConstraint, ShexReport report) {
+        public Boolean visit(NodeConstraint nodeConstraint, ShexReportElement report) {
             return satisfies(nodeConstraint, dataNode, report);
         }
     }
@@ -242,10 +242,10 @@ public class ShapeExprEval {
     static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
 
         private final Node dataNode;
-        private final ShexReport report;
+        private final ShexReportElement report;
         private final NodeConstraint parentConstraint;
 
-        NodeConstraintComponentEvalVisitor(Node dataNode, ShexReport report, NodeConstraint parentConstraint) {
+        NodeConstraintComponentEvalVisitor(Node dataNode, ShexReportElement report, NodeConstraint parentConstraint) {
             this.dataNode = dataNode;
             this.report = report;
             this.parentConstraint = parentConstraint;

@@ -188,7 +188,7 @@ class ShexValidatorImpl implements ShexValidator {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         //vCxtInner.startValidate(shapeDecl, focus);
-        AShexReport shexReport = ExhaustiveShexReporter.create(focus, shapeDecl);
+        AbstractShexReportElement shexReport = ExhaustiveShexReportElement.create(focus, shapeDecl);
         //ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
         //vCxtInner.finishValidate(shapeDecl, focus);
         boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
@@ -217,7 +217,7 @@ class ShexValidatorImpl implements ShexValidator {
 
     // TODO review
     private static void atLeastOneReportItem(ValidationContext vCxt, ShapeExpr exprForReport /* TODO replace*/,
-                                             Node focus, AShexReport shexReport) {
+                                             Node focus, AbstractShexReportElement shexReport) {
         // Ensure at least one entry.
         if (vCxt.getReportItems().isEmpty()) {
             shexReport.addInfoFailure("Failed", exprForReport, null);

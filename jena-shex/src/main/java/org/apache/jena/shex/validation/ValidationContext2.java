@@ -40,10 +40,10 @@ public class ValidationContext2 {
 
 
     // Used from public
-    public ShexReport validate(Node focus, ShapeExprRef shapeExprRef, ShexReport factory) {
+    public ShexReportElement validate(Node focus, ShapeExprRef shapeExprRef, ShexReportElement factory) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
-        ShexReport r = typing.get(focus, shapeExprLabel);
+        ShexReportElement r = typing.get(focus, shapeExprLabel);
         if (r != null)
             return new ShexReportReference(r);
 
@@ -184,33 +184,33 @@ public class ValidationContext2 {
 
     private class Typing {
 
-        private Map<Pair<Node, Node>, ShexReport> typing = new HashMap<>();
+        private Map<Pair<Node, Node>, ShexReportElement> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
-        ShexReport get(Node focus, Node shapeExprLabel) {
+        ShexReportElement get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
     }
 
     private class EmptyTyping extends Typing {
 
-        final ShexReport get(Node focus, Node shapeExprLabel) {
+        final ShexReportElement get(Node focus, Node shapeExprLabel) {
             return null;
         }
     }
 
-    private static class ShexReportReference implements ShexReport {
+    private static class ShexReportReference implements ShexReportElement {
 
-        private ShexReport parent = null;
-        private final ShexReport report;
+        private ShexReportElement parent = null;
+        private final ShexReportElement report;
 
-        ShexReportReference(ShexReport report) {
+        ShexReportReference(ShexReportElement report) {
             super();
             this.report = report;
         }
 
         @Override
-        public void setParent(ShexReport parent) {
+        public void setParent(ShexReportElement parent) {
             if (this.parent != null) {
                 throw new IllegalStateException("Can't set parent twice");
             }
@@ -233,7 +233,7 @@ public class ValidationContext2 {
         }
 
         @Override
-        public ShexReport create(Node node, ShapeExpr shapeExpr) {
+        public ShexReportElement create(Node node, ShapeExpr shapeExpr) {
             throw new UnsupportedOperationException();
         }
 
@@ -255,12 +255,12 @@ public class ValidationContext2 {
 
 
         @Override
-        public ShexReport getParent() {
+        public ShexReportElement getParent() {
             return parent;
         }
 
         @Override
-        public List<ShexReport> getChildren() {
+        public List<ShexReportElement> getChildren() {
             return report.getChildren();
         }
 
