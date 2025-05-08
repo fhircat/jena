@@ -104,6 +104,9 @@ public class ShexSchema {
         return shapes;
     }
 
+    /** Returns all shape maps for this schema **/
+    public Map<Node,ShapeDecl> getShapeMap() { return shapeMap; }
+
     /** Get all the shapes. This includes the start shape, which has label {@link SysShex#startNode}. */
     public TripleExpr getTripleExpr(Node label) {
         return tripleRefs.get(label);

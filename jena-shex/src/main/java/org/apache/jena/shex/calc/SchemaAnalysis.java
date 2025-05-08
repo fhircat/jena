@@ -169,7 +169,7 @@ public class SchemaAnalysis {
     }
 
     private boolean isMainShapeAndConstraints (ShapeDecl shapeDecl, TypeHierarchyGraph typeHierarchyGraph) {
-        Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(shapeDecl.getShapeExpr(), shapeDeclMap::get);
+        Pair<Shape, List<ShapeExpr>> mc = Util.mainShapeAndConstraints(shapeDecl.getShapeExpr(), l -> shapeDeclMap.get(l).getShapeExpr());
         List<ShapeExpr> constraints = mc.getRight();
 
         List<Shape> shapesInConstraints = new ArrayList<>();
@@ -192,7 +192,7 @@ public class SchemaAnalysis {
         Set<Node> mainShapeInvPredicates = new HashSet<>();
         typeHierarchyGraph.getSupertypes(shapeDecl.getLabel()).forEach(l ->
                 AccumulationUtil.accumulatePredicates(
-                        List.of(Util.mainShape(shapeDeclMap.get(l).getShapeExpr(), shapeDeclMap::get).getTripleExpr()),
+                        List.of(Util.mainShape(shapeDeclMap.get(l).getShapeExpr(), x -> shapeDeclMap.get(x).getShapeExpr()).getTripleExpr()),
                         tripleRefsMap::get,
                         mainShapeFwdPredicates, mainShapeInvPredicates));
 

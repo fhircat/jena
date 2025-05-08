@@ -26,10 +26,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
-import org.apache.jena.shex.validation.AShexReport;
-import org.apache.jena.shex.validation.ShapeExprEval;
-import org.apache.jena.shex.validation.ExhaustiveShexReporter;
-import org.apache.jena.shex.validation.ValidationContext;
+import org.apache.jena.shex.validation.*;
 
 import java.util.*;
 
@@ -188,7 +185,7 @@ class ShexValidatorImpl implements ShexValidator {
         ValidationContext vCxtInner = vCxt.create();
         //vCxtInner.startValidate(shapeDecl, focus);
         AShexReport shexReport = ExhaustiveShexReporter.create(focus, shapeDecl);
-        ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
+        //ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
         //vCxtInner.finishValidate(shapeDecl, focus);
         boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
         if (!isValid) {
@@ -219,7 +216,7 @@ class ShexValidatorImpl implements ShexValidator {
                                              Node focus, AShexReport shexReport) {
         // Ensure at least one entry.
         if (vCxt.getReportItems().isEmpty()) {
-            shexReport.addInfoFailure(exprForReport, null, "Failed");
+            shexReport.addInfoFailure("Failed", exprForReport, null);
         }
     }
 

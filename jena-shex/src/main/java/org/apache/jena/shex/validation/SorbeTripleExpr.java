@@ -116,7 +116,7 @@ import java.util.stream.Collectors;
      */
     // Cannot return a map here because two triple expressions can be equal (wrt Object#equals) but distinct in the AST
     /*package*/ List<Pair<TripleExpr, Set<Triple>>> getSemActsSubExprsAndTheirMatchedTriples(
-            Map<Triple, TripleConstraint> matching, ValidationContext vCxt) {
+            Map<Triple, TripleConstraint> matching, ValidationContext2 vCxt) {
 
         return originSubExprsWithSemActs.stream()
                 .map(originSubExpr -> new ImmutablePair<>(originSubExpr,
@@ -144,7 +144,7 @@ import java.util.stream.Collectors;
      * @param vCxt
      * @return
      */
-    private ESet<TripleConstraint> getSorbeTripleConstraintsOfOriginSubExpr(TripleExpr originSubExpr, ValidationContext vCxt) {
+    private ESet<TripleConstraint> getSorbeTripleConstraintsOfOriginSubExpr(TripleExpr originSubExpr, ValidationContext2 vCxt) {
         return srcSubExprToItsSorbeTripleConstraintsMap.computeIfAbsent(originSubExpr, e -> {
             List<TripleConstraint> sourceTripleConstraints = new ArrayList<>();
             AccumulationUtil.accumulateTripleConstraintsFollowTripleExprReferences(originSubExpr,
@@ -190,7 +190,7 @@ import java.util.stream.Collectors;
      */
     private Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> sorbeMatching,
                                                       TripleExpr originSubExpr,
-                                                      ValidationContext vCxt) {
+                                                      ValidationContext2 vCxt) {
 
         ESet<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
         return sorbeMatching.entrySet().stream()

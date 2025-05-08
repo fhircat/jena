@@ -2,32 +2,32 @@ package org.apache.jena.shex.validation;
 
 
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.ShexReport2;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Result of validating a node against a {@link ShapeDecl} or a {@link Shape}.
  * Is a hierarchic structure.
  */
-public abstract class AShexReport {
+public abstract class AShexReport implements ShexReport2 {
 
     /* TODO make ShexReport2 subclass of this one, and call it ExhaustiveShapeReporter or something like that
             ie all report infos are registered. Possibly, make also a minimal implementation that ignores all
             registered infos. */
 
-    public final Node node;
-    public final ShapeExpr expr;
-    public final AShexReport parent;
-    private final List<AShexReport> children = new ArrayList<>();
-
+    private final Node node;
+    private final ShapeExpr expr;
     private ShexStatus status = null;
+
+    private ShexReport2 parent = null;
+    private final List<ShexReport2> children = new ArrayList<>();
+
     protected final List<ReportInfo> infos = new ArrayList<>();
 
     protected AShexReport(Node node, ShapeExpr expr, AShexReport parent) {
@@ -38,37 +38,47 @@ public abstract class AShexReport {
         this.parent = parent;
     }
 
-    // TODO these create a ReportInfo, for success with some dummy message
-    // subNeighbourhood is null if non relevant, TODO javadoc
-    public abstract void addInfoSuccess(Expression expr, Set<Triple> subNeighbourhood);
-    public abstract void addInfoFailure(Expression expr, Set<Triple> subNeighbourhood, String errorMessage);
+    @Override
+    public void setParent (ShexReport2 parent) {
+        if (this.parent != null)
+            throw new IllegalStateException("Can't set parent twice");
+        this.parent = parent;
+    }
 
     public abstract AShexReport createChild(Node node, ShapeExpr expr);
 
-    public void setSatisfies (boolean satisfies) {
+    @Override
+    public void setSatisfies(boolean satisfies) {
         this.status = satisfies ? ShexStatus.conformant : ShexStatus.nonconformant;
     }
 
+    @Override
     public ShexStatus getStatus() {
         return status;
     }
 
+    @Override
     public List<ReportInfo> getInfos() {
         return Collections.unmodifiableList(infos);
     }
 
-    public List<AShexReport> getChildren() {
+    @Override
+    public List<ShexReport2> getChildren() {
         return Collections.unmodifiableList(children);
     }
 
-    public AShexReport getParent() {
+    @Override
+    public ShexReport2 getParent() {
         return parent;
     }
 
-    /**
-     * The {@link ShapeExpr} to which the report is associated.
-     */
-    public ShapeExpr getSchapeExpr() {
+    @Override
+    public Node getNode() {
+        return node;
+    }
+
+    @Override
+    public ShapeExpr getShapeExpr() {
         return expr;
     }
 
@@ -86,9 +96,10 @@ public abstract class AShexReport {
             sb.append(info.toString());
             sb.append("\n");
         }
-        for (AShexReport child : children) {
+        for (ShexReport2 child : children) {
             sb.append(" ".repeat(indent));
-            sb.append(String.format("- %s", child.toString(indent + 2)));
+            // TODO indentation
+            sb.append(String.format("- %s", child.toString()));
         }
         return sb.toString();
     }

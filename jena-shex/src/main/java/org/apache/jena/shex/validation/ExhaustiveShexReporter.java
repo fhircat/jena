@@ -16,6 +16,15 @@ import java.util.Set;
  */
 public class ExhaustiveShexReporter extends AShexReport {
 
+    // TODO make a real factory
+    public static ExhaustiveShexReporter factory() {
+        return ExhaustiveShexReporter.create(null, (ShapeDecl) null);
+    }
+
+    public ExhaustiveShexReporter create (Node node, ShapeExpr expr) {
+        return new ExhaustiveShexReporter(node, expr, null);
+    }
+
     public static ExhaustiveShexReporter create(Node node, ShapeDecl shapeDecl) {
         return new ExhaustiveShexReporter(node, ShapeExprRef.create(shapeDecl.getLabel()), null);
     }
@@ -25,12 +34,12 @@ public class ExhaustiveShexReporter extends AShexReport {
     }
 
     @Override
-    public void addInfoSuccess(Expression expr, Set<Triple> subNeighbourhood) {
-        infos.add(new ReportInfoImpl(expr, subNeighbourhood, ShexStatus.conformant, ""));
+    public void addInfoSuccess(String message, Expression subExpr, Set<Triple> subNeighbourhood) {
+        infos.add(new ReportInfoImpl(subExpr, subNeighbourhood, ShexStatus.conformant, ""));
     }
 
     @Override
-    public void addInfoFailure(Expression expr, Set<Triple> subNeighbourhood, String errorMessage) {
+    public void addInfoFailure(String errorMessage, Expression expr, Set<Triple> subNeighbourhood) {
         infos.add(new ReportInfoImpl(expr, subNeighbourhood, ShexStatus.nonconformant, errorMessage));
     }
 

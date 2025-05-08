@@ -24,7 +24,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.validation.ValidationContext;
+import org.apache.jena.shex.validation.ValidationContext2;
 import org.apache.jena.system.G;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
@@ -38,17 +38,17 @@ public class Util {
 
     // TODO move below as util for another util
     /** Dereferences until a non reference is found. */
-    public static ShapeExpr dereference (ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
+    public static ShapeExpr dereference (ShapeExpr shapeExpr, Function<Node, ShapeExpr> shapeExprRefsDefs) {
         ShapeExpr expr = shapeExpr;
         while (expr instanceof ShapeExprRef) {
-            expr = shapeExprRefsDefs.apply(((ShapeExprRef) expr).getLabel()).getShapeExpr();
+            expr = shapeExprRefsDefs.apply(((ShapeExprRef) expr).getLabel());
         }
         return expr;
     }
 
     // TODO no usages
     /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
-    public static List<Shape> mainShapesOfBases(ShapeExpr extendableShape, Function<Node, ShapeDecl> shapeExprRefsDefs) {
+    public static List<Shape> mainShapesOfBases(ShapeExpr extendableShape, Function<Node, ShapeExpr> shapeExprRefsDefs) {
         List<Shape> result = new ArrayList<>();
         Deque<Node> extendedFifo = new ArrayDeque<>();
 
@@ -61,7 +61,7 @@ public class Util {
         ShapeExpr current = extendableShape;
         step.accept(current);
         while (!extendedFifo.isEmpty()) {
-            current = shapeExprRefsDefs.apply(extendedFifo.removeFirst()).getShapeExpr();
+            current = shapeExprRefsDefs.apply(extendedFifo.removeFirst());
             step.accept(current);
         }
         return result;
@@ -69,7 +69,7 @@ public class Util {
 
     private static final int INDEX_MAIN = 0;
     public static Pair<Shape, List<ShapeExpr>> mainShapeAndConstraints (ShapeExpr shapeExpr,
-                                                                        Function<Node, ShapeDecl> shapeExprRefsDefs) {
+                                                                        Function<Node, ShapeExpr> shapeExprRefsDefs) {
         Shape mainShape;
         List<ShapeExpr> constraints;
 
@@ -91,12 +91,12 @@ public class Util {
     }
 
     public static Shape mainShape (ShapeExpr shapeExpr,
-                                   Function<Node, ShapeDecl> shapeExprRefsDefs) {
+                                   Function<Node, ShapeExpr> shapeExprRefsDefs) {
         return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getLeft();
     }
 
     public static List<ShapeExpr> constraints (ShapeExpr shapeExpr,
-                                               Function<Node, ShapeDecl> shapeExprRefsDefs) {
+                                               Function<Node, ShapeExpr> shapeExprRefsDefs) {
         return mainShapeAndConstraints(shapeExpr, shapeExprRefsDefs).getRight();
     }
 
@@ -106,7 +106,7 @@ public class Util {
     public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
                                                      Collection<TripleExpr> tripleExprs,
                                                      Set<Triple> accMatchables, Set<Triple> accNonMatchables,
-                                                     ValidationContext vCxt) {
+                                                     ValidationContext2 vCxt) {
 
         Set<Node> fwdPredicates = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
@@ -131,7 +131,7 @@ public class Util {
     public static Set<Triple> filterRelevantNeighbourhood(Set<Triple> neighbourhood,
                                                           Node dataNode,
                                                           TripleExpr tripleExpr,
-                                                          ValidationContext vCxt) {
+                                                          ValidationContext2 vCxt) {
 
         Set<Node> fwdPredicates = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
@@ -160,7 +160,7 @@ public class Util {
 
 
 
-    public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeDecl> shapeExprRefsDefs) {
+    public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeExpr> shapeExprRefsDefs) {
         Shape mainShape;
         try {
              mainShape = mainShape(shapeExpr, shapeExprRefsDefs);

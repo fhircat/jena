@@ -20,6 +20,7 @@ package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShexReport2;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.util.iterator.FilterIterator;
 
@@ -62,8 +63,8 @@ public class TripleExprEval {
     static Iterator<Map<Node, Set<Triple>>> correctSplitsIterator(Set<Triple> triples,
                                                                   Shape shape,
                                                                   Map<Node, TripleExpr> baseTripleExprs,
-                                                                  ValidationContext vCxt,
-                                                                  AShexReport report,
+                                                                  ValidationContext2 vCxt,
+                                                                  ShexReport2 report,
                                                                   ShapeExpr exprForReport, /* TODO replace */
                                                                   Node nodeForReport /* TODO replace*/) {
         Map<Node, SorbeTripleExpr> toBeMatched = new HashMap<>(baseTripleExprs.size());
@@ -95,8 +96,8 @@ public class TripleExprEval {
     private static Map<Triple, List<TripleConstraint>> preMatching_rec_sorbe(Set<Triple> triples,
                                                                              Collection<SorbeTripleExpr> toBeMatched,
                                                                              Set<Node> extraPredicates,
-                                                                             ValidationContext vCxt,
-                                                                             AShexReport report,
+                                                                             ValidationContext2 vCxt,
+                                                                             ShexReport2 report,
                                                                              ShapeExpr exprForReport,
                                                                              Node nodeForReport) {
         // 1. With every triple, associate all the triple constraints that this triple could match
@@ -108,8 +109,8 @@ public class TripleExprEval {
         // 3. Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedNonExtra = filterExtra(preMatching, extraPredicates);
         if (null != unmatchedNonExtra) {
-            report.addInfoFailure(exprForReport, triples,
-                    "The triples match none of the triples constraints and are not allowed by extra" + unmatchedNonExtra);
+            report.addInfoFailure("The triples match none of the triples constraints and are not allowed by extra" + unmatchedNonExtra, exprForReport, triples
+            );
         }
         return preMatching;
     }
@@ -183,8 +184,8 @@ public class TripleExprEval {
 
     /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t, by recursively validating t's object against the triple constraint's object constraint.*/
     private static void filterRecursiveValidation (Map<Triple, List<TripleConstraint>> preMatching,
-                                                  ValidationContext vCxt,
-                                                  AShexReport report) {
+                                                  ValidationContext2 vCxt,
+                                                  ShexReport2 report) {
         preMatching.forEach((triple, matchingTripleConstraints) -> {
             Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
             while (it.hasNext()) {
@@ -215,7 +216,7 @@ public class TripleExprEval {
     /** Checs whether a matching satisfies a hierarchy of triple expressions. */
     private static boolean matchingSatisfiesTripleExpression_sorbe(Map<Triple, TripleConstraint> matching,
                                                                   Collection<SorbeTripleExpr> toBeMatched,
-                                                                  ValidationContext vCxt) {
+                                                                  ValidationContext2 vCxt) {
 
         return toBeMatched.stream().allMatch(sorbeTripleExpr -> {
             // this loop is needed only for extends, but does no harm w/o extends

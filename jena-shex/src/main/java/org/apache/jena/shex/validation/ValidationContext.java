@@ -38,8 +38,11 @@ public class ValidationContext {
     private final ShexSchema schema;
     private final Graph data;
     private final Map<String, SemanticActionPlugin> semActPluginIndex;
+
+
     private final SorbeFactory sorbeFactory;
     private final TypeHierarchyGraph typeHierarchyGraph;
+
     private final Deque<ValidationStackElement> validationStack;
 
     private final ShexReport.Builder reportBuilder = ShexReport.create();
