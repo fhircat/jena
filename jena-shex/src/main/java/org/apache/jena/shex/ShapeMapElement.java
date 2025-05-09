@@ -22,6 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.SysShex;
+import org.apache.jena.shex.validation.ShexReportElement;
 
 /**
  * {@code ShexShapeRecord} is an entry in a {@linkplain ShapeMap} used for both targeting shapes and reporting violations.
@@ -39,7 +40,7 @@ public class ShapeMapElement {
     public final Node focusSelector;
     public final Node shapeExprLabel;
     public final ShexStatus status;
-    public final String reason;
+    public final ShexReportElement reason;
 
 //  public final String appInfo;
 
@@ -59,13 +60,14 @@ public class ShapeMapElement {
     private ShapeMapElement(Node node, Triple patternSelector, Node shapeExprLabel) {
         this(node, patternSelector, shapeExprLabel, null, null, null);
     }
-
-    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, String reason) {
+    
+    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, ShexReportElement reason) {
         // Reporting form.
         this(assoc.nodeSelector, assoc.patternSelector, assoc.shapeExprLabel, focusNode, status, reason);
     }
 
-    private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel, Node focusNode, ShexStatus status, String reason) {
+    private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel, Node focusNode,
+                            ShexStatus status, ShexReportElement reason) {
         super();
         this.nodeSelector = node;
         this.patternSelector = pattern;
@@ -95,6 +97,7 @@ public class ShapeMapElement {
         return ( node == null || node.isExt() ) ? Node.ANY : node ;
     }
 
+    // TODO change wrt reason becoming ShexReportElement
     @Override
     public String toString() {
         StringBuilder sBuff = new StringBuilder();

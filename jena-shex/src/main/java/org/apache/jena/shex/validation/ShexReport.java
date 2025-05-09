@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 
 public class ShexReport {
 
-    private List<ShexReportElement> elements = new ArrayList<>();
+    private List<ShapeMapElement> elements = new ArrayList<>();
 
     public void addElement(ShexReportElement element) {
         elements.add(element);

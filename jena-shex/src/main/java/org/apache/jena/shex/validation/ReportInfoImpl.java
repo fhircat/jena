@@ -11,7 +11,7 @@ public class ReportInfoImpl implements ReportInfo {
     private final Set<Triple> subNeighbourhood;
     private final ShexStatus status;
     private String message;
-    public ReportInfoImpl(Expression expr, Set<Triple> subNeighbourhood, ShexStatus status, String message) {
+    public ReportInfoImpl(ShexStatus status, String message, Expression expr, Set<Triple> subNeighbourhood) {
         this.expr = expr;
         this.subNeighbourhood = subNeighbourhood;
         this.status = status;

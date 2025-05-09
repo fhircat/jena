@@ -37,7 +37,6 @@ public class ReportItem {
     private Set<Triple> neigh;
     private Expression expr;
     private ShapeDecl shapeDecl; // TODO needed for reporting on checking subtypes
-    // TODO a level of reporting might be considered
 
     // TODO shoud be package visibility, the ReportItem and ShexReport should be in the same package
     public ReportItem(String message, Node node, Set<Triple> subNeighbourhood,

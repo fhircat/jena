@@ -30,6 +30,7 @@ import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.validation.ShexReport;
 import org.apache.jena.shex.ShexStatus;
+import org.apache.jena.shex.validation.ShexReportElement;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -110,7 +111,7 @@ public class ShexLib {
         String target = reportEntry.strTarget();
 
         ShexStatus status = reportEntry.status;
-        String reason = reportEntry.reason;
+        ShexReportElement reason = reportEntry.reason;
         Node focusNode = reportEntry.focusSelector;
 
         switch (status) {

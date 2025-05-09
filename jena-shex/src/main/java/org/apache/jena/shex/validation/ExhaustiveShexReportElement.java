@@ -37,12 +37,12 @@ public class ExhaustiveShexReportElement extends AbstractShexReportElement {
 
     @Override
     public void addInfoSuccess(String message, Expression subExpr, Set<Triple> subNeighbourhood) {
-        infos.add(new ReportInfoImpl(subExpr, subNeighbourhood, ShexStatus.conformant, ""));
+        infos.add(new ReportInfoImpl(ShexStatus.conformant, "", subExpr, subNeighbourhood));
     }
 
     @Override
     public void addInfoFailure(String errorMessage, Expression expr, Set<Triple> subNeighbourhood) {
-        infos.add(new ReportInfoImpl(expr, subNeighbourhood, ShexStatus.nonconformant, errorMessage));
+        infos.add(new ReportInfoImpl(ShexStatus.nonconformant, errorMessage, expr, subNeighbourhood));
     }
 
     @Override

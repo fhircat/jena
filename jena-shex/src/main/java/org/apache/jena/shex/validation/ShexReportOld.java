@@ -45,14 +45,12 @@ public class ShexReportOld {
     private final List<ShapeMapElement> reports;
     public boolean conforms;
 
-
     public ShexReportOld(boolean isConformant) {
         this.conforms = isConformant;
         this.resultResource = null;
         entries = new ArrayList<>();
         reports = new ArrayList<>();
     }
-
 
     public static Builder create() {
         return new Builder();
@@ -128,7 +126,7 @@ public class ShexReportOld {
 
         /** Create a new report line item from an exists (shex map) entry and add it to the reports */
         public void shexReport(ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
-            ShapeMapElement ssa = new ShapeMapElement(entry, focusNode, result, reason);
+            ShapeMapElement ssa = new ShapeMapElement(entry, focusNode, result, null);
             shexReport(ssa);
         }
 
