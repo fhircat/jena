@@ -15,12 +15,8 @@ import java.util.List;
 
 public class ReportTests {
 
-    public static void main(String[] args) {
+    public static void runTest(String schemaFile, String graphFile, String shapeStr, String focusStr) {
         final String DIR = "/home/io/Git/dev/shex/error-report-examples/";
-        String schemaFile = "";
-        String graphFile = "observation-example-f204-creatinine.ttl";
-        String shapeStr = "file:///home/io/Git/dev/shex/fhir-examples/R5Plus/Observation";
-        String focusStr = "http://a.example/validate-me";
 
         ShexSchema sch = ShExC.parse(DIR + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + graphFile).getGraph();
@@ -33,6 +29,15 @@ public class ReportTests {
         ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
         ShexReport report = v.validate(graph, sch, shape, focus);
         System.out.println("Conforms: " + report.conforms());
+    }
+
+    public static void main(String[] args) {
+        runTest(
+                /* schema file */ "",
+                /* graph file */ "",
+                /* shape */ "",
+                /* node */ ""
+        );
     }
 }
 

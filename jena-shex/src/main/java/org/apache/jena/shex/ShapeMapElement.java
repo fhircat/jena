@@ -37,12 +37,8 @@ public class ShapeMapElement {
 
     public final Node nodeSelector;
     public final Triple patternSelector;
-    public final Node focusSelector;
     public final Node shapeExprLabel;
-    public final ShexStatus status;
     public final ShexReportElement reason;
-
-//  public final String appInfo;
 
     public ShapeMapElement(Node node, Node shapeExprLabel) {
         this(node, null, shapeExprLabel);
@@ -58,23 +54,35 @@ public class ShapeMapElement {
     }
 
     private ShapeMapElement(Node node, Triple patternSelector, Node shapeExprLabel) {
-        this(node, patternSelector, shapeExprLabel, null, null, null);
-    }
-    
-    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, ShexReportElement reason) {
-        // Reporting form.
-        this(assoc.nodeSelector, assoc.patternSelector, assoc.shapeExprLabel, focusNode, status, reason);
+        this(node, patternSelector, shapeExprLabel, null);
     }
 
-    private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel, Node focusNode,
-                            ShexStatus status, ShexReportElement reason) {
+    public ShapeMapElement createReportElement(ShexReportElement report) {
+        if (patternSelector != null)
+            throw new ShexException("A non-fixed shape map association cannot be used for validation or reporting.");
+        return new ShapeMapElement(nodeSelector, null, shapeExprLabel, report);
+    }
+
+
+    // TODO should be removed
+    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, ShexReportElement reason) {
+        // Reporting form.
+        this(assoc.nodeSelector, null, assoc.shapeExprLabel, reason);
+        if (assoc.patternSelector != null)
+            throw new ShexException("Cannot associate status to a non fixed shape map association");
+    }
+
+    private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel,
+                            ShexReportElement reason) {
         super();
         this.nodeSelector = node;
         this.patternSelector = pattern;
         this.shapeExprLabel = shapeExprLabel;
-        this.status = status;
-        this.focusSelector = focusNode;
         this.reason = reason;
+    }
+
+    public ShexStatus getStatus() {
+        return reason != null ? reason.getStatus() : null;
     }
 
     public boolean isSubjectFocus() {
@@ -102,8 +110,7 @@ public class ShapeMapElement {
     public String toString() {
         StringBuilder sBuff = new StringBuilder();
         String str = strTarget();
-        if ( focusSelector != null )
-            str = str+" "+ShexLib.displayStr(focusSelector);
+        ShexStatus status = getStatus();
         if ( status != null )
             str = str+" "+status;
         if ( reason != null )

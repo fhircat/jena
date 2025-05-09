@@ -100,8 +100,8 @@ public class ShexLib {
     public static void printReport(OutputStream outStream, ShexReport report) {
         AWriter out = IO.wrapUTF8(outStream);
         try {
-            if ( ! report.hasReports() )
-                out.println("OK");  // Empty.
+            if (report.conforms())
+                out.println("OK");
             else
                 report.forEachReport(reportEntry->printReport(out, reportEntry));
         } finally { out.flush(); }
@@ -110,9 +110,9 @@ public class ShexLib {
     private static void printReport(AWriter out, ShapeMapElement reportEntry) {
         String target = reportEntry.strTarget();
 
-        ShexStatus status = reportEntry.status;
+        ShexStatus status = reportEntry.getStatus();
         ShexReportElement reason = reportEntry.reason;
-        Node focusNode = reportEntry.focusSelector;
+        Node focusNode = reportEntry.nodeSelector;
 
         switch (status) {
             case conformant :

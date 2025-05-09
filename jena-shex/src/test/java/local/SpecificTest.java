@@ -4,7 +4,6 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.validation.*;
 import org.apache.jena.shex.ShexSchema;
@@ -48,7 +47,7 @@ public class SpecificTest {
 
             ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
             ShexReport report = v.validate(graph, sch, shape, focus);
-            System.out.println("Expected: " + exp + "  Result: " + report.getElements().get(0).getStatus());
+            System.out.println("Expected: " + exp + "  Result: " + report.conforms());
 
             reports.add(report);
         }

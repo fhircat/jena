@@ -295,7 +295,7 @@ public class ShexValidationTest implements Runnable {
                     MyShexRecord mine = myReports.next();
                     if (!resultReport.nodeSelector.getURI().equals(mine.node)
                         || !resultReport.shapeExprLabel.getURI().equals(mine.shape)
-                        || resultReport.status != mine.res)
+                        || resultReport.getStatus() != mine.res)
                         res.set(false);
                 }
             });

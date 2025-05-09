@@ -1,43 +1,54 @@
 package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.Expression;
-import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.validation.ReportInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 public class ShexReport {
 
-    private List<ShapeMapElement> elements = new ArrayList<>();
+    private final List<ShapeMapElement> reports;
 
-    public void addElement(ShexReportElement element) {
-        elements.add(element);
+    private ShexReport(List<ShapeMapElement> reports) {
+        this.reports = reports;
     }
 
-    public boolean hasReports() {
-        return elements.size() > 0;
-    }
-
-    public List<ShexReportElement> getElements() {
-        return elements;
+    public static Builder builder() {
+        return new Builder();
     }
 
     // TODO quick fix
+    public List<ShapeMapElement> getReports() {
+        return reports;
+    }
+
     public void forEachReport(Consumer<ShapeMapElement> action) {
-        throw new UnsupportedOperationException("not implemented yet");
-        //elements.forEach(action);
+        reports.forEach(action);
     }
 
-    // TODO quick fix
    public boolean conforms() {
-        return elements.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
+        return reports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
    }
 
+   public static class Builder {
+
+        private final List<ShapeMapElement> reports = new ArrayList<>();
+
+        public Builder() { }
+
+        public void addReport(ShapeMapElement shapeMapElement, ShexReportElement report) {
+            reports.add(shapeMapElement.createReportElement(report));
+        }
+
+        public void addReport(Node focusNode, Node shapeExprLabel, ShexReportElement report) {
+            addReport(new ShapeMapElement(focusNode, shapeExprLabel), report);
+        }
+
+        public ShexReport build() {
+            return new ShexReport(reports);
+        }
+    }
 }

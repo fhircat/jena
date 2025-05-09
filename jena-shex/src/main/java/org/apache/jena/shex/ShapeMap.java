@@ -42,6 +42,10 @@ public class ShapeMap {
         this.associations = associations;
     }
 
+    public boolean isFixed() {
+        return associations.stream().allMatch(a -> a.patternSelector == null);
+    }
+
     public List<ShapeMapElement> entries() {
         return Collections.unmodifiableList(associations);
     }

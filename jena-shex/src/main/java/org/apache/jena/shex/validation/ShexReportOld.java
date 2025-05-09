@@ -70,10 +70,10 @@ public class ShexReportOld {
         this.reports = new ArrayList<>(reports);
         this.resultResource = resultResource;
         // Conforms if all shape validations are conformant
-        this.conforms = reports.stream().allMatch(a -> a.status == ShexStatus.conformant);
+        this.conforms = reports.stream().allMatch(a -> a.getStatus() == ShexStatus.conformant);
         // Consistency check.
         if ( conforms != entries.isEmpty() ) {
-            long x = reports.stream().filter(a -> a.status == ShexStatus.conformant).count();
+            long x = reports.stream().filter(a -> a.getStatus() == ShexStatus.conformant).count();
             String msg = String.format("conforms() inconsistent:  e:%s/r:%s %d/%d[%d]\n", conforms, entries.isEmpty(), entries.size(), reports.size(),x);
             throw new InternalErrorException(msg);
         }
