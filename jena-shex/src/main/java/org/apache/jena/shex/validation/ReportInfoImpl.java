@@ -41,10 +41,10 @@ public class ReportInfoImpl implements ReportInfo {
     @Override
     public String toString() {
         return "ReportInfoImpl{" +
-                "expr=" + expr +
+                "message='" + message + '\'' +
                 ", subNeighbourhood=" + subNeighbourhood +
+                ", expr=" + expr +
                 ", status=" + status +
-                ", message='" + message + '\'' +
                 '}';
     }
 }

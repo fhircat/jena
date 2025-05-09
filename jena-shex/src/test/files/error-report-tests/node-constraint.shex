@@ -1,0 +1,7 @@
+PREFIX ex: <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+ex:P1-IRI { ex:p1 IRI }
+ex:P1-INT { ex:p1 xsd:integer }
+ex:P1-L-5 { ex:p1 length 5 }
+ex:P1-V-1 { ex:p1 [1] }

@@ -4,6 +4,8 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.system.stream.Locator;
+import org.apache.jena.riot.system.stream.StreamManager;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.validation.*;
 import org.apache.jena.shex.ShexSchema;
@@ -15,7 +17,11 @@ import java.util.List;
 
 public class SpecificTest {
 
+
+
+
     public static void main(String[] args) {
+
         final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/shexTest/";
         String schemaFile = "2RefS1-IS2.shex";
         String graphFile = "In1_Ip1_In2.In2_Ip2_LX.ttl";

@@ -1,4 +1,4 @@
-The files in "spec/" are taken from:
+The files in "shexTest/" are taken from:
 
 https://github.com/shexSpec/shexTest.git
 

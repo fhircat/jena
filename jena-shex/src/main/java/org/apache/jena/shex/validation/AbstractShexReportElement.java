@@ -89,22 +89,26 @@ public abstract class AbstractShexReportElement implements ShexReportElement {
 
     @Override
     public String toString() {
-        return toString(0);
+        return toString(this, 2);
     }
 
-    private String toString(int indent) {
+
+
+    private static String toString(AbstractShexReportElement r, int indent) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Report: node=%s, expr=%s, status=%s", node, expr, status));
-        for (ReportInfo info : infos) {
-            sb.append(" ".repeat(indent));
-            sb.append("i:");
-            sb.append(info.toString());
+        sb.append("\n");
+        sb.append(" ".repeat(indent));
+        sb.append(String.format("Report: node=%s, expr=%s, status=%s", r.node, r.expr, r.status));
+        for (ReportInfo info : r.infos) {
             sb.append("\n");
+            sb.append(" ".repeat(indent));
+            sb.append("details: ");
+            sb.append(info.toString());
         }
-        for (ShexReportElement child : children) {
+        for (ShexReportElement child : r.children) {
             sb.append(" ".repeat(indent));
             // TODO indentation
-            sb.append(String.format("- %s", child.toString()));
+            sb.append(String.format("- %s", AbstractShexReportElement.toString((AbstractShexReportElement) child, indent+2)));
         }
         return sb.toString();
     }
