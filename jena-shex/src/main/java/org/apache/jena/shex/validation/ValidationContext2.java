@@ -4,7 +4,7 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.validation.ShexReport;
+import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
@@ -83,6 +83,24 @@ public class ValidationContext2 {
 
     public Graph getGraph() {
         return this.graph;
+    }
+
+    public ShexReport dispatchStartSemanticAction(ShexSchema schema, ShexReportElement factory) {
+        ShexReport.Builder builder = new ShexReport.Builder();
+        List<SemAct> semACts = schema.getSemActs();
+        for (SemAct semAct: semACts) {
+            String semActIri = semAct.getIri();
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
+            if (semActPlugin != null) {
+                if (!semActPlugin.evaluateStart(semAct, schema)) {
+                    ShexReportElement r = ExhaustiveShexReportElement.factory(); // the passed ShexReportElement factory doesn't accept create(null, null)
+                    r.setSatisfies(false);
+                    r.addInfoFailure(String.format("%s start shape failed", semActIri), null, null);
+                    builder.addReport(null, null, r);
+                }
+            }
+        }
+        return builder.build();
     }
 
     public boolean dispatchShapeExprSemanticAction(Node focus, ShapeExpr expr) {

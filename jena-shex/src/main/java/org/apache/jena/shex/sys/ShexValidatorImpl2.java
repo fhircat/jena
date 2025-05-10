@@ -26,6 +26,10 @@ public class ShexValidatorImpl2 implements ShexValidator {
         ValidationContext2 vCxt = new ValidationContext2(schema, graph,
                 false, false, semanticActionPluginIndex);
         ShexReportElement factory = ExhaustiveShexReportElement.factory(); // TODO should be a parameter of the validator
+        ShexReport semActReport = vCxt.dispatchStartSemanticAction(schema, factory);
+        if (!semActReport.conforms()) {
+            return semActReport;
+        }
         ShexReport.Builder builder = ShexReport.builder();
         for (ShapeMapElement e : shapeMap) {
             ShexReportElement r = vCxt.validate(e.nodeSelector, ShapeExprRef.create(e.shapeExprLabel), factory);

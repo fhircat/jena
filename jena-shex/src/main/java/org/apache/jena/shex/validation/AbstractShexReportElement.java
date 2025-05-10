@@ -37,7 +37,7 @@ public abstract class AbstractShexReportElement implements ShexReportElement {
         this.parent = parent;
     }
 
-    // TODO quick fix for factory, to remove
+    // TODO quick fix for factory and Start SemActs, to remove?
     protected AbstractShexReportElement() {
         this.node = null;
         this.expr = null;
