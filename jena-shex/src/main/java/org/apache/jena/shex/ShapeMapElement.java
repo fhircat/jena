@@ -74,7 +74,6 @@ public class ShapeMapElement {
 
     private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel,
                             ShexReportElement reason) {
-        super(); // TODO: delete me
         this.nodeSelector = node;
         this.patternSelector = pattern;
         this.shapeExprLabel = shapeExprLabel;

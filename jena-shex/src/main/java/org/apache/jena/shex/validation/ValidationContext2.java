@@ -87,15 +87,15 @@ public class ValidationContext2 {
 
     public ShexReport dispatchStartSemanticAction(ShexSchema schema, ShexReportElement factory) {
         ShexReport.Builder builder = new ShexReport.Builder();
-        List<SemAct> semACts = schema.getSemActs();
-        for (SemAct semAct: semACts) {
+        List<SemAct> semActs = schema.getSemActs();
+        for (SemAct semAct: semActs) {
             String semActIri = semAct.getIri();
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
                 if (!semActPlugin.evaluateStart(semAct, schema)) {
-                    ShexReportElement r = ExhaustiveShexReportElement.factory(); // the passed ShexReportElement factory doesn't accept create(null, null)
+                    ShexReportElement r = factory.create(null, null);
                     r.setSatisfies(false);
-                    r.addInfoFailure(String.format("%s start shape failed", semActIri), null, null);
+                    r.addInfoFailure(String.format("%s start semantic action failed", semActIri), null, null);
                     builder.addReport(null, null, r);
                 }
             }

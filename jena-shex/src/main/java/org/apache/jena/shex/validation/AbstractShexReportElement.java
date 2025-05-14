@@ -29,15 +29,16 @@ public abstract class AbstractShexReportElement implements ShexReportElement {
 
     protected final List<ReportInfo> infos = new ArrayList<>();
 
+    // TODO expr should be null only for start semantic actions
     protected AbstractShexReportElement(Node node, ShapeExpr expr, ShexReportElement parent) {
-        if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
-            throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference).");
+        if (! (expr == null || expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
+            throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference) or null.");
         this.node = node;
         this.expr = expr;
         this.parent = parent;
     }
 
-    // TODO quick fix for factory and Start SemActs, to remove?
+    // TODO quick fix for factory and Start SemActs, to remove
     protected AbstractShexReportElement() {
         this.node = null;
         this.expr = null;
