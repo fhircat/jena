@@ -11,6 +11,8 @@ import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.expressions.TripleExpr;
+import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 import java.util.*;
@@ -38,18 +40,18 @@ public class ValidationContext2 {
     }
 
     // Used from public
-    public ShexReportElement validate(Node focus, ShapeExprRef shapeExprRef, ShexReportElement factory) {
+    public NodeSatExprReport validate(Node focus, ShapeExprRef shapeExprRef, NodeSatExprReport factory) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
-        ShexReportElement r = typing.get(focus, shapeExprLabel);
+        NodeSatExprReport r = typing.get(focus, shapeExprLabel);
         if (r != null)
-            return new ShexReportReference(r);
+            return r.getReference();
 
         // The node/label pair is on the stack
         if (stack.contains(focus, shapeExprLabel)) {
             r = factory.create(focus, shapeExprRef);
             r.setSatisfies(true);
-            r.addInfoSuccess("Cycle detected", null, null);
+            r.addInfoSuccess("Cycle detected");
             return r;
         }
 
@@ -85,7 +87,7 @@ public class ValidationContext2 {
         return this.graph;
     }
 
-    public ShexReport dispatchStartSemanticAction(ShexSchema schema, ShexReportElement factory) {
+    public ShexReport dispatchStartSemanticAction(ShexSchema schema, NodeSatExprReport factory) {
         ShexReport.Builder builder = new ShexReport.Builder();
         List<SemAct> semActs = schema.getSemActs();
         for (SemAct semAct: semActs) {
@@ -93,9 +95,10 @@ public class ValidationContext2 {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
             if (semActPlugin != null) {
                 if (!semActPlugin.evaluateStart(semAct, schema)) {
-                    ShexReportElement r = factory.create(null, null);
+                    NodeSatExprReport r = factory.create(null, null);
                     r.setSatisfies(false);
-                    r.addInfoFailure(String.format("%s start semantic action failed", semActIri), null, null);
+                    // TODO fix this for the semantic actions
+                    r.addInfoFailure((ShapeExpr) null, String.format("%s start semantic action failed", semActIri));
                     builder.addReport(null, null, r);
                 }
             }
@@ -200,91 +203,19 @@ public class ValidationContext2 {
 
     private class Typing {
 
-        private Map<Pair<Node, Node>, ShexReportElement> typing = new HashMap<>();
+        private Map<Pair<Node, Node>, NodeSatExprReport> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
-        ShexReportElement get(Node focus, Node shapeExprLabel) {
+        NodeSatExprReport get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
     }
 
     private class EmptyTyping extends Typing {
 
-        final ShexReportElement get(Node focus, Node shapeExprLabel) {
+        final NodeSatExprReport get(Node focus, Node shapeExprLabel) {
             return null;
         }
-    }
-
-    private static class ShexReportReference implements ShexReportElement {
-
-        private ShexReportElement parent = null;
-        private final ShexReportElement report;
-
-        ShexReportReference(ShexReportElement report) {
-            super();
-            this.report = report;
-        }
-
-        @Override
-        public void setParent(ShexReportElement parent) {
-            if (this.parent != null) {
-                throw new IllegalStateException("Can't set parent twice");
-            }
-            this.parent = parent;
-        }
-
-        @Override
-        public void setSatisfies(boolean satisfies) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void addInfoSuccess(String message, Expression subExpr, Set<Triple> subNeighbourhood) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void addInfoFailure(String errorMessage, Expression expr, Set<Triple> subNeighbourhood) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ShexReportElement create(Node node, ShapeExpr shapeExpr) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Node getNode() {
-            return report.getNode();
-        }
-
-        @Override
-        public ShapeExpr getShapeExpr() {
-            return report.getShapeExpr();
-        }
-
-        @Override
-        public ShexStatus getStatus() {
-            return report.getStatus();
-        }
-
-
-
-        @Override
-        public ShexReportElement getParent() {
-            return parent;
-        }
-
-        @Override
-        public List<ShexReportElement> getChildren() {
-            return report.getChildren();
-        }
-
-        @Override
-        public List<ReportInfo> getInfos() {
-            return report.getInfos();
-        }
-
     }
 
 

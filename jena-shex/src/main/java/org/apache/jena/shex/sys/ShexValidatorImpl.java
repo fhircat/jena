@@ -25,6 +25,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
+import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.*;
 
@@ -188,7 +190,7 @@ class ShexValidatorImpl implements ShexValidator {
         // Isolate report entries.
         ValidationContext vCxtInner = vCxt.create();
         //vCxtInner.startValidate(shapeDecl, focus);
-        AbstractShexReportElement shexReport = ExhaustiveShexReportElement.create(focus, shapeDecl);
+        NodeSatExprReport shexReport = NodeSatExprReportExhaustive.create(focus, shapeDecl);
         //ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
         //vCxtInner.finishValidate(shapeDecl, focus);
         boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
@@ -217,10 +219,10 @@ class ShexValidatorImpl implements ShexValidator {
 
     // TODO review
     private static void atLeastOneReportItem(ValidationContext vCxt, ShapeExpr exprForReport /* TODO replace*/,
-                                             Node focus, AbstractShexReportElement shexReport) {
+                                             Node focus, NodeSatExprReport shexReport) {
         // Ensure at least one entry.
         if (vCxt.getReportItems().isEmpty()) {
-            shexReport.addInfoFailure("Failed", exprForReport, null);
+            shexReport.addInfoFailure(exprForReport, null, "Failed");
         }
     }
 

@@ -6,10 +6,10 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
+import org.apache.jena.shex.reporting.NodeSatExprReport;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
-import org.apache.jena.shex.validation.ShexReport;
-import org.apache.jena.shex.validation.ShexReportElement;
+import org.apache.jena.shex.reporting.ShexReport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class ReportTests {
         ShexSchema sch = ShExC.parse(DIR + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + graphFile).getGraph();
 
-        List<ShexReportElement> reports = new ArrayList<>();
+        List<NodeSatExprReport> reports = new ArrayList<>();
 
         Node shape = ResourceFactory.createResource(shapeStr).asNode();
         Node focus = ResourceFactory.createResource(focusStr).asNode();

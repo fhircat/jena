@@ -1,11 +1,11 @@
 package org.apache.jena.shex.sys;
 
-import com.fasterxml.jackson.core.JsonpCharacterEscapes;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.*;
+import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
-import org.apache.jena.shex.validation.ShexReportElement;
 import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.validation.*;
 
@@ -25,14 +25,14 @@ public class ShexValidatorImpl2 implements ShexValidator {
         // TODO for now without memoization
         ValidationContext2 vCxt = new ValidationContext2(schema, graph,
                 false, false, semanticActionPluginIndex);
-        ShexReportElement factory = ExhaustiveShexReportElement.factory(); // TODO should be a parameter of the validator
+        NodeSatExprReport factory = NodeSatExprReportExhaustive.factory(); // TODO should be a parameter of the validator
         ShexReport semActReport = vCxt.dispatchStartSemanticAction(schema, factory);
         if (!semActReport.conforms()) {
             return semActReport;
         }
         ShexReport.Builder builder = ShexReport.builder();
         for (ShapeMapElement e : shapeMap) {
-            ShexReportElement r = vCxt.validate(e.nodeSelector, ShapeExprRef.create(e.shapeExprLabel), factory);
+            NodeSatExprReport r = vCxt.validate(e.nodeSelector, ShapeExprRef.create(e.shapeExprLabel), factory);
             builder.addReport(e.nodeSelector, e.shapeExprLabel, r);
         }
         return builder.build();

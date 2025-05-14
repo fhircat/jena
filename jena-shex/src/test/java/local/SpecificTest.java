@@ -4,10 +4,8 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.system.stream.Locator;
-import org.apache.jena.riot.system.stream.StreamManager;
+import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
-import org.apache.jena.shex.validation.*;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
 

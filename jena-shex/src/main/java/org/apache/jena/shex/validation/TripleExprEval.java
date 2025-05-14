@@ -20,7 +20,7 @@ package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.validation.ShexReportElement;
+import org.apache.jena.shex.reporting.NodeSatExprReport;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.util.iterator.FilterIterator;
 
@@ -64,7 +64,7 @@ public class TripleExprEval {
                                                                   Shape shape,
                                                                   Map<Node, TripleExpr> baseTripleExprs,
                                                                   ValidationContext2 vCxt,
-                                                                  ShexReportElement report,
+                                                                  NodeSatExprReport report,
                                                                   ShapeExpr exprForReport, /* TODO replace */
                                                                   Node nodeForReport /* TODO replace*/) {
         Map<Node, SorbeTripleExpr> toBeMatched = new HashMap<>(baseTripleExprs.size());
@@ -97,7 +97,7 @@ public class TripleExprEval {
                                                                              Collection<SorbeTripleExpr> toBeMatched,
                                                                              Set<Node> extraPredicates,
                                                                              ValidationContext2 vCxt,
-                                                                             ShexReportElement report,
+                                                                             NodeSatExprReport report,
                                                                              ShapeExpr exprForReport,
                                                                              Node nodeForReport) {
         // 1. With every triple, associate all the triple constraints that this triple could match
@@ -109,8 +109,8 @@ public class TripleExprEval {
         // 3. Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedNonExtra = filterExtra(preMatching, extraPredicates);
         if (null != unmatchedNonExtra) {
-            report.addInfoFailure("The triples match none of the triples constraints and are not allowed by extra" + unmatchedNonExtra, exprForReport, triples
-            );
+            report.addInfoFailure(exprForReport, triples,
+                    "The triples match none of the triples constraints and are not allowed by extra" + unmatchedNonExtra);
         }
         return preMatching;
     }
@@ -185,7 +185,7 @@ public class TripleExprEval {
     /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t, by recursively validating t's object against the triple constraint's object constraint.*/
     private static void filterRecursiveValidation (Map<Triple, List<TripleConstraint>> preMatching,
                                                   ValidationContext2 vCxt,
-                                                  ShexReportElement report) {
+                                                  NodeSatExprReport report) {
         preMatching.forEach((triple, matchingTripleConstraints) -> {
             Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
             while (it.hasNext()) {

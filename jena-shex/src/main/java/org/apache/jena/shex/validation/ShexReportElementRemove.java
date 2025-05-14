@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public interface ShexReportElement {
+public interface ShexReportElementRemove {
 
     // TODO to be replaced by a factory method
-    ShexReportElement create(Node node, ShapeExpr shapeExpr);
+    ShexReportElementRemove create(Node node, ShapeExpr shapeExpr);
 
     Node getNode();
     ShapeExpr getShapeExpr();
@@ -22,10 +22,10 @@ public interface ShexReportElement {
 
     void setSatisfies(boolean satisfies);
 
-    ShexReportElement getParent();
-    void setParent(ShexReportElement parent);  // TODO can be set only once
+    ShexReportElementRemove getParent();
+    void setParent(ShexReportElementRemove parent);  // TODO can be set only once
 
-    List<ShexReportElement> getChildren();
+    List<ShexReportElementRemove> getChildren();
 
     // TODO these create a ReportInfo, for success with some dummy message
     // subNeighbourhood is null if non relevant, TODO javadoc
