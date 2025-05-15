@@ -32,7 +32,8 @@ public class ShexReport {
     }
 
    public boolean conforms() {
-        return mapElementsReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
+        return mapElementsReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant)
+                && directReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
    }
 
    public static class Builder {
@@ -50,8 +51,8 @@ public class ShexReport {
             addReport(new ShapeMapElement(focusNode, shapeExprLabel), report);
         }
 
-        public void addReport(ShexStatus status, String message) {
-            directReports.add(new SimpleReportElement(message, status));
+        public void addReport(ReportElement report) {
+            directReports.add(report);
         }
 
         public ShexReport build() {

@@ -16,20 +16,17 @@ import java.util.List;
 
 public class SpecificTest {
 
-
-
-
     public static void main(String[] args) {
 
         final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/shexTest/";
-        String schemaFile = "2RefS1-IS2.shex";
-        String graphFile = "In1_Ip1_In2.In2_Ip2_LX.ttl";
+        String schemaFile = "startCode1fail.shex";
+        String graphFile = "Is1_Ip1_Io1.ttl";
         List<String> focusShapePairs = new ArrayList<>();
         // Shape
         focusShapePairs.add("http://a.example/S1");
         // Focus node
-        focusShapePairs.add("http://a.example/n1");
-        focusShapePairs.add("valid");
+        focusShapePairs.add("http://a.example/s1");
+        focusShapePairs.add("invalid");
         /*
         focusShapePairs.add("http://inst.example/Issue2");
         focusShapePairs.add("http://schema.example/IssueShape");

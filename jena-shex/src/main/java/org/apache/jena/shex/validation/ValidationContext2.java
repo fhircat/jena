@@ -29,8 +29,7 @@ public class ValidationContext2 {
         this.graph = graph;
         this.semActPluginIndex = semActPluginIndex;
 
-        if (fixedSchema) this.schemaMem = new ShexSchemaMem(schema);
-        else this.schemaMem = new ShexSchemaMem(schema);
+        this.schemaMem = new ShexSchemaMem(schema);
         if (fixedGraph) this.typing = new Typing();
         else this.typing = new EmptyTyping();
 

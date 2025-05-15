@@ -26,7 +26,6 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.reporting.AtomicExprHReport;
-import org.apache.jena.shex.reporting.ExprHReportExhaustive;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.*;

@@ -27,10 +27,11 @@ public class ShexValidatorImpl2 implements ShexValidator {
         ValidationContext2 vCxt = new ValidationContext2(schema, graph,
                 false, false, semanticActionPluginIndex);
         boolean isValid = vCxt.dispatchStartSemanticAction(schema, reporter);
-        if (!isValid) {
-            reporter.setResult(ShexStatus.nonconformant, "Start semantic actions failed.");
-        }
         ShexReport.Builder builder = ShexReport.builder();
+        if (!isValid) {
+            builder.addReport(reporter.getReport());
+            return builder.build();
+        }
         for (ShapeMapElement e : shapeMap) {
             ReportElement re = vCxt.validate(e.nodeSelector, ShapeExprRef.create(e.shapeExprLabel), reporter);
             builder.addReport(e.nodeSelector, e.shapeExprLabel, re);
