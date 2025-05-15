@@ -28,7 +28,8 @@ import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShapeMapElement;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.AtomicExprHReport;
+import org.apache.jena.shex.reporting.ReportElement;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.vocabulary.OWL;
@@ -111,7 +112,7 @@ public class ShexLib {
         String target = reportEntry.strTarget();
 
         ShexStatus status = reportEntry.getStatus();
-        NodeSatExprReport reason = reportEntry.reason;
+        ReportElement reason = reportEntry.reason;
         Node focusNode = reportEntry.nodeSelector;
 
         switch (status) {

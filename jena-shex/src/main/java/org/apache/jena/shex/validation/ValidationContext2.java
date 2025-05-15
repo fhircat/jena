@@ -4,15 +4,13 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.SemAct;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.Expression;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.expressions.TripleExpr;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.reporting.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 
 import java.util.*;
@@ -39,43 +37,31 @@ public class ValidationContext2 {
         this.stack = new ValidationStack();
     }
 
-    // Used from public
-    public NodeSatExprReport validate(Node focus, ShapeExprRef shapeExprRef, NodeSatExprReport factory) {
+    // Used from public. TODO will change with reporter
+    public ReportElement validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
-        NodeSatExprReport r = typing.get(focus, shapeExprLabel);
-        if (r != null)
-            return r.getReference();
+        ReportElement re = typing.get(focus, shapeExprLabel);
+        if (re != null)
+            return re;
 
         // The node/label pair is on the stack
-        if (stack.contains(focus, shapeExprLabel)) {
-            r = factory.create(focus, shapeExprRef);
-            r.setSatisfies(true);
-            r.addInfoSuccess("Cycle detected");
-            return r;
-        }
+        if (stack.contains(focus, shapeExprLabel))
+            return new SimpleReportElement("Cycle detected", ShexStatus.conformant);
 
         // The node has not been validated against this label
-        // TODO the stack
-        // TODO the reference should be given, instead of created
-        // TODO dispatch semantic actions
-
         boolean isValid = false;
-        r = factory.create(focus, shapeExprRef);
+        Reporter rep = reporter.createNew(focus, shapeExprLabel);
         stack.push(focus, shapeExprLabel);
         try {
             ShapeExpr expr = schema.get(shapeExprLabel).getShapeExpr();
-            isValid = ShapeExprEval.satisfies(focus, expr, this, r)
-                && dispatchShapeExprSemanticAction(focus, expr);
+            isValid = ShapeExprEval.satisfies(focus, expr, this, rep)
+                && dispatchShapeExprSemanticAction(focus, expr, reporter);
         } finally { // TODO What exception could we have here ?
             stack.pop();
         }
-        r.setSatisfies(isValid);
-        return r;
-    }
-
-    public ShexReport validate(Collection<Pair<Node, Node>> shapeMap) {
-        throw new UnsupportedOperationException("not yet implemented");
+        rep.setFinalResult(isValid);
+        return rep.getReport();
     }
 
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
@@ -87,47 +73,56 @@ public class ValidationContext2 {
         return this.graph;
     }
 
-    public ShexReport dispatchStartSemanticAction(ShexSchema schema, NodeSatExprReport factory) {
-        ShexReport.Builder builder = new ShexReport.Builder();
-        List<SemAct> semActs = schema.getSemActs();
-        for (SemAct semAct: semActs) {
-            String semActIri = semAct.getIri();
-            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
+    public boolean dispatchStartSemanticAction(ShexSchema schema, Reporter reporter) {
+        for (SemAct semAct: schema.getSemActs()) {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                if (!semActPlugin.evaluateStart(semAct, schema)) {
-                    NodeSatExprReport r = factory.create(null, null);
-                    r.setSatisfies(false);
-                    // TODO fix this for the semantic actions
-                    r.addInfoFailure((ShapeExpr) null, String.format("%s start semantic action failed", semActIri));
-                    builder.addReport(null, null, r);
+                boolean eval = semActPlugin.evaluateStart(semAct, schema);
+                if (!eval) {
+                    reporter.setResult(schema, semAct, ShexStatus.nonconformant);
+                    return false;
+                } else {
+                    reporter.setResult(schema, semAct, ShexStatus.conformant);
                 }
             }
         }
-        return builder.build();
+        return true;
     }
 
-    public boolean dispatchShapeExprSemanticAction(Node focus, ShapeExpr expr) {
+    public boolean dispatchShapeExprSemanticAction(Node focus, ShapeExpr expr, Reporter reporter) {
         if (expr.getSemActs() == null)
             return true;
-        return expr.getSemActs().stream().noneMatch(semAct -> {
+        for (SemAct semAct: expr.getSemActs()) {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                return !semActPlugin.evaluateShapeExpr(semAct, expr, focus);
+                boolean eval = semActPlugin.evaluateShapeExpr(semAct, expr, focus);
+                if (!eval) {
+                    reporter.setResult(focus, expr, semAct, ShexStatus.nonconformant);
+                    return false;
+                } else {
+                    reporter.setResult(focus, expr, semAct, ShexStatus.conformant);
+                }
             }
-            return false;
-        });
+        }
+        return true;
     }
 
-    public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
-        if (te.getSemActs() == null)
+    public boolean dispatchTripleExprSemanticAction(TripleExpr expr, Set<Triple> triples, Reporter reporter) {
+        if (expr.getSemActs() == null)
             return true;
-        return te.getSemActs().stream().noneMatch(semAct -> {
+        for (SemAct semAct : expr.getSemActs()) {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
-                return !semActPlugin.evaluateTripleExpr(semAct, te, matchables);
+                boolean eval = semActPlugin.evaluateTripleExpr(semAct, expr, triples);
+                if (!eval) {
+                    reporter.setResult(triples, expr, semAct, ShexStatus.nonconformant);
+                    return false;
+                } else {
+                    reporter.setResult(triples, expr, semAct, ShexStatus.conformant);
+                }
             }
-            return false;
-        });
+        }
+        return true;
     }
 
     public TripleExpr getTripleExpr(Node label) {
@@ -148,7 +143,7 @@ public class ValidationContext2 {
     }
 
 
-    private class ValidationStack {
+    private static class ValidationStack {
 
         private Deque<Pair<Node, Node>> stack = new ArrayDeque<>();
 
@@ -181,7 +176,7 @@ public class ValidationContext2 {
         }
     }
 
-    private class ShexSchemaMem {
+    private static class ShexSchemaMem {
 
         private final SorbeFactory sorbeFactory;
         private final TypeHierarchyGraph typeHierarchyGraph;
@@ -201,19 +196,19 @@ public class ValidationContext2 {
 
     }
 
-    private class Typing {
+    private static class Typing {
 
-        private Map<Pair<Node, Node>, NodeSatExprReport> typing = new HashMap<>();
+        private Map<Pair<Node, Node>, ReportElement> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
-        NodeSatExprReport get(Node focus, Node shapeExprLabel) {
+        ReportElement get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
     }
 
     private class EmptyTyping extends Typing {
 
-        final NodeSatExprReport get(Node focus, Node shapeExprLabel) {
+        final AtomicExprHReport get(Node focus, Node shapeExprLabel) {
             return null;
         }
     }

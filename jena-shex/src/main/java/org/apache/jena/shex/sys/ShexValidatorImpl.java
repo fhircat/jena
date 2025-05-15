@@ -25,7 +25,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.AtomicExprHReport;
+import org.apache.jena.shex.reporting.ExprHReportExhaustive;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.*;
@@ -186,20 +187,21 @@ class ShexValidatorImpl implements ShexValidator {
     private static boolean validationStepWorker(ValidationContext vCxt, ShapeMapElement mapEntry, ShapeDecl shapeDecl,
                                                 Node shapeRef, Node focus) {
         // TODO adapt to new reporting mechanism
+        throw new UnsupportedOperationException("deprecated");
 
         // Isolate report entries.
-        ValidationContext vCxtInner = vCxt.create();
+        //ValidationContext vCxtInner = vCxt.create();
         //vCxtInner.startValidate(shapeDecl, focus);
-        NodeSatExprReport shexReport = NodeSatExprReportExhaustive.create(focus, shapeDecl);
+        //AtomicExprHReport shexReport = ExprHReportExhaustive.create(focus, shapeDecl);
         //ShapeExprEval.satisfies(focus, shapeDecl.getShapeExpr(), vCxtInner, shexReport);
         //vCxtInner.finishValidate(shapeDecl, focus);
-        boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
-        if (!isValid) {
-            atLeastOneReportItem(vCxtInner, null, focus, shexReport);
-            vCxtInner.copyInto(vCxt); // Report items.
-        }
-        createShexReportLine(vCxt, mapEntry, isValid, shapeRef, focus);
-        return isValid;
+        //boolean isValid = shexReport.getStatus() == ShexStatus.conformant;
+        //if (!isValid) {
+        //    atLeastOneReportItem(vCxtInner, null, focus, shexReport);
+        //    vCxtInner.copyInto(vCxt); // Report items.
+        //}
+        //createShexReportLine(vCxt, mapEntry, isValid, shapeRef, focus);
+        //return isValid;
     }
 
     private static void createShexReportLine(ValidationContext vCxt, ShapeMapElement mapEntry, boolean conforms, Node shapeRef, Node focus) {
@@ -219,11 +221,12 @@ class ShexValidatorImpl implements ShexValidator {
 
     // TODO review
     private static void atLeastOneReportItem(ValidationContext vCxt, ShapeExpr exprForReport /* TODO replace*/,
-                                             Node focus, NodeSatExprReport shexReport) {
+                                             Node focus, AtomicExprHReport shexReport) {
         // Ensure at least one entry.
-        if (vCxt.getReportItems().isEmpty()) {
-            shexReport.addInfoFailure(exprForReport, null, "Failed");
-        }
+        throw new UnsupportedOperationException("deprecated");
+        //if (vCxt.getReportItems().isEmpty()) {
+        //    shexReport.addInfoFailure(exprForReport, null, "Failed");
+        //}
     }
 
     private static void report(ValidationContext vCxt, ShapeMapElement entry, Node focusNode,

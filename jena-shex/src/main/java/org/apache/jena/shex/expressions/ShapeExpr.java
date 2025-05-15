@@ -26,19 +26,13 @@ import java.util.List;
 // TODO are annotations allowed for shape expressions ? If yes, we should add them
 public abstract class ShapeExpr extends Expression {
 
-    private final List<SemAct> semActs;
 
-    public ShapeExpr(List<SemAct> semActs) {
-        super();
-        this.semActs = semActs;
+    protected ShapeExpr(List<SemAct> semActs) {
+        super(semActs);
     }
 
     protected ShapeExpr() {
         this(null);
-    }
-
-    public List<SemAct> getSemActs() {
-        return semActs;
     }
 
     public abstract void visit(VoidShapeExprVisitor visitor);

@@ -21,6 +21,8 @@ package org.apache.jena.shex.sys;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shex.ShexValidator;
+import org.apache.jena.shex.reporting.EmptyReporter;
+import org.apache.jena.shex.reporting.Reporter;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,10 @@ public class SysShex {
         return systemValiditor;
     }
 
+    public static Reporter getReporter() {
+        return new EmptyReporter();
+    }
+
     static {
         semActPluginIndex = new ConcurrentHashMap<>();
         systemValiditor = new ShexValidatorImpl(semActPluginIndex);
@@ -67,7 +73,7 @@ public class SysShex {
         pz.forEach(p -> {
             p.getUris().forEach(u -> iriToPlugin.put(u, p));
         });
-        ShexValidator ret = new ShexValidatorImpl2(iriToPlugin);
+        ShexValidator ret = new ShexValidatorImpl2(iriToPlugin, getReporter());
         return ret;
     }
 }

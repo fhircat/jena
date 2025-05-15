@@ -20,7 +20,8 @@ package org.apache.jena.shex;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.AtomicExprHReport;
+import org.apache.jena.shex.reporting.ReportElement;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.SysShex;
 
@@ -38,7 +39,7 @@ public class ShapeMapElement {
     public final Node nodeSelector;
     public final Triple patternSelector;
     public final Node shapeExprLabel;
-    public final NodeSatExprReport reason;
+    public final ReportElement reason;
 
     public ShapeMapElement(Node node, Node shapeExprLabel) {
         this(node, null, shapeExprLabel);
@@ -57,7 +58,7 @@ public class ShapeMapElement {
         this(node, patternSelector, shapeExprLabel, null);
     }
 
-    public ShapeMapElement createReportElement(NodeSatExprReport report) {
+    public ShapeMapElement createReportElement(ReportElement report) {
         if (patternSelector != null)
             throw new ShexException("A non-fixed shape map association cannot be used for validation or reporting.");
         return new ShapeMapElement(nodeSelector, null, shapeExprLabel, report);
@@ -65,7 +66,7 @@ public class ShapeMapElement {
 
 
     // TODO should be removed
-    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, NodeSatExprReport reason) {
+    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, ReportElement reason) {
         // Reporting form.
         this(assoc.nodeSelector, null, assoc.shapeExprLabel, reason);
         if (assoc.patternSelector != null)
@@ -73,7 +74,7 @@ public class ShapeMapElement {
     }
 
     private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel,
-                            NodeSatExprReport reason) {
+                            ReportElement reason) {
         this.nodeSelector = node;
         this.patternSelector = pattern;
         this.shapeExprLabel = shapeExprLabel;

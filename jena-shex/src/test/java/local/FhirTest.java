@@ -6,9 +6,10 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
+import org.apache.jena.shex.reporting.AtomicExprHReport;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.sys.SysShex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +26,12 @@ public class FhirTest {
         ShexSchema sch = ShExC.parse(DIR + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + graphFile).getGraph();
 
-        List<NodeSatExprReport> reports = new ArrayList<>();
+        List<AtomicExprHReport> reports = new ArrayList<>();
 
         Node shape = ResourceFactory.createResource(shapeStr).asNode();
         Node focus = ResourceFactory.createResource(focusStr).asNode();
 
-        ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+        ShexValidatorImpl2 v = new ShexValidatorImpl2(null, SysShex.getReporter());
         ShexReport report = v.validate(graph, sch, shape, focus);
         System.out.println("Conforms: " + report.conforms());
         System.out.println(report.getMapElementsReports().get(0).reason);

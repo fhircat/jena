@@ -8,6 +8,7 @@ import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
+import org.apache.jena.shex.sys.SysShex;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ public class SpecificTest {
             Node focus = ResourceFactory.createResource(it.next()).asNode();
             String exp = it.next();
 
-            ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+            ShexValidatorImpl2 v = new ShexValidatorImpl2(null, SysShex.getReporter());
             ShexReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Expected: " + exp + "  Result: " + report.conforms());
 

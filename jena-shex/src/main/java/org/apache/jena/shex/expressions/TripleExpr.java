@@ -25,20 +25,15 @@ import java.util.List;
 
 public abstract class TripleExpr extends Expression {
 
-    private List<SemAct> semActs;
 
     // TODO semacts are most often empty, it's weird to have the unique constructor requiring semantic actions
     protected TripleExpr(List<SemAct> semActs) {
-        super();
-        this.semActs = semActs;
+        super(semActs);
     }
 
-    public List<SemAct> getSemActs() {
-        return semActs;
-    }
-
+    @Override
     public void setSemActs(List<SemAct> semActs) { // needed for ShExC parser's late binding of SemActs to EachOf
-        this.semActs = semActs;
+        super.setSemActs(semActs);
     }
 
     public abstract void visit(VoidTripleExprVisitor visitor);

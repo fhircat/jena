@@ -24,12 +24,13 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFmtLib;
-import org.apache.jena.shex.reporting.NodeSatExprReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.shex.calc.Util;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.reporting.ReportElement;
+import org.apache.jena.shex.reporting.Reporter;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.sparql.expr.NodeValue;
 import org.apache.jena.sparql.expr.nodevalue.NodeFunctions;
@@ -45,19 +46,19 @@ public class ShapeExprEval {
 
 
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
-                                     ValidationContext2 vCxt, NodeSatExprReport report) {
-        return satisfies(dataNode, expr, null, vCxt, report);
+                                     ValidationContext2 vCxt, Reporter reporter) {
+        return satisfies(dataNode, expr, null, vCxt, reporter);
     }
 
-    private static NodeSatExprReport nodeSatisfiesRefExact (Node dataNode, ShapeExprRef ref,
-                                                      ValidationContext2 vCxt, NodeSatExprReport reportFactory) {
-        return vCxt.validate(dataNode, ref, reportFactory);
+    private static ReportElement nodeSatisfiesRefExact (Node dataNode, ShapeExprRef ref,
+                                                        ValidationContext2 vCxt, Reporter reporter) {
+        return vCxt.validate(dataNode, ref, reporter);
     }
 
     private static boolean neighSatisfiesRefExact (Node commonFocus, Set<Triple> neigh, ShapeExprRef ref,
-                                                   ValidationContext2 vCxt, NodeSatExprReport report) {
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(commonFocus, neigh, vCxt);
-        return vCxt.getDefinition(ref.getLabel()).visit(evaluator, report);
+                                                   ValidationContext2 vCxt, Reporter reporter) {
+        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(commonFocus, neigh, vCxt, reporter);
+        return vCxt.getDefinition(ref.getLabel()).visit(evaluator, reporter);
     }
 
 
@@ -65,35 +66,31 @@ public class ShapeExprEval {
 
 
     private static boolean satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
-                                     ValidationContext2 vCxt, NodeSatExprReport report) {
+                                     ValidationContext2 vCxt, Reporter reporter) {
         boolean result = false;
         if (expr instanceof ShapeExprRef ref) {
             for (Node base : vCxt.getNonAbstractSubtypes(ref.getLabel())) {
                 if (neigh == null) {
-                    NodeSatExprReport r = nodeSatisfiesRefExact(dataNode, ShapeExprRef.create(base), vCxt, report);
-                    r.setParent(report);
+                    ReportElement r = nodeSatisfiesRefExact(dataNode, ShapeExprRef.create(base), vCxt, reporter);
                     if (ShexStatus.conformant == r.getStatus())
                         return true;
                 } else {
-                    if (neighSatisfiesRefExact(dataNode, neigh, ref, vCxt, report)) {
+                    if (neighSatisfiesRefExact(dataNode, neigh, ref, vCxt, reporter)) {
                         return true;
                     }
                 }
             }
             return false;
         } else {
-            ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(dataNode, neigh, vCxt);
-            return expr.visit(evaluator, report);
+            ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(dataNode, neigh, vCxt, reporter);
+            return expr.visit(evaluator, null);
         }
     }
 
     /** Validates a node's neighbourhood or a set of triples against a shape.
      * If triples is null, the whole node's neighbourhood is considered. */
     private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
-                                          ValidationContext2 vCxt, NodeSatExprReport report) {
-
-        NodeSatExprReport childReport = report.create(dataNode, shape);
-        childReport.setParent(report);
+                                          ValidationContext2 vCxt, Reporter reporter) {
 
         // 1. Collect the shapes to be satisfied (several if the shape is with extends)
         //    and the corresponding constraints if the shape is with extends
@@ -121,24 +118,24 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !accNonMatchables.isEmpty()) {
-            report.addInfoFailure(shape, accMatchables, "CLOSED required but forbidden triples");
+            reporter.setResult(dataNode, shape, triples, ShexStatus.nonconformant,
+                    "CLOSED required but forbidden triples", accMatchables);
             return false;
         }
 
         // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
         Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(accMatchables, shape,
-                mainTripleExprs, vCxt, childReport, shape, dataNode);
+                mainTripleExprs, vCxt, reporter, shape, dataNode);
 
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
-            if (splitSatisfiesConstraints(split, constraints, vCxt, report, dataNode)) {
-                report.setSatisfies(true);
+            if (splitSatisfiesConstraints(split, constraints, vCxt, reporter, dataNode)) {
+                reporter.setValid(dataNode, shape, triples);
                 return true;
             }
         }
 
-        report.setSatisfies(false);
-        report.addInfoFailure(shape, triples, "Shape not satisfied by the triples.");
+        reporter.setResult(dataNode, shape, triples, ShexStatus.conformant, "Shape not satisfied by the triples.");
         return false;
     }
 
@@ -147,7 +144,7 @@ public class ShapeExprEval {
     private static boolean splitSatisfiesConstraints (Map<Node, Set<Triple>> split,
                                                       Map<Node, List<ShapeExpr>> constraints,
                                                       ValidationContext2 vCxt,
-                                                      NodeSatExprReport report,
+                                                      Reporter reporter,
                                                       Node nodeForReport) {
         Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
         for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
@@ -156,7 +153,7 @@ public class ShapeExprEval {
                         vCxt.getSupertypes(e.getKey()).stream()
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
-                if (!satisfies(nodeForReport, constr, triples, vCxt, report /* TODO which report is that? */)) {
+                if (!satisfies(nodeForReport, constr, triples, vCxt, reporter /* TODO which report is that? */)) {
                     return false;
                 }
             }
@@ -165,89 +162,99 @@ public class ShapeExprEval {
     }
 
     private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode,
-                                     NodeSatExprReport report) {
+                                     Reporter reporter) {
         NodeConstraintComponentEvalVisitor componentEval =
-                new NodeConstraintComponentEvalVisitor(dataNode, report, nodeConstraint);
+                new NodeConstraintComponentEvalVisitor(dataNode, reporter, nodeConstraint);
         return nodeConstraint.getComponents().stream().allMatch(ncc -> ncc.visit(componentEval));
     }
 
 
     // TODO report for all visit functions
-    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, NodeSatExprReport> {
+    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Object> {
 
         private final ValidationContext2 vCxt;
         private final Node dataNode;
         private final Set<Triple> triples;
+        private final Reporter reporter;
 
-        ShapeExprEvalVisitor(Node dataNode, Set<Triple> triples, ValidationContext2 vCxt) {
+        ShapeExprEvalVisitor(Node dataNode, Set<Triple> triples, ValidationContext2 vCxt, Reporter reporter) {
             this.vCxt = vCxt;
             this.dataNode = dataNode;
             this.triples = triples;
+            this.reporter = reporter;
         }
 
         @Override
-        public Boolean visit(ShapeAnd shapeAnd, NodeSatExprReport report) {
+        public Boolean visit(ShapeAnd shapeAnd, Object x) {
             for (ShapeExpr se : shapeAnd.getShapeExprs()) {
-                if (! se.visit(this, report)) {
-                    report.addInfoFailure(shapeAnd, triples, "AND not satisfied");
+                reporter.addChild(dataNode, shapeAnd, dataNode, se, triples);
+                if (! se.visit(this, reporter)) {
+                    reporter.setInvalid(dataNode, shapeAnd, triples);
                     return false;
                 }
             }
+            reporter.setValid(dataNode, shapeAnd, triples);
             return true;
         }
 
         @Override
-        public Boolean visit(ShapeOr shapeOr, NodeSatExprReport report) {
+        public Boolean visit(ShapeOr shapeOr, Object x) {
             for (ShapeExpr se : shapeOr.getShapeExprs()) {
-                if (se.visit(this, report))
+                reporter.addChild(dataNode, shapeOr, dataNode, se, triples);
+                if (se.visit(this, x)) {
+                    reporter.setValid(dataNode, shapeOr, triples);
                     return true;
+                }
             }
-            report.addInfoFailure(shapeOr, triples, "None of the OR disjuncts was satisfied");
+            reporter.setInvalid(dataNode, shapeOr, triples);
             return false;
         }
 
         @Override
-        public Boolean visit(ShapeNot shapeNot, NodeSatExprReport report) {
-            if (shapeNot.getShapeExpr().visit(this, report)) {
-                report.addInfoFailure(shapeNot, triples, "Negated expression is satisfied");
+        public Boolean visit(ShapeNot shapeNot, Object x) {
+            ShapeExpr subExpr = shapeNot.getShapeExpr();
+            reporter.addChild(dataNode, shapeNot, dataNode, subExpr, triples);
+            if (subExpr.visit(this, x)) {
+                reporter.setInvalid(dataNode, shapeNot, triples);
                 return false;
-            } else
+            } else {
+                reporter.setValid(dataNode, shapeNot, triples);
                 return true;
+            }
         }
 
         @Override
-        public Boolean visit(ShapeExprRef shapeExprRef, NodeSatExprReport report) {
-            return satisfies(dataNode, shapeExprRef, triples, vCxt, report);
+        public Boolean visit(ShapeExprRef shapeExprRef, Object x) {
+            return satisfies(dataNode, shapeExprRef, triples, vCxt, reporter);
         }
 
         @Override
-        public Boolean visit(ShapeExternal shapeExternal, NodeSatExprReport report) {
+        public Boolean visit(ShapeExternal shapeExternal, Object x) {
             // TODO shape external never satisfied
-            report.addInfoFailure(shapeExternal, triples, "Shape external not supported, never satisfied");
+            reporter.setResult(dataNode, shapeExternal, triples, ShexStatus.nonconformant,
+                    "Shape external not supported, never satisfied");
             return false;
         }
 
         @Override
-        public Boolean visit(Shape shape, NodeSatExprReport report) {
-            return satisfiesShape(shape, dataNode, triples, vCxt, report);
+        public Boolean visit(Shape shape, Object x) {
+            return satisfiesShape(shape, dataNode, triples, vCxt, reporter);
         }
 
         @Override
-        public Boolean visit(NodeConstraint nodeConstraint, NodeSatExprReport report) {
-            return satisfies(nodeConstraint, dataNode, report);
+        public Boolean visit(NodeConstraint nodeConstraint, Object x) {
+            return satisfies(nodeConstraint, dataNode, reporter);
         }
     }
 
     static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
 
         private final Node dataNode;
-        private final NodeSatExprReport report;
-        private final NodeConstraint parentConstraint;
+        private final Reporter reporter;
 
-        NodeConstraintComponentEvalVisitor(Node dataNode, NodeSatExprReport report, NodeConstraint parentConstraint) {
+        NodeConstraintComponentEvalVisitor(Node dataNode, Reporter reporter, NodeConstraint parentConstraint) {
             this.dataNode = dataNode;
-            this.report = report;
-            this.parentConstraint = parentConstraint;
+            this.reporter = reporter;
         }
 
         @Override
@@ -263,7 +270,7 @@ public class ShapeExprEval {
 
             // TODO Bad.
             if (!satisfied)
-                report.addInfoFailure(nodeKindCstr,
+                reporter.setInvalid(dataNode, nodeKindCstr,
                         nodeKindCstr + ": Expected " + nodeKind + " for " + displayStr(dataNode));
             return satisfied;
         }
@@ -271,7 +278,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(DatatypeConstraint datatypeCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(datatypeCstr,
+                reporter.setInvalid(dataNode,  datatypeCstr,
                         datatypeCstr + " : Not a literal");
                 return false;
             }
@@ -279,12 +286,12 @@ public class ShapeExprEval {
             if (datatypeCstr.getDatatypeURI().equals(dataNode.getLiteralDatatypeURI())) {
                 // Must be valid for the type
                 if (!datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm())) {
-                    report.addInfoFailure(datatypeCstr,
+                    reporter.setInvalid(dataNode, datatypeCstr,
                             datatypeCstr + " : Not valid value : Node " + displayStr(dataNode));
                     return false;
                 }
             } else {
-                report.addInfoFailure(datatypeCstr,
+                reporter.setInvalid(dataNode, datatypeCstr,
                         datatypeCstr + " -- Wrong datatype: " + strDatatype(dataNode) + " for focus node: " + displayStr(dataNode));
                 return false;
             }
@@ -294,25 +301,25 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(NumLengthConstraint numLengthCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(numLengthCstr, format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode)));
+                reporter.setInvalid(dataNode, numLengthCstr, format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             RDFDatatype rdfDT = dataNode.getLiteralDatatype();
             if (!(rdfDT instanceof XSDDatatype)) {
-                report.addInfoFailure(numLengthCstr,
+                reporter.setInvalid(dataNode, numLengthCstr,
                         format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             if (XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT)) {
-                report.addInfoFailure(numLengthCstr,
+                reporter.setInvalid(dataNode, numLengthCstr,
                         format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
             String lexicalForm = dataNode.getLiteralLexicalForm();
             if (!rdfDT.isValid(lexicalForm)) {
-                report.addInfoFailure(numLengthCstr,
+                reporter.setInvalid(dataNode, numLengthCstr,
                         format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
@@ -373,14 +380,14 @@ public class ShapeExprEval {
 
             String msg = format("Expected %s %d : got = %d", numLengthCstr.getLengthType().label(),
                     numLengthCstr.getLength(), lexicalForm.length());
-            report.addInfoFailure(numLengthCstr, msg);
+            reporter.setInvalid(dataNode, numLengthCstr, msg);
             return false;
         }
 
         @Override
         public Boolean visit(NumRangeConstraint numRangeCstr) {
             if (!dataNode.isLiteral()) {
-                report.addInfoFailure(numRangeCstr, "NumRange: Not a literal number");
+                reporter.setInvalid(dataNode, numRangeCstr, "NumRange: Not a literal number");
                 return false;
             }
             NodeValue nv = NodeValue.makeNode(dataNode);
@@ -410,7 +417,7 @@ public class ShapeExprEval {
                     break;
             }
             String msg = format("Expected %s %s : got = %s", numRangeCstr.getRangeKind().label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(dataNode));
-            report.addInfoFailure(numRangeCstr, msg);
+            reporter.setInvalid(dataNode, numRangeCstr, msg);
             return false;
         }
 
@@ -418,7 +425,7 @@ public class ShapeExprEval {
         public Boolean visit(StrRegexConstraint strRegexCstr) {
             if (dataNode.isBlank()) {
                 String msg = toString() + ": Blank node: " + displayStr(dataNode);
-                report.addInfoFailure(strRegexCstr, msg);
+                reporter.setInvalid(dataNode, strRegexCstr, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -426,7 +433,7 @@ public class ShapeExprEval {
                 return true;
             }
             String msg = strRegexCstr + ": Does not match: '" + str + "'";
-            report.addInfoFailure(strRegexCstr, msg);
+            reporter.setInvalid(dataNode, strRegexCstr, msg);
             return false;
         }
 
@@ -436,7 +443,7 @@ public class ShapeExprEval {
             int length = strLengthCstr.getLength();
             if (!dataNode.isLiteral() && !dataNode.isURI()) {
                 String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(dataNode));
-                report.addInfoFailure(strLengthCstr, msg);
+                reporter.setInvalid(dataNode, strLengthCstr, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -459,7 +466,7 @@ public class ShapeExprEval {
             }
 
             String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-            report.addInfoFailure(strLengthCstr, msg);
+            reporter.setInvalid(dataNode, strLengthCstr, msg);
             return false;
         }
 
@@ -468,7 +475,7 @@ public class ShapeExprEval {
             boolean b = valueCstr.getValueSetRanges().stream()
                     .anyMatch(valueSetRange -> validateRange(valueSetRange, dataNode));
             if (!b) {
-                report.addInfoFailure(valueCstr, "Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr);
+                reporter.setInvalid(dataNode, valueCstr, "Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr);
                 return false;
             }
             return true;

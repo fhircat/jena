@@ -17,13 +17,25 @@
  */
 package org.apache.jena.shex.expressions;
 
+import java.util.List;
+
 public abstract class Expression {
 
-    public final int id;
     private static int nextId = 0;
+    public final int id;
+    private List<SemAct> semActs;
 
-    public Expression () {
+    protected Expression (List<SemAct> semActs) {
         this.id = nextId++;
+        this.semActs = semActs;
+    }
+
+    public List<SemAct> getSemActs() {
+        return semActs;
+    }
+
+    protected void setSemActs(List<SemAct> semActs) {
+        this.semActs = semActs;
     }
 
 }

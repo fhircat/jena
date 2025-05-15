@@ -3,7 +3,6 @@ package org.apache.jena.shex.reporting;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.validation.ReportInfoImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,11 +42,11 @@ public class ShexReport {
 
         public Builder() { }
 
-        public void addReport(ShapeMapElement shapeMapElement, NodeSatExprReport report) {
+        public void addReport(ShapeMapElement shapeMapElement, ReportElement report) {
             shapeMapReports.add(shapeMapElement.createReportElement(report));
         }
 
-        public void addReport(Node focusNode, Node shapeExprLabel, NodeSatExprReport report) {
+        public void addReport(Node focusNode, Node shapeExprLabel, ReportElement report) {
             addReport(new ShapeMapElement(focusNode, shapeExprLabel), report);
         }
 
