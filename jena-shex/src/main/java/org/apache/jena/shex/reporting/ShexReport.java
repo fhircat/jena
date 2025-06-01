@@ -13,28 +13,24 @@ public class ShexReport {
     private final List<ReportElement> directReports;
     private final List<ShapeMapElement> mapElementsReports;
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private ShexReport(List<ShapeMapElement> mapElementsReports, List<ReportElement> directReports) {
         this.mapElementsReports = mapElementsReports;
         this.directReports = directReports;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    // TODO quick fix
-    public List<ShapeMapElement> getMapElementsReports() {
-        return mapElementsReports;
-    }
-
     public void forEachReport(Consumer<ShapeMapElement> action) {
         mapElementsReports.forEach(action);
+        // TODO should treat direct reports as well
     }
 
-   public boolean conforms() {
+    public boolean conforms() {
         return mapElementsReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant)
                 && directReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
-   }
+    }
 
    public static class Builder {
 

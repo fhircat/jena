@@ -4,6 +4,8 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.reporting.ShexReport;
 
+import java.util.Objects;
+
 public interface ShexValidator2 {
 
     /** Basic validator that can be used with every schema and every graph. */
@@ -20,10 +22,8 @@ public interface ShexValidator2 {
 
     /** A validator that can be used only with the given schema and graph. */
     public static ShexValidator2 get(ShexSchema schema, Graph graph) {
-        if ( schema == null )
-            throw new IllegalArgumentException("Schema cannot be null.");
-        if ( graph == null )
-            throw new IllegalArgumentException("Graph cannot be null.");
+        Objects.requireNonNull(schema);
+        Objects.requireNonNull(graph);
         throw new UnsupportedOperationException("not implemented yet");
     }
 

@@ -28,7 +28,6 @@ import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShapeMapElement;
-import org.apache.jena.shex.reporting.AtomicExprHReport;
 import org.apache.jena.shex.reporting.ReportElement;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.ShexStatus;

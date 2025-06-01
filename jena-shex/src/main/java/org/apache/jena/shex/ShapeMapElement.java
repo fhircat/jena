@@ -20,7 +20,6 @@ package org.apache.jena.shex;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.reporting.AtomicExprHReport;
 import org.apache.jena.shex.reporting.ReportElement;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.SysShex;

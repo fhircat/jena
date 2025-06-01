@@ -5,7 +5,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.reporting.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
-import org.apache.jena.shex.expressions.ShapeExprRef;
 import org.apache.jena.shex.validation.*;
 
 import java.util.List;
@@ -16,9 +15,8 @@ public class ShexValidatorImpl2 implements ShexValidator {
     private final Map<String, SemanticActionPlugin> semanticActionPluginIndex;
     private Reporter reporter;
 
-    public ShexValidatorImpl2(Map<String, SemanticActionPlugin> pz, Reporter reporter) {
+    public ShexValidatorImpl2(Map<String, SemanticActionPlugin> pz) {
         semanticActionPluginIndex = pz;
-        this.reporter = reporter;
     }
 
     private ShexReport validate (Graph graph, ShexSchema schema, List<ShapeMapElement> shapeMap) {
@@ -26,17 +24,22 @@ public class ShexValidatorImpl2 implements ShexValidator {
         // TODO for now without memoization
         ValidationContext2 vCxt = new ValidationContext2(schema, graph,
                 false, false, semanticActionPluginIndex);
-        boolean isValid = vCxt.dispatchStartSemanticAction(schema, reporter);
+        boolean isValid = vCxt.dispatchStartSemanticAction(schema);
         ShexReport.Builder builder = ShexReport.builder();
         if (!isValid) {
-            builder.addReport(reporter.getReport());
+            builder.addReport(new SimpleReportElement(ShexStatus.nonconformant, "Start semantic actions failed."));
             return builder.build();
         }
         for (ShapeMapElement e : shapeMap) {
-            ReportElement re = vCxt.validate(e.nodeSelector, ShapeExprRef.create(e.shapeExprLabel), reporter);
+            ReportElement re = vCxt.validate(e.nodeSelector, e.shapeExprLabel, reporter);
             builder.addReport(e.nodeSelector, e.shapeExprLabel, re);
         }
         return builder.build();
+    }
+
+    /** Is effective at the next validation. */
+    public void setReporter(Reporter reporter) {
+        this.reporter = reporter;
     }
 
     @Override

@@ -25,7 +25,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.reporting.AtomicExprHReport;
+import org.apache.jena.shex.reporting.ExpressionHReport;
+import org.apache.jena.shex.reporting.Reporter;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.*;
@@ -36,9 +37,6 @@ class ShexValidatorImpl implements ShexValidator {
 
     private Map<String, SemanticActionPlugin> semanticActionPluginIndex;
 
-    ShexValidatorImpl() {
-    }
-
     ShexValidatorImpl(Map<String, SemanticActionPlugin> semActPluginIndex) {
         this.semanticActionPluginIndex = semActPluginIndex;
     }
@@ -48,6 +46,11 @@ class ShexValidatorImpl implements ShexValidator {
      */
     public static ShexValidator get() {
         return SysShex.get();
+    }
+
+    @Override
+    public void setReporter(Reporter reporter) {
+        throw new UnsupportedOperationException("deprecated");
     }
 
     /**
@@ -220,7 +223,7 @@ class ShexValidatorImpl implements ShexValidator {
 
     // TODO review
     private static void atLeastOneReportItem(ValidationContext vCxt, ShapeExpr exprForReport /* TODO replace*/,
-                                             Node focus, AtomicExprHReport shexReport) {
+                                             Node focus, ExpressionHReport shexReport) {
         // Ensure at least one entry.
         throw new UnsupportedOperationException("deprecated");
         //if (vCxt.getReportItems().isEmpty()) {

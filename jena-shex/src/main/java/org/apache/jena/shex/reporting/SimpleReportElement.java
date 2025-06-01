@@ -7,7 +7,8 @@ public class SimpleReportElement implements ReportElement {
     private String message = "";
     private ShexStatus status = null;
 
-    public SimpleReportElement(String message, ShexStatus status) {
+    // TODO exchange order of parameters
+    public SimpleReportElement(ShexStatus status, String message) {
         this.message = message;
         this.status = status;
     }
@@ -29,6 +30,4 @@ public class SimpleReportElement implements ReportElement {
     protected void setStatus(ShexStatus status) {
         this.status = status;
     }
-
-
 }

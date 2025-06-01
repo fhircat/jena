@@ -12,4 +12,6 @@ public class NodeConstraintReport extends SimpleReportElement {
         setStatus(status);
         this.constraint = constraint;
     }
+
+    // TODO toString
 }

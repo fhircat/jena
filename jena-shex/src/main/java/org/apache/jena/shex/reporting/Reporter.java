@@ -2,48 +2,51 @@ package org.apache.jena.shex.reporting;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.expressions.Expression;
+import org.apache.jena.shex.expressions.NodeConstraintComponent;
+import org.apache.jena.shex.expressions.SemAct;
 
 import java.util.Set;
 
 public interface Reporter {
 
-    /** Report for checking node against shape expr. label. */
-    Reporter createNew (Node node, Node label);
-    void setFinalResult(boolean isValid); // TODO to be removed
+    Reporter createRoot(Node node, Expression expr);
+    Reporter createChild(Node node, Expression expr, Set<Triple> neigh);
+
+    void setResult(ShexStatus status, String message, Object details);
+    void addInfo(ShexStatus status, String message, Object details);
+
     ReportElement getReport();
 
-    /** While validating n1 against e1, needed to check n2 against e2. */
-    void addChild(Node n1, Expression e1, Node n2, Expression e2, Set<Triple> n2subNeigh);
+    /** Returns yes if the reporter is not interested in detailed reports.
+     * Used to speed up error reporting. */
+    boolean isValidateOnly();
 
-    /** The result of validating node against eexpr, with possible sub-neighbourhood for node. With additional details. */
-    void setResult(Node node, Expression expr, Set<Triple> subNeigh, ShexStatus status, String message, Object details);
-
-    /** The result of validating node against expr, with possible sub-neighbourhood for node. */
-    default void setResult(Node node, Expression expr, Set<Triple> subNeigh, ShexStatus status, String message) {
-        setResult(node, expr, subNeigh, status, message, null);
+    default void setResult(ShexStatus status, String message) {
+        setResult(status, message, null);
+    }
+    /** Sets the result to conformant or non-conformant, and returns the boolean. */
+    default boolean setIsConformant(boolean isConformant) {
+        setResult(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, "", null);
+        return isConformant;
     }
 
-    /** node with possible sub-neighbourhood satisfies expr, empty message. */
-    default void setValid(Node node, Expression expr, Set<Triple> subNeigh) {
-        setResult(node, expr, subNeigh, ShexStatus.conformant, "");
-    }
-    /** node with possible sub-neighbourhood does not satisfy expr, empty message. */
-    default void setInvalid(Node node, Expression expr, Set<Triple> subNeigh) {
-        setResult(node, expr, subNeigh, ShexStatus.nonconformant, "");
+
+
+    default void addInfo(ShexStatus status, String message) {
+        addInfo(status, message, null);
     }
 
-    void setInvalid(Node node, NodeConstraintComponent e, String m);
+    default void addInfo(ShexStatus status) {
+        addInfo(status, "", null);
+    }
 
-    // Semantic actions
-    void setResult(Node node, ShapeExpr expr, SemAct semAct, ShexStatus status);
-    void setResult(Set<Triple> triples, TripleExpr expr, SemAct semAct, ShexStatus status);
-    void setResult(ShexSchema schema, SemAct semAct, ShexStatus status);
+    default void addSemanticActionsInfo(ShexStatus status, String message, SemAct semAct) {
+        addInfo(status, message, semAct);
+    }
 
-    void setResult(ShexStatus status, String message);
-
-
-
+    default void addNodeConstraintInvalidInfo(NodeConstraintComponent c, String message) {
+        addInfo(ShexStatus.nonconformant, message, c);
+    }
 }

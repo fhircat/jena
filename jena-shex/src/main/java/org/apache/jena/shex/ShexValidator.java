@@ -18,6 +18,7 @@
 
 package org.apache.jena.shex;
 
+import org.apache.jena.shex.reporting.Reporter;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -33,6 +34,8 @@ public interface ShexValidator {
     public static ShexValidator getNew(Collection<SemanticActionPlugin> semanticActionPlugins) {
         return SysShex.getNew(semanticActionPlugins);
     }
+
+    void setReporter(Reporter reporter);
 
     /** Validate data using a collection of shapes and a shape map */
     public ShexReport validate(Graph graph, ShexSchema shapes, ShapeMap shapeMap);

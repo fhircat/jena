@@ -4,11 +4,11 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shex.reporting.ExhaustiveReporter;
 import org.apache.jena.shex.reporting.ShexReport;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
-import org.apache.jena.shex.sys.SysShex;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,14 +19,14 @@ public class SpecificTest {
     public static void main(String[] args) {
 
         final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/shexTest/";
-        String schemaFile = "startCode1fail.shex";
-        String graphFile = "Is1_Ip1_Io1.ttl";
+        String schemaFile = "0.shex";
+        String graphFile = "empty.ttl";
         List<String> focusShapePairs = new ArrayList<>();
         // Shape
         focusShapePairs.add("http://a.example/S1");
         // Focus node
-        focusShapePairs.add("http://a.example/s1");
-        focusShapePairs.add("invalid");
+        focusShapePairs.add("http://a.example/dummy");
+        focusShapePairs.add("valid");
         /*
         focusShapePairs.add("http://inst.example/Issue2");
         focusShapePairs.add("http://schema.example/IssueShape");
@@ -47,7 +47,8 @@ public class SpecificTest {
             Node focus = ResourceFactory.createResource(it.next()).asNode();
             String exp = it.next();
 
-            ShexValidatorImpl2 v = new ShexValidatorImpl2(null, SysShex.getReporter());
+            ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+            v.setReporter(ExhaustiveReporter.factory());
             ShexReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Expected: " + exp + "  Result: " + report.conforms());
 

@@ -36,31 +36,37 @@ public class ValidationContext2 {
         this.stack = new ValidationStack();
     }
 
-    // Used from public. TODO will change with reporter
-    public ReportElement validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
+    public ReportElement validate(Node focus, Node label, Reporter factory) {
+        ShapeExprRef ref = ShapeExprRef.create(label);
+        Reporter myReporter = factory.createRoot(focus, ref);
+        validate(focus, ref, myReporter);
+        return myReporter.getReport();
+    }
+
+    /* package */ boolean validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
         ReportElement re = typing.get(focus, shapeExprLabel);
         if (re != null)
-            return re;
+            return re.getStatus() == ShexStatus.conformant;
 
         // The node/label pair is on the stack
-        if (stack.contains(focus, shapeExprLabel))
-            return new SimpleReportElement("Cycle detected", ShexStatus.conformant);
+        if (stack.contains(focus, shapeExprLabel)) {
+            reporter.setResult(ShexStatus.conformant, "Cycle.");
+            return true;
+        }
 
         // The node has not been validated against this label
-        boolean isValid = false;
-        Reporter rep = reporter.createNew(focus, shapeExprLabel);
+        boolean isValid;
         stack.push(focus, shapeExprLabel);
         try {
             ShapeExpr expr = schema.get(shapeExprLabel).getShapeExpr();
-            isValid = ShapeExprEval.satisfies(focus, expr, this, rep)
-                && dispatchShapeExprSemanticAction(focus, expr, reporter);
+            Reporter childReporter = reporter.createChild(focus, expr, null);
+            isValid = ShapeExprEval.satisfies(focus, expr, this, childReporter);
         } finally { // TODO What exception could we have here ?
             stack.pop();
         }
-        rep.setFinalResult(isValid);
-        return rep.getReport();
+        return reporter.setIsConformant(isValid);
     }
 
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
@@ -72,17 +78,12 @@ public class ValidationContext2 {
         return this.graph;
     }
 
-    public boolean dispatchStartSemanticAction(ShexSchema schema, Reporter reporter) {
+    public boolean dispatchStartSemanticAction(ShexSchema schema) {
         for (SemAct semAct: schema.getSemActs()) {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateStart(semAct, schema);
-                if (!eval) {
-                    reporter.setResult(schema, semAct, ShexStatus.nonconformant);
-                    return false;
-                } else {
-                    reporter.setResult(schema, semAct, ShexStatus.conformant);
-                }
+                if (!eval) return false;
             }
         }
         return true;
@@ -95,30 +96,28 @@ public class ValidationContext2 {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateShapeExpr(semAct, expr, focus);
-                if (!eval) {
-                    reporter.setResult(focus, expr, semAct, ShexStatus.nonconformant);
-                    return false;
-                } else {
-                    reporter.setResult(focus, expr, semAct, ShexStatus.conformant);
-                }
+                reporter.addSemanticActionsInfo(
+                        eval ? ShexStatus.conformant : ShexStatus.nonconformant,
+                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
+                        semAct);
+                if (!eval) return false;
             }
         }
         return true;
     }
 
-    public boolean dispatchTripleExprSemanticAction(TripleExpr expr, Set<Triple> triples, Reporter reporter) {
+    public boolean dispatchTripleExprSemanticAction(TripleExpr expr, Set<Triple> triples, Reporter reporter, Node node) {
         if (expr.getSemActs() == null)
             return true;
         for (SemAct semAct : expr.getSemActs()) {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateTripleExpr(semAct, expr, triples);
-                if (!eval) {
-                    reporter.setResult(triples, expr, semAct, ShexStatus.nonconformant);
-                    return false;
-                } else {
-                    reporter.setResult(triples, expr, semAct, ShexStatus.conformant);
-                }
+                reporter.addSemanticActionsInfo(
+                        eval ? ShexStatus.conformant : ShexStatus.nonconformant,
+                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
+                        semAct);
+                if (!eval) return false;
             }
         }
         return true;
@@ -197,19 +196,25 @@ public class ValidationContext2 {
 
     private static class Typing {
 
-        private Map<Pair<Node, Node>, ReportElement> typing = new HashMap<>();
+        private final Map<Pair<Node, Node>, ReportElement> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
         ReportElement get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
+
+        void put(Node focus, Node shapeExprLabel, ReportElement report) {
+            typing.put(new Pair<>(focus, shapeExprLabel), report);
+        }
     }
 
-    private class EmptyTyping extends Typing {
+    private static class EmptyTyping extends Typing {
 
-        final AtomicExprHReport get(Node focus, Node shapeExprLabel) {
+        final ExpressionHReport get(Node focus, Node shapeExprLabel) {
             return null;
         }
+
+        final void put(Node focus, Node shapeExprLabel, ReportElement report) { /*empty*/ }
     }
 
 

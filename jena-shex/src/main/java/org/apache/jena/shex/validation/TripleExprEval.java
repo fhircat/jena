@@ -21,7 +21,6 @@ package org.apache.jena.shex.validation;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.reporting.AtomicExprHReport;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.reporting.Reporter;
 import org.apache.jena.util.iterator.FilterIterator;
@@ -78,7 +77,7 @@ public class TripleExprEval {
                 shape.getExtras(), vCxt, reporter, exprForReport, nodeForReport);
 
         Iterator<Map<Triple, TripleConstraint>> correctMatchingsIterator = new FilterIterator<Map<Triple, TripleConstraint>>(
-                m -> matchingSatisfiesTripleExpression_sorbe(m, toBeMatched.values(), vCxt, reporter),
+                m -> matchingSatisfiesTripleExpression_sorbe(m, toBeMatched.values(), vCxt, reporter, nodeForReport),
                 new MatchingsIterator(preMatching));
 
         return new Iterator<Map<Node, Set<Triple>>>() {
@@ -111,7 +110,7 @@ public class TripleExprEval {
         // 3. Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedNonExtra = filterExtra(preMatching, extraPredicates);
         if (null != unmatchedNonExtra) {
-            reporter.setResult(nodeForReport, exprForReport, triples, ShexStatus.nonconformant,
+            reporter.setResult(ShexStatus.nonconformant,
                     "The triples match none of the triples constraints and are not allowed by extra",
                     unmatchedNonExtra);
         }
@@ -220,7 +219,8 @@ public class TripleExprEval {
     private static boolean matchingSatisfiesTripleExpression_sorbe(Map<Triple, TripleConstraint> matching,
                                                                    Collection<SorbeTripleExpr> toBeMatched,
                                                                    ValidationContext2 vCxt,
-                                                                   Reporter reporter) {
+                                                                   Reporter reporter,
+                                                                   Node nodeForReport) {
 
         return toBeMatched.stream().allMatch(sorbeTripleExpr -> {
             // this loop is needed only for extends, but does no harm w/o extends
@@ -229,7 +229,7 @@ public class TripleExprEval {
                     // the triple expression is satisfied by the matching, check semantic actions
                     &&
                     sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt).stream()
-                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue(), reporter));
+                            .allMatch(p -> vCxt.dispatchTripleExprSemanticAction(p.getKey(), p.getValue(), reporter, nodeForReport));
         });
     }
 

@@ -6,11 +6,11 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
-import org.apache.jena.shex.reporting.AtomicExprHReport;
+import org.apache.jena.shex.reporting.ExpressionHReport;
+import org.apache.jena.shex.reporting.ValidateOnlyReporter;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.reporting.ShexReport;
-import org.apache.jena.shex.sys.SysShex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +32,13 @@ public class ReportTests {
         ShexSchema sch = ShExC.parse(DIR + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + graphFile).getGraph();
 
-        List<AtomicExprHReport> reports = new ArrayList<>();
+        List<ExpressionHReport> reports = new ArrayList<>();
 
         Node shape = ResourceFactory.createResource(shapeStr).asNode();
         Node focus = ResourceFactory.createResource(focusStr).asNode();
 
-        ShexValidatorImpl2 v = new ShexValidatorImpl2(null, SysShex.getReporter());
+        ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+        v.setReporter(ValidateOnlyReporter.factory());
         ShexReport report = v.validate(graph, sch, shape, focus);
         System.out.println("Conforms: " + report.conforms());
         ShexLib.printReport(report);
