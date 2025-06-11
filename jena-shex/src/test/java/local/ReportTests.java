@@ -10,7 +10,7 @@ import org.apache.jena.shex.reporting.ExpressionHReport;
 import org.apache.jena.shex.reporting.ValidateOnlyReporter;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.validation.ShexValidationReport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class ReportTests {
 
         ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
         v.setReporter(ValidateOnlyReporter.factory());
-        ShexReport report = v.validate(graph, sch, shape, focus);
+        ShexValidationReport report = v.validate(graph, sch, shape, focus);
         System.out.println("Conforms: " + report.conforms());
         ShexLib.printReport(report);
     }

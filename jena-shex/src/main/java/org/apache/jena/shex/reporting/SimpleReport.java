@@ -2,13 +2,13 @@ package org.apache.jena.shex.reporting;
 
 import org.apache.jena.shex.ShexStatus;
 
-public class SimpleReportElement implements ReportElement {
+public class SimpleReport implements Report {
 
     private String message = "";
     private ShexStatus status = null;
 
     // TODO exchange order of parameters
-    public SimpleReportElement(ShexStatus status, String message) {
+    public SimpleReport(ShexStatus status, String message) {
         this.message = message;
         this.status = status;
     }
@@ -23,7 +23,7 @@ public class SimpleReportElement implements ReportElement {
         return status;
     }
 
-    protected SimpleReportElement() {}
+    protected SimpleReport() {}
     protected void setMessage(String message) {
         this.message = message;
     }

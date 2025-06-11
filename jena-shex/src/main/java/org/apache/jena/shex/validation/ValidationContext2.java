@@ -5,13 +5,11 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.SemAct;
+import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.ShexSchema;
-import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.ShapeExprRef;
-import org.apache.jena.shex.expressions.TripleExpr;
 import org.apache.jena.shex.reporting.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
+import org.apache.jena.shex.sys.SysShex;
 
 import java.util.*;
 
@@ -36,37 +34,48 @@ public class ValidationContext2 {
         this.stack = new ValidationStack();
     }
 
-    public ReportElement validate(Node focus, Node label, Reporter factory) {
-        ShapeExprRef ref = ShapeExprRef.create(label);
-        Reporter myReporter = factory.createRoot(focus, ref);
-        validate(focus, ref, myReporter);
-        return myReporter.getReport();
+    public Report validate(Node focus, Node label, Reporter factory) {
+        Report r = typing.get(focus, label);
+        if (r != null)
+            return r;
+        Reporter myReport = factory.createRoot(focus, ShapeExprRef.create(label));
+        computeIsValid(focus, label, myReport);
+        return myReport.getReport();
     }
+
+    private boolean computeIsValid(Node focus, Node label, Reporter reporter) {
+        List<Node> nonAbstractSubtypes =
+                label == SysShex.startNode
+                        ? List.of(label)
+                        : getNonAbstractSubtypes(label);
+        for (Node subTypeLabel : nonAbstractSubtypes) {
+            ShapeExpr expr = schema.get(subTypeLabel).getShapeExpr();
+            Reporter exprReporter = reporter.createChild(focus, expr, null);
+
+            stack.push(focus, subTypeLabel);
+            boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);
+            stack.pop();
+
+            if (isValid)
+                return reporter.setIsConformant(true, "Non-abstract subtype " + subTypeLabel + " is satisfied.");
+        }
+        return reporter.setIsConformant(false, "No non-abstract subtype is satisfied.");
+    }
+
 
     /* package */ boolean validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
-        ReportElement re = typing.get(focus, shapeExprLabel);
+        Report re = typing.get(focus, shapeExprLabel);
         if (re != null)
-            return re.getStatus() == ShexStatus.conformant;
+            return reporter.setIsConformant(re.getStatus() == ShexStatus.conformant, "", re);
 
         // The node/label pair is on the stack
-        if (stack.contains(focus, shapeExprLabel)) {
-            reporter.setResult(ShexStatus.conformant, "Cycle.");
-            return true;
-        }
+        if (stack.contains(focus, shapeExprLabel))
+            return reporter.setIsConformant(true, "Cycle.");
 
         // The node has not been validated against this label
-        boolean isValid;
-        stack.push(focus, shapeExprLabel);
-        try {
-            ShapeExpr expr = schema.get(shapeExprLabel).getShapeExpr();
-            Reporter childReporter = reporter.createChild(focus, expr, null);
-            isValid = ShapeExprEval.satisfies(focus, expr, this, childReporter);
-        } finally { // TODO What exception could we have here ?
-            stack.pop();
-        }
-        return reporter.setIsConformant(isValid);
+        return computeIsValid(focus, shapeExprLabel, reporter);
     }
 
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
@@ -196,14 +205,14 @@ public class ValidationContext2 {
 
     private static class Typing {
 
-        private final Map<Pair<Node, Node>, ReportElement> typing = new HashMap<>();
+        private final Map<Pair<Node, Node>, Report> typing = new HashMap<>();
 
         /** Returns null if the result is unknown. */
-        ReportElement get(Node focus, Node shapeExprLabel) {
+        Report get(Node focus, Node shapeExprLabel) {
             return typing.get(new Pair<>(focus, shapeExprLabel));
         }
 
-        void put(Node focus, Node shapeExprLabel, ReportElement report) {
+        void put(Node focus, Node shapeExprLabel, Report report) {
             typing.put(new Pair<>(focus, shapeExprLabel), report);
         }
     }
@@ -214,7 +223,7 @@ public class ValidationContext2 {
             return null;
         }
 
-        final void put(Node focus, Node shapeExprLabel, ReportElement report) { /*empty*/ }
+        final void put(Node focus, Node shapeExprLabel, Report report) { /*empty*/ }
     }
 
 

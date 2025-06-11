@@ -44,6 +44,7 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 public class ShapeExprEval {
 
 
+    // TODO does not modify the reporter
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
                                      ValidationContext2 vCxt, Reporter reporter) {
         return satisfies(dataNode, expr, null, vCxt, reporter)
@@ -54,24 +55,18 @@ public class ShapeExprEval {
     private static boolean satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
                                      ValidationContext2 vCxt, Reporter reporter) {
         if (expr instanceof ShapeExprRef ref) {
-            Node label = ref.getLabel();
-
-            for (Node subTypeLabel : vCxt.getNonAbstractSubtypes(label)) {
-                boolean isSelf = label.equals(subTypeLabel);
-
-                ShapeExprRef loopRef = isSelf ? ref : ShapeExprRef.create(subTypeLabel);
-                Reporter loopReporter = isSelf ? reporter : reporter.createChild(dataNode, loopRef, neigh);
-
-                boolean isSatisfied;
-                if (neigh == null)
-                    isSatisfied = nodeSatisfiesRefExact(dataNode, loopRef, vCxt, loopReporter);
-                else
-                    isSatisfied = neighSatisfiesRefExact(dataNode, neigh, ref, vCxt, loopReporter);
-
-                if (isSatisfied)
-                    return true;
+            if (neigh == null)
+                return vCxt.validate(dataNode, ref, reporter);
+            else {
+                for (Node subTypeLabel : vCxt.getNonAbstractSubtypes(ref.getLabel())) {
+                    ShapeExpr defn = vCxt.getDefinition(subTypeLabel);
+                    Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
+                    boolean isValid = satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter);
+                    if (isValid)
+                        return reporter.setIsConformant(true, "Non-abstract subtype " + subTypeLabel + " is satisfied.");
+                }
+                return reporter.setIsConformant(false, "No non-abstract subtype is satisfied.");
             }
-            return false;
         } else {
             return reporter.setIsConformant(satisfiesNonRefExpr(dataNode, expr, neigh, vCxt, reporter));
         }
@@ -127,9 +122,8 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !accNonMatchables.isEmpty()) {
-            reporter.setResult(ShexStatus.nonconformant,
+            return reporter.setIsConformant(false,
                     "CLOSED required but forbidden triples", accMatchables);
-            return false;
         }
 
         // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
@@ -229,9 +223,8 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExternal shapeExternal, Reporter reporter) {
             // TODO shape external never satisfied
-            reporter.setResult(ShexStatus.nonconformant,
+            return reporter.setIsConformant(false,
                     "Shape external not supported, never satisfied");
-            return false;
         }
 
         @Override

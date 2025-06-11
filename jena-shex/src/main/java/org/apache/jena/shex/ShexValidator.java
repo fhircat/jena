@@ -19,7 +19,7 @@
 package org.apache.jena.shex;
 
 import org.apache.jena.shex.reporting.Reporter;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.validation.ShexValidationReport;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
@@ -38,14 +38,14 @@ public interface ShexValidator {
     void setReporter(Reporter reporter);
 
     /** Validate data using a collection of shapes and a shape map */
-    public ShexReport validate(Graph graph, ShexSchema shapes, ShapeMap shapeMap);
+    public ShexValidationReport validate(Graph graph, ShexSchema shapes, ShapeMap shapeMap);
 
     /** Validate a specific node (the focus), with a specific shape in a set of shapes. */
-    public ShexReport validate(Graph graphData, ShexSchema shapes, Node shapeRef, Node focus);
+    public ShexValidationReport validate(Graph graphData, ShexSchema shapes, Node shapeRef, Node focus);
 
     /** Validate a specific node (the focus), against a shape. */
-    public ShexReport validate(Graph graphData, ShexSchema shapes, ShapeDecl shape, Node focus);
+    public ShexValidationReport validate(Graph graphData, ShexSchema shapes, ShapeDecl shape, Node focus);
 
     /** Validate a specific node using the shape map to determine which shapes to use. */
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node dataNode);
+    public ShexValidationReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node dataNode);
 }

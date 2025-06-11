@@ -34,7 +34,7 @@ import org.apache.jena.shex.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.validation.ShexValidationReport;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -151,7 +151,7 @@ public class ShexValidationTest implements Runnable {
         try {
             if ( ShexTests.dumpTest )
                 describeTest();
-            ShexReport report;
+            ShexValidationReport report;
             TestSemanticActionPlugin semActPlugin = new TestSemanticActionPlugin();
             List<SemanticActionPlugin> semanticActionPlugins = Collections.singletonList(semActPlugin);
             switch (this.testType) {
@@ -283,7 +283,7 @@ public class ShexValidationTest implements Runnable {
             return this;
         }
 
-        public boolean matches(ShexReport report) {
+        public boolean matches(ShexValidationReport report) {
             Iterator<MyShexRecord> myReports = reports.iterator();
             AtomicBoolean res = new AtomicBoolean(true);
             report.forEachReport(resultReport -> {

@@ -16,7 +16,7 @@ import java.util.Set;
 public class ExpressionHReport extends ExpressionReport {
 
     private final List<ExpressionHReport> children = new ArrayList<>();
-    private final List<ReportElement> infos = new ArrayList<>();
+    private final List<Report> infos = new ArrayList<>();
 
     /* package */ ExpressionHReport(Node node, Expression expr, Set<Triple> neighbourhood) {
         super(node, expr, neighbourhood);
@@ -28,7 +28,7 @@ public class ExpressionHReport extends ExpressionReport {
         return Collections.unmodifiableList(children);
     }
 
-    public List<ReportElement> getInfos() {
+    public List<Report> getInfos() {
         return Collections.unmodifiableList(infos);
     }
 
@@ -36,7 +36,7 @@ public class ExpressionHReport extends ExpressionReport {
         children.add(child);
     }
 
-    /* package */ void addInfo(ReportElement info) {
+    /* package */ void addInfo(Report info) {
         infos.add(info);
     }
 
@@ -50,7 +50,7 @@ public class ExpressionHReport extends ExpressionReport {
         sb.append("\n");
         sb.append(" ".repeat(indent));
         sb.append(String.format("Report: node=%s, expr=%s, status=%s", r.node, r.expr, r.getStatus()));
-        for (ReportElement info : r.infos) {
+        for (Report info : r.infos) {
             sb.append("\n");
             sb.append(" ".repeat(indent));
             sb.append("details: ");

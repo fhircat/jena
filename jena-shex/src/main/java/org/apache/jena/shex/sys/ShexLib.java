@@ -28,8 +28,8 @@ import org.apache.jena.riot.out.NodeFormatterTTL;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShapeMapElement;
-import org.apache.jena.shex.reporting.ReportElement;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.reporting.Report;
+import org.apache.jena.shex.validation.ShexValidationReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -93,11 +93,11 @@ public class ShexLib {
         return displayStr(triple.getSubject())+" "+displayStr(triple.getPredicate())+" "+displayStr(triple.getObject());
     }
 
-    public static void printReport(ShexReport report) {
+    public static void printReport(ShexValidationReport report) {
         printReport(System.out, report);
     }
 
-    public static void printReport(OutputStream outStream, ShexReport report) {
+    public static void printReport(OutputStream outStream, ShexValidationReport report) {
         AWriter out = IO.wrapUTF8(outStream);
         try {
             if (report.conforms())
@@ -111,7 +111,7 @@ public class ShexLib {
         String target = reportEntry.strTarget();
 
         ShexStatus status = reportEntry.getStatus();
-        ReportElement reason = reportEntry.reason;
+        Report reason = reportEntry.reason;
         Node focusNode = reportEntry.nodeSelector;
 
         switch (status) {

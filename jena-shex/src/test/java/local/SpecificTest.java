@@ -5,7 +5,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.reporting.ExhaustiveReporter;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.reporting.ValidateOnlyReporter;
+import org.apache.jena.shex.validation.ShexValidationReport;
 import org.apache.jena.shex.sys.ShexValidatorImpl2;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
@@ -39,7 +40,7 @@ public class SpecificTest {
         ShexSchema sch = ShExC.parse(DIR + "schemas/" + schemaFile);
         Graph graph = RDFDataMgr.loadModel(DIR + "validation/" +  graphFile).getGraph();
 
-        List<ShexReport> reports = new ArrayList<>();
+        List<ShexValidationReport> reports = new ArrayList<>();
 
         Iterator<String> it = focusShapePairs.iterator();
         while (it.hasNext()) {
@@ -48,14 +49,14 @@ public class SpecificTest {
             String exp = it.next();
 
             ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
-            v.setReporter(ExhaustiveReporter.factory());
-            ShexReport report = v.validate(graph, sch, shape, focus);
+            v.setReporter(ValidateOnlyReporter.factory());
+            ShexValidationReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Expected: " + exp + "  Result: " + report.conforms());
 
             reports.add(report);
         }
         System.out.println("-----------------------------------");
-        for (ShexReport report : reports)
+        for (ShexValidationReport report : reports)
             System.out.println(report);
     }
 }

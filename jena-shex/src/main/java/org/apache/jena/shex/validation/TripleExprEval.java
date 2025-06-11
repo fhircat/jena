@@ -110,7 +110,7 @@ public class TripleExprEval {
         // 3. Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedNonExtra = filterExtra(preMatching, extraPredicates);
         if (null != unmatchedNonExtra) {
-            reporter.setResult(ShexStatus.nonconformant,
+            reporter.setIsConformant(false,
                     "The triples match none of the triples constraints and are not allowed by extra",
                     unmatchedNonExtra);
         }

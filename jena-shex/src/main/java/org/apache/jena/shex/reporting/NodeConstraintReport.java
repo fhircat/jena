@@ -3,7 +3,7 @@ package org.apache.jena.shex.reporting;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.NodeConstraintComponent;
 
-public class NodeConstraintReport extends SimpleReportElement {
+public class NodeConstraintReport extends SimpleReport {
 
     private NodeConstraintComponent constraint;
 

@@ -2,18 +2,14 @@ package org.apache.jena.shex.reporting;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
-import org.apache.jena.shex.expressions.ShapeExpr;
 
 import java.util.Objects;
 import java.util.Set;
 
 
-/** Report on validating a node or a part of node's neighbourhood against an {@link Expression}.
- *
- */
-public class ExpressionReport extends SimpleReportElement {
+/** Report on validating a node or a part of node's neighbourhood against an {@link Expression}. */
+public class ExpressionReport extends SimpleReport {
     protected final Node node;
     protected final Expression expr;
     private Set<Triple> subNeigh;
@@ -35,5 +31,9 @@ public class ExpressionReport extends SimpleReportElement {
     }
     public Expression getExpr() {
         return expr;
+    }
+
+    public Set<Triple> getSubNeigh() {
+        return subNeigh;
     }
 }

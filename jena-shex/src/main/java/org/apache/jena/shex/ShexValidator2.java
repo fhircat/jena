@@ -2,7 +2,7 @@ package org.apache.jena.shex;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.validation.ShexValidationReport;
 
 import java.util.Objects;
 
@@ -30,12 +30,12 @@ public interface ShexValidator2 {
     /**
      * Validate a shape map.
      */
-    public ShexReport validate(ShapeMap shapeMap, Graph graph, ShexSchema schema);
+    public ShexValidationReport validate(ShapeMap shapeMap, Graph graph, ShexSchema schema);
 
     /**
      * Validate a specific node (the focus), with a specific shape.
      */
-    public ShexReport validate(Node shapeLabel, Node focus, Graph graphData, ShexSchema schema);
+    public ShexValidationReport validate(Node shapeLabel, Node focus, Graph graphData, ShexSchema schema);
 
     //public AShexReport validate(ShapeDecl shape, Node focus, Graph graphData, ShexSchema schema);
 

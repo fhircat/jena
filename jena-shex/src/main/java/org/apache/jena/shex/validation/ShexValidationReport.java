@@ -1,23 +1,24 @@
-package org.apache.jena.shex.reporting;
+package org.apache.jena.shex.validation;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexStatus;
+import org.apache.jena.shex.reporting.Report;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ShexReport {
+public class ShexValidationReport {
 
-    private final List<ReportElement> directReports;
+    private final List<Report> directReports;
     private final List<ShapeMapElement> mapElementsReports;
 
     public static Builder builder() {
         return new Builder();
     }
 
-    private ShexReport(List<ShapeMapElement> mapElementsReports, List<ReportElement> directReports) {
+    private ShexValidationReport(List<ShapeMapElement> mapElementsReports, List<Report> directReports) {
         this.mapElementsReports = mapElementsReports;
         this.directReports = directReports;
     }
@@ -34,25 +35,25 @@ public class ShexReport {
 
    public static class Builder {
 
-        private final List<ReportElement> directReports = new ArrayList<>();
+        private final List<Report> directReports = new ArrayList<>();
         private final List<ShapeMapElement> shapeMapReports = new ArrayList<>();
 
         public Builder() { }
 
-        public void addReport(ShapeMapElement shapeMapElement, ReportElement report) {
+        public void addReport(ShapeMapElement shapeMapElement, Report report) {
             shapeMapReports.add(shapeMapElement.createReportElement(report));
         }
 
-        public void addReport(Node focusNode, Node shapeExprLabel, ReportElement report) {
+        public void addReport(Node focusNode, Node shapeExprLabel, Report report) {
             addReport(new ShapeMapElement(focusNode, shapeExprLabel), report);
         }
 
-        public void addReport(ReportElement report) {
+        public void addReport(Report report) {
             directReports.add(report);
         }
 
-        public ShexReport build() {
-            return new ShexReport(shapeMapReports, directReports);
+        public ShexValidationReport build() {
+            return new ShexValidationReport(shapeMapReports, directReports);
         }
     }
 }

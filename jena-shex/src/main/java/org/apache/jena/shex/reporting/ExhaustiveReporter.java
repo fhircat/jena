@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class ExhaustiveReporter implements Reporter {
 
-    private static boolean DEBUG = true;  // TODO remove
+    public static final boolean DEBUG = true;  // TODO remove
 
     private static ExhaustiveReporter factoryInstance = new ExhaustiveReporter();
     public static ExhaustiveReporter factory() {
@@ -37,6 +37,16 @@ public class ExhaustiveReporter implements Reporter {
     }
 
     @Override
+    public void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child) {
+        if (! (child instanceof ExhaustiveReporter))
+            throw new IllegalArgumentException("Incompatible type for child. Should be " + this.getClass() + ".");
+        ExhaustiveReporter r = (ExhaustiveReporter)child;
+        if (r.report.getNode() != node || r.report.getExpr() != expr || r.report.getSubNeigh() != neigh)
+            throw new IllegalArgumentException("Different node or expression or neighborhood");
+        report.addChild(((ExhaustiveReporter)child).getReport());
+    }
+
+    @Override
     public void setResult(ShexStatus status, String message, Object details) {
         if (DEBUG && report.getStatus() != null)
             throw new IllegalStateException("Result set twice");
@@ -46,14 +56,15 @@ public class ExhaustiveReporter implements Reporter {
 
     @Override
     public void addInfo(ShexStatus status, String message, Object details) {
-        report.addInfo(new SimpleReportElement(status, message));
+        report.addInfo(new SimpleReport(status, message));
     }
 
     @Override
-    public ReportElement getReport() {
+    public ExpressionHReport getReport() {
         return report;
     }
 
     @Override
     public boolean isValidateOnly () { return false; }
+
 }

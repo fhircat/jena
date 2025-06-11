@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class ValidateOnlyReporter implements Reporter {
 
-    private ReportElement report;
+    private Report report;
 
     public static ValidateOnlyReporter factory() {
         return new ValidateOnlyReporter();
@@ -24,10 +24,17 @@ public class ValidateOnlyReporter implements Reporter {
     public Reporter createChild(Node node, Expression expr, Set<Triple> neigh) {
         return new EmptyReporter();
     }
+    @Override
+    public void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child) {
+        // empty
+    }
+
 
     @Override
     public void setResult(ShexStatus status, String message, Object details) {
-        report = new SimpleReportElement(status, message);
+        if (ExhaustiveReporter.DEBUG && report != null)
+            throw new IllegalStateException("Result set twice");
+        report = new SimpleReport(status, message);
     }
 
     @Override
@@ -36,7 +43,7 @@ public class ValidateOnlyReporter implements Reporter {
     }
 
     @Override
-    public ReportElement getReport() {
+    public Report getReport() {
         return report;
     }
 
@@ -56,6 +63,11 @@ public class ValidateOnlyReporter implements Reporter {
         }
 
         @Override
+        public void addChild (Node node, Expression expr, Set<Triple> neigh, Reporter child) {
+            // empty
+        }
+
+        @Override
         public void setResult(ShexStatus status, String message, Object details) {
             // empty
         }
@@ -66,7 +78,7 @@ public class ValidateOnlyReporter implements Reporter {
         }
 
         @Override
-        public ReportElement getReport() {
+        public Report getReport() {
             return null;
         }
 

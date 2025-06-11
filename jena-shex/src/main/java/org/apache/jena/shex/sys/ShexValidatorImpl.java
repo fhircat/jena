@@ -27,7 +27,7 @@ import org.apache.jena.shex.*;
 import org.apache.jena.shex.expressions.ShapeExpr;
 import org.apache.jena.shex.reporting.ExpressionHReport;
 import org.apache.jena.shex.reporting.Reporter;
-import org.apache.jena.shex.reporting.ShexReport;
+import org.apache.jena.shex.validation.ShexValidationReport;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.validation.*;
 
@@ -57,7 +57,7 @@ class ShexValidatorImpl implements ShexValidator {
      * Validate data using a collection of shapes and a shape map
      */
     @Override
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap) {
+    public ShexValidationReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap) {
         throw new UnsupportedOperationException("deprecated");
         /*Objects.requireNonNull(dataGraph);
         Objects.requireNonNull(shapes);
@@ -81,7 +81,7 @@ class ShexValidatorImpl implements ShexValidator {
      * Validate a specific node (the focus), with a specific shape in a set of shapes.
      */
     @Override
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, Node shapeRef, Node focus) {
+    public ShexValidationReport validate(Graph dataGraph, ShexSchema shapes, Node shapeRef, Node focus) {
         throw new UnsupportedOperationException("deprecated");
         /*Objects.requireNonNull(shapeRef);
         Objects.requireNonNull(focus);
@@ -104,7 +104,7 @@ class ShexValidatorImpl implements ShexValidator {
      * Validate a specific node (the focus), against a given shape.
      */
     @Override
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeDecl shape, Node focus) {
+    public ShexValidationReport validate(Graph dataGraph, ShexSchema shapes, ShapeDecl shape, Node focus) {
         throw new UnsupportedOperationException("deprecated");
         /*Objects.requireNonNull(shape);
         Objects.requireNonNull(shapes);
@@ -119,7 +119,7 @@ class ShexValidatorImpl implements ShexValidator {
     }
 
     @Override
-    public ShexReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node focus) {
+    public ShexValidationReport validate(Graph dataGraph, ShexSchema shapes, ShapeMap shapeMap, Node focus) {
         throw new UnsupportedOperationException("deprecated");
         /*Objects.requireNonNull(shapes);
         Objects.requireNonNull(dataGraph);
