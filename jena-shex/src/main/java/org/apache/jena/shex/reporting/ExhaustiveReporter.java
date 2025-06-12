@@ -36,6 +36,7 @@ public class ExhaustiveReporter implements Reporter {
         return r;
     }
 
+    /*
     @Override
     public void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child) {
         if (! (child instanceof ExhaustiveReporter))
@@ -45,6 +46,7 @@ public class ExhaustiveReporter implements Reporter {
             throw new IllegalArgumentException("Different node or expression or neighborhood");
         report.addChild(((ExhaustiveReporter)child).getReport());
     }
+    */
 
     @Override
     public void setResult(ShexStatus status, String message, Object details) {

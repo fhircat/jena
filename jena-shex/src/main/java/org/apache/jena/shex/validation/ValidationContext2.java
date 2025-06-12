@@ -44,26 +44,30 @@ public class ValidationContext2 {
     }
 
     private boolean computeIsValid(Node focus, Node label, Reporter reporter) {
-        List<Node> nonAbstractSubtypes =
+        // Notifies the reporter about conformant / non-conformant.
+
+        List<Node> nonAbstractDescendants =
                 label == SysShex.startNode
                         ? List.of(label)
-                        : getNonAbstractSubtypes(label);
-        for (Node subTypeLabel : nonAbstractSubtypes) {
-            ShapeExpr expr = schema.get(subTypeLabel).getShapeExpr();
+                        : nonAbstractDescendants(label);
+        for (Node descendant : nonAbstractDescendants) {
+            ShapeExpr expr = schema.get(descendant).getShapeExpr();
             Reporter exprReporter = reporter.createChild(focus, expr, null);
 
-            stack.push(focus, subTypeLabel);
+            stack.push(focus, descendant);
             boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);
             stack.pop();
 
             if (isValid)
-                return reporter.setIsConformant(true, "Non-abstract subtype " + subTypeLabel + " is satisfied.");
+                return reporter.setIsConformant(true, "Non-abstract subtype " + descendant + " is satisfied.");
         }
         return reporter.setIsConformant(false, "No non-abstract subtype is satisfied.");
+        // TODO memoization
     }
 
-
     /* package */ boolean validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
+        // Notifies the reporter about conformant / non-conformant.
+
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
         Report re = typing.get(focus, shapeExprLabel);
@@ -79,7 +83,7 @@ public class ValidationContext2 {
     }
 
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
-    public List<Node> getNonAbstractSubtypes(Node shexprLabel) {
+    public List<Node> nonAbstractDescendants(Node shexprLabel) {
         return schemaMem.getTypeHierarchyGraph().getNonAbstractSubtypes(shexprLabel);
     }
 
@@ -106,7 +110,7 @@ public class ValidationContext2 {
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateShapeExpr(semAct, expr, focus);
                 reporter.addSemanticActionsInfo(
-                        eval ? ShexStatus.conformant : ShexStatus.nonconformant,
+                        eval,
                         eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
                         semAct);
                 if (!eval) return false;
@@ -123,7 +127,7 @@ public class ValidationContext2 {
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateTripleExpr(semAct, expr, triples);
                 reporter.addSemanticActionsInfo(
-                        eval ? ShexStatus.conformant : ShexStatus.nonconformant,
+                        eval,
                         eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
                         semAct);
                 if (!eval) return false;

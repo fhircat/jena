@@ -49,7 +49,7 @@ public class SpecificTest {
             String exp = it.next();
 
             ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
-            v.setReporter(ValidateOnlyReporter.factory());
+            v.setReporter(ExhaustiveReporter.factory());
             ShexValidationReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Expected: " + exp + "  Result: " + report.conforms());
 

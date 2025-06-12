@@ -24,7 +24,6 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.out.NodeFmtLib;
-import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.calc.TypedNodeConstraintComponentVisitor;
 import org.apache.jena.shex.calc.TypedShapeExprVisitor;
 import org.apache.jena.shex.calc.Util;
@@ -44,57 +43,51 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 public class ShapeExprEval {
 
 
-    // TODO does not modify the reporter
+
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
                                      ValidationContext2 vCxt, Reporter reporter) {
-        return satisfies(dataNode, expr, null, vCxt, reporter)
+        // Does not notify the reporter about conformant / non-conformant
+        return _satisfies(dataNode, expr, null, vCxt, reporter)
             && vCxt.dispatchShapeExprSemanticAction(dataNode, expr, reporter);
     }
 
-    /** Takes care of checking subtypes of shape expression references. */
-    private static boolean satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
-                                     ValidationContext2 vCxt, Reporter reporter) {
+    private static boolean _satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
+                                      ValidationContext2 vCxt, Reporter reporter) {
+        // Notifies the reporter about conformant / non-conformant.
         if (expr instanceof ShapeExprRef ref) {
             if (neigh == null)
                 return vCxt.validate(dataNode, ref, reporter);
             else {
-                for (Node subTypeLabel : vCxt.getNonAbstractSubtypes(ref.getLabel())) {
-                    ShapeExpr defn = vCxt.getDefinition(subTypeLabel);
+                for (Node descendant : vCxt.nonAbstractDescendants(ref.getLabel())) {
+                    ShapeExpr defn = vCxt.getDefinition(descendant);
                     Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
-                    boolean isValid = satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter);
-                    if (isValid)
-                        return reporter.setIsConformant(true, "Non-abstract subtype " + subTypeLabel + " is satisfied.");
+                    if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
+                        reporter.addDescendantSatisfactionInfo(true,
+                                "The non-abstract descendant " + descendant + " is satisfied.");
+                        return true;
+                    }
                 }
-                return reporter.setIsConformant(false, "No non-abstract subtype is satisfied.");
+                reporter.addDescendantSatisfactionInfo(false,
+                        "No non-abstract descendant is satisfied.");
+                return false;
             }
         } else {
-            return reporter.setIsConformant(satisfiesNonRefExpr(dataNode, expr, neigh, vCxt, reporter));
+            return satisfiesNonRefExpr(dataNode, expr, neigh, vCxt, reporter);
         }
-    }
-
-    private static boolean nodeSatisfiesRefExact (Node dataNode, ShapeExprRef ref,
-                                                  ValidationContext2 vCxt, Reporter reporter) {
-        // TODO I don't know here whether I should set the result or it was already set
-        return reporter.setIsConformant(vCxt.validate(dataNode, ref, reporter));
-    }
-
-    private static boolean neighSatisfiesRefExact (Node commonFocus, Set<Triple> neigh, ShapeExprRef ref,
-                                                   ValidationContext2 vCxt, Reporter reporter) {
-        ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(commonFocus, neigh, vCxt);
-        // TODO I don't now here whether I should set the result or it was already set
-        return reporter.setIsConformant(vCxt.getDefinition(ref.getLabel()).visit(evaluator, reporter));
     }
 
     private static boolean satisfiesNonRefExpr (Node node, ShapeExpr expr, Set<Triple> neigh,
                                                 ValidationContext2 vCxt, Reporter reporter) {
+        // Does not directly notify the reporter about conformant / non-conformant. Should be done by the visit method
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, neigh, vCxt);
         return expr.visit(evaluator, reporter);
     }
 
     /** Validates a node's neighbourhood or a set of triples against a shape.
      * If triples is null, the whole node's neighbourhood is considered. */
-    private static boolean satisfiesShape(Shape shape, Node dataNode, Set<Triple> triples,
-                                          ValidationContext2 vCxt, Reporter reporter) {
+    private static boolean satisfiesShape(Node dataNode, Shape shape, Set<Triple> triples,
+                                          ValidationContext2 vCxt, Reporter shapeReporter) {
+        // Notifies the reporter about conformant / non-conformant.
 
         // 1. Collect the shapes to be satisfied (several if the shape is with extends)
         //    and the corresponding constraints if the shape is with extends
@@ -110,45 +103,44 @@ public class ShapeExprEval {
         }
 
         // 2. Extract the neighbourhood of the node relevant for satisfying that shape
-        Set<Triple> accMatchables = new HashSet<>();
-        Set<Triple> accNonMatchables = new HashSet<>();
+        Set<Triple> matchables = new HashSet<>();
+        Set<Triple> nonMatchables = new HashSet<>();
         if (null == triples) {  // Validating the whole neighbourhood
             Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode,
                     mainTripleExprs.values(),
-                    accMatchables, accNonMatchables, vCxt);
+                    matchables, nonMatchables, vCxt);
         } else {   // Validating only part of the neighbourhood
-            accMatchables = triples;
+            matchables = triples;
         }
 
         // 3. Check if the closed constraint is satisfied, if any
-        if (shape.isClosed() && !accNonMatchables.isEmpty()) {
-            return reporter.setIsConformant(false,
-                    "CLOSED required but forbidden triples", accMatchables);
+        if (shape.isClosed() && !nonMatchables.isEmpty()) {
+            return shapeReporter.setIsConformant(false,
+                    "CLOSED required but forbidden triples", matchables);
         }
 
         // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
-        Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(accMatchables, shape,
-                mainTripleExprs, vCxt, reporter, shape, dataNode);
+        Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(dataNode, shape, matchables,
+                mainTripleExprs, vCxt, shapeReporter);
 
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
-            if (splitSatisfiesConstraints(split, constraints, vCxt, reporter, dataNode)) {
-                reporter.setIsConformant(true);
-                return true;
+            if (splitSatisfiesConstraints(dataNode, shape, split, constraints, vCxt, shapeReporter)) {
+                return shapeReporter.setIsConformant(true);
             }
         }
-
-        reporter.setIsConformant(false);
-        return false;
+        return shapeReporter.setIsConformant(false);
     }
 
     /** Check whether a splitting of the triples between the supertypes also satisfies the constraints
      * of each supertype. */
-    private static boolean splitSatisfiesConstraints (Map<Node, Set<Triple>> split,
+    private static boolean splitSatisfiesConstraints (Node dataNode,
+                                                      Shape shape,
+                                                      Map<Node, Set<Triple>> split,
                                                       Map<Node, List<ShapeExpr>> constraints,
                                                       ValidationContext2 vCxt,
-                                                      Reporter reporter,
-                                                      Node nodeForReport) {
+                                                      Reporter shapeReporter) {
+        // Does not directly notify the reporter about conformant / non-conformant.
         Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
         for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
             for (ShapeExpr constr : e.getValue()) {
@@ -156,7 +148,8 @@ public class ShapeExprEval {
                         vCxt.getSupertypes(e.getKey()).stream()
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
-                if (!satisfies(nodeForReport, constr, triples, vCxt, reporter /* TODO which report is that? */)) {
+                Reporter subReporter = shapeReporter.createChild(dataNode, constr, triples);
+                if (!_satisfies(dataNode, constr, triples, vCxt, subReporter)) {
                     return false;
                 }
             }
@@ -164,15 +157,16 @@ public class ShapeExprEval {
         return true;
     }
 
-    private static boolean satisfies(NodeConstraint nodeConstraint, Node dataNode,
-                                     Reporter reporter) {
+    private static boolean satisfiesNodeConstraint(NodeConstraint nodeConstraint,
+                                                   Node dataNode,
+                                                   Reporter reporter) {
+        // Notifies the reporter about conformant / non-conformant
         NodeConstraintComponentEvalVisitor componentEval =
                 new NodeConstraintComponentEvalVisitor(dataNode, reporter, nodeConstraint);
-        return nodeConstraint.getComponents().stream().allMatch(ncc -> ncc.visit(componentEval));
+        return reporter.setIsConformant(nodeConstraint.getComponents().stream()
+                .allMatch(ncc -> ncc.visit(componentEval)));
     }
 
-
-    // TODO report for all visit functions
     static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Reporter> {
 
         private final ValidationContext2 vCxt;
@@ -206,35 +200,32 @@ public class ShapeExprEval {
         }
 
         @Override
-        public Boolean visit(ShapeNot shapeNot, Reporter reporter ) {
+        public Boolean visit(ShapeNot shapeNot, Reporter reporter) {
             ShapeExpr subExpr = shapeNot.getShapeExpr();
-            if (subExpr.visit(this, reporter.createChild(dataNode, subExpr, triples))) {
-                return reporter.setIsConformant(false);
-            } else {
-                return reporter.setIsConformant(true);
-            }
+            boolean subExprIsValid = subExpr.visit(this, reporter.createChild(dataNode, subExpr, triples));
+            return reporter.setIsConformant(! subExprIsValid);
         }
 
         @Override
         public Boolean visit(ShapeExprRef shapeExprRef, Reporter reporter) {
-            return satisfies(dataNode, shapeExprRef, triples, vCxt, reporter);
+            return _satisfies(dataNode, shapeExprRef, triples, vCxt, reporter);
         }
 
         @Override
         public Boolean visit(ShapeExternal shapeExternal, Reporter reporter) {
             // TODO shape external never satisfied
             return reporter.setIsConformant(false,
-                    "Shape external not supported, never satisfied");
+                    "Shape external not supported.");
         }
 
         @Override
         public Boolean visit(Shape shape, Reporter reporter) {
-            return satisfiesShape(shape, dataNode, triples, vCxt, reporter);
+            return satisfiesShape(dataNode, shape, triples, vCxt, reporter);
         }
 
         @Override
         public Boolean visit(NodeConstraint nodeConstraint, Reporter reporter) {
-            return satisfies(nodeConstraint, dataNode, reporter);
+            return satisfiesNodeConstraint(nodeConstraint, dataNode, reporter);
         }
     }
 

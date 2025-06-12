@@ -24,11 +24,6 @@ public class ValidateOnlyReporter implements Reporter {
     public Reporter createChild(Node node, Expression expr, Set<Triple> neigh) {
         return new EmptyReporter();
     }
-    @Override
-    public void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child) {
-        // empty
-    }
-
 
     @Override
     public void setResult(ShexStatus status, String message, Object details) {
@@ -60,11 +55,6 @@ public class ValidateOnlyReporter implements Reporter {
         @Override
         public Reporter createChild(Node node, Expression expr, Set<Triple> neigh) {
             return this;
-        }
-
-        @Override
-        public void addChild (Node node, Expression expr, Set<Triple> neigh, Reporter child) {
-            // empty
         }
 
         @Override

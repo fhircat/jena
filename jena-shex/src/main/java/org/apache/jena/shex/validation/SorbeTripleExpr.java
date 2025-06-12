@@ -70,6 +70,8 @@ import java.util.stream.Collectors;
         this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
     }
 
+    /* package */ TripleExpr getOriginTripleExpr() { return originTripleExpr; }
+
     /*package*/ static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
 
         List<TripleExpr> subExprsWithSemActs
@@ -188,9 +190,9 @@ import java.util.stream.Collectors;
      * @param vCxt
      * @return The set of triples that {@code sorbeMatching} matches to some sorbe triple constraint which origin is in {@code originSubExpr}
      */
-    private Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> sorbeMatching,
-                                                      TripleExpr originSubExpr,
-                                                      ValidationContext2 vCxt) {
+    /* package */ Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> sorbeMatching,
+                                                            TripleExpr originSubExpr,
+                                                            ValidationContext2 vCxt) {
 
         ESet<TripleConstraint> sorbeTripleConstraints = getSorbeTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
         return sorbeMatching.entrySet().stream()
@@ -198,6 +200,8 @@ import java.util.stream.Collectors;
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
+
+
 
     // --------------------------------------------------------------------------------------------------
     // Visitor-based traversals of the expression

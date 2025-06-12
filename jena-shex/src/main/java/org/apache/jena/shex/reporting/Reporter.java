@@ -13,7 +13,6 @@ public interface Reporter {
 
     Reporter createRoot(Node node, Expression expr);
     Reporter createChild(Node node, Expression expr, Set<Triple> neigh);
-    void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child);
 
     void setResult(ShexStatus status, String message, Object details);
     void addInfo(ShexStatus status, String message, Object details);
@@ -39,8 +38,19 @@ public interface Reporter {
         return isConformant;
     }
 
-    default void addSemanticActionsInfo(ShexStatus status, String message, SemAct semAct) {
-        addInfo(status, message, semAct);
+
+    default void addDescendantSatisfactionInfo(boolean isConformant, String message) {
+        addInfo(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, message, null);
+    }
+
+
+    default void addForbiddenExtraInfo(String message, Set<Triple> unallowedExtraTriples) {
+        addInfo(ShexStatus.nonconformant, message, unallowedExtraTriples);
+
+    }
+
+    default void addSemanticActionsInfo(boolean isConformant, String message, SemAct semAct) {
+        addInfo(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, message, semAct);
     }
 
     default void addNodeConstraintInvalidInfo(NodeConstraintComponent c, String message) {
