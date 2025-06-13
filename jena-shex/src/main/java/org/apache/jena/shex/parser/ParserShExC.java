@@ -634,7 +634,7 @@ public class ParserShExC extends LangParserBase {
     }
 
     private void seenValueExclusion(String iriStr, String lang, Node lit, boolean isStem) {
-        valueSetRange.exclusions.add(new ValueSetItem(iriStr, langtag(lang), lit, isStem));
+        valueSetRange.getExclusions().add(new ValueSetItem(iriStr, langtag(lang), lit, isStem));
     }
 
     protected Cardinality cardinalityRange(String image, int line, int column) {

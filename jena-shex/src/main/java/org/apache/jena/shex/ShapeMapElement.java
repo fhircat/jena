@@ -63,15 +63,6 @@ public class ShapeMapElement {
         return new ShapeMapElement(nodeSelector, null, shapeExprLabel, report);
     }
 
-
-    // TODO should be removed
-    public ShapeMapElement(ShapeMapElement assoc, Node focusNode, ShexStatus status, Report reason) {
-        // Reporting form.
-        this(assoc.nodeSelector, null, assoc.shapeExprLabel, reason);
-        if (assoc.patternSelector != null)
-            throw new ShexException("Cannot associate status to a non fixed shape map association");
-    }
-
     private ShapeMapElement(Node node, Triple pattern, Node shapeExprLabel,
                             Report reason) {
         this.nodeSelector = node;
@@ -92,19 +83,10 @@ public class ShapeMapElement {
         return patternSelector != null && SysShex.focusNode.equals(patternSelector.getObject());
     }
 
-    public Triple asMatcher() {
-        if ( patternSelector == null )
-            return null;
-        return Triple.create(n(patternSelector.getSubject()),
-                             n(patternSelector.getPredicate()),
-                             n(patternSelector.getObject()));
-    }
-
     private Node n(Node node) {
         return ( node == null || node.isExt() ) ? Node.ANY : node ;
     }
 
-    // TODO change wrt reason becoming ShexReportElement
     @Override
     public String toString() {
         StringBuilder sBuff = new StringBuilder();

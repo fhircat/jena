@@ -172,7 +172,7 @@ public class TripleExprEval {
                 .collect(Collectors.toMap(Function.identity(),
                         t -> new ArrayList<>()));
         for (SorbeTripleExpr sorbeTripleExpr : toBeMatched) {
-            // this loop is needed only for extends, but does no harm w/o extends // TODO note: here, we need the actual shape to be in the map
+            // this loop is needed only for extends, but does no harm w/o extends
             Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
             pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
         }

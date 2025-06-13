@@ -309,9 +309,9 @@ public class PrettyPrinter {
             valueCstr.getValueSetRanges().forEach(valueSetRange -> {
                 out.print(" ");
                 print(valueSetRange.item, out, nFmt);
-                if (!valueSetRange.exclusions.isEmpty()) {
+                if (!valueSetRange.getExclusions().isEmpty()) {
                     out.print(" -");
-                    valueSetRange.exclusions.forEach(ex -> {
+                    valueSetRange.getExclusions().forEach(ex -> {
                         out.print(" ");
                         print(ex, out, nFmt);
                     });

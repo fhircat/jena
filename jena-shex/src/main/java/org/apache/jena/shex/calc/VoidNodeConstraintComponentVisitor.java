@@ -21,7 +21,6 @@ package org.apache.jena.shex.calc;
 import org.apache.jena.shex.expressions.*;
 
 /** Visitor for NodeConstraintComponents. */
-// TODO not covered by tests
 public interface VoidNodeConstraintComponentVisitor {
 
     public default void visit(NodeKindConstraint nodeKindCstr) {}

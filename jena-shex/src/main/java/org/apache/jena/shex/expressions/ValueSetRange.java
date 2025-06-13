@@ -28,8 +28,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ValueSetRange {
-    public ValueSetItem item; //TODO Hum... do we want these to be public fields? Better to add getters and setters
-    public List<ValueSetItem> exclusions;
+    public final ValueSetItem item;
+    private List<ValueSetItem> exclusions;
     public ValueSetRange(String iriStr, String lang, Node literal, boolean isStem) {
         // [shex] collapse. Subclass?
         this.item = new ValueSetItem(iriStr, lang, literal, isStem);
@@ -39,6 +39,10 @@ public class ValueSetRange {
     public void setExclusions(List<ValueSetItem> exclusions) {
         this.exclusions = exclusions;
     }
+    public List<ValueSetItem> getExclusions() {
+        return this.exclusions;
+    }
+
 
     public String type() {
         if( item.iriStr != null) return "IRI";

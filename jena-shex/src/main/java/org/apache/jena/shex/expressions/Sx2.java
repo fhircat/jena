@@ -23,7 +23,6 @@ import org.apache.jena.atlas.io.IndentedWriter;
 import java.util.function.Supplier;
 
 /** Misc internal code */
-// TODO not used in tests
 public class Sx2 {
     public static boolean TRACE = false;
 

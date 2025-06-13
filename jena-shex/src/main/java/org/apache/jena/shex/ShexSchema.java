@@ -53,12 +53,6 @@ public class ShexSchema {
         return analysis.isCorrect();
     }
 
-    // TODO this shouldn't be here, but for now I need it for validating extends and no time to figure out where is more appropriate
-    // Needs visibility to the shape declarations map
-    public static TypeHierarchyGraph computeTypeHierarchyGraph (ShexSchema schema) {
-        return TypeHierarchyGraph.create(schema.shapeMap);
-    }
-
     public static ShexSchema shapes(String source, String baseURI, PrefixMap prefixes, ShapeDecl startShape,
                                     List<ShapeDecl> shapes, List<String> imports, List<SemAct> semActs,
                                     Map<Node, TripleExpr> tripleRefs) {

@@ -169,7 +169,7 @@ public class ValidationContext {
             stack.push(p);
         }
 
-        // TODO chec this Pair's hash code and equals are as we want them
+        // TODO check this Pair's hash code and equals are as we want them
         Pair<Node, Node> pop() {
             return stack.pop();
         }

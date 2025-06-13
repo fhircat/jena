@@ -32,10 +32,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// different utilities, waiting to be moved to an appropriate place
+// TODO different utilities, waiting to be moved to an appropriate place
 public class Util {
 
-    // TODO move below as util for another util
     /** Dereferences until a non reference is found. */
     public static ShapeExpr dereference (ShapeExpr shapeExpr, Function<Node, ShapeExpr> shapeExprRefsDefs) {
         ShapeExpr expr = shapeExpr;
@@ -43,27 +42,6 @@ public class Util {
             expr = shapeExprRefsDefs.apply(((ShapeExprRef) expr).getLabel());
         }
         return expr;
-    }
-
-    // TODO no usages
-    /** Returns the main shapes of all the extended shapes, including the main shape of the given extendable shape expression. */
-    public static List<Shape> mainShapesOfBases(ShapeExpr extendableShape, Function<Node, ShapeExpr> shapeExprRefsDefs) {
-        List<Shape> result = new ArrayList<>();
-        Deque<Node> extendedFifo = new ArrayDeque<>();
-
-        Consumer<ShapeExpr> step = (se) -> {
-            Shape mainShape = mainShape(se, shapeExprRefsDefs);
-            result.add(mainShape);
-            mainShape.getExtends().forEach( e -> extendedFifo.addLast(e.getLabel()));
-        };
-
-        ShapeExpr current = extendableShape;
-        step.accept(current);
-        while (!extendedFifo.isEmpty()) {
-            current = shapeExprRefsDefs.apply(extendedFifo.removeFirst());
-            step.accept(current);
-        }
-        return result;
     }
 
     private static final int INDEX_MAIN = 0;
@@ -101,7 +79,6 @@ public class Util {
 
     /** Partitions the triples of the neighbourhood of the node between those whose predicate appears in
      * the tripleExprs, and those whose predicate does not appear.*/
-    // TODO  accNonMatchables are used only to test whether they are empty, so we do not really need to collect them
     public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
                                                      Collection<TripleExpr> tripleExprs,
                                                      Set<Triple> accMatchables, Set<Triple> accNonMatchables,
@@ -126,7 +103,6 @@ public class Util {
         inNeighbourhood.filterKeep(t -> invPredicates.contains(t.getPredicate())).forEach(accMatchables::add);
     }
 
-    // TODO 1 usage, give it a better name
     public static Set<Triple> filterRelevantNeighbourhood(Set<Triple> neighbourhood,
                                                           Node dataNode,
                                                           TripleExpr tripleExpr,
@@ -155,18 +131,6 @@ public class Util {
                     triple.getObject().equals(dataNode) && invPredicates.contains(triple.getPredicate()))
                     accMatchables.add(triple);
             });
-    }
-
-
-
-    public static boolean hasExtends(ShapeExpr shapeExpr, Function<Node, ShapeExpr> shapeExprRefsDefs) {
-        Shape mainShape;
-        try {
-             mainShape = mainShape(shapeExpr, shapeExprRefsDefs);
-        } catch (ShexSchemaStructureException e) {
-            return false;
-        }
-        return ! mainShape.getExtends().isEmpty();
     }
 
 }

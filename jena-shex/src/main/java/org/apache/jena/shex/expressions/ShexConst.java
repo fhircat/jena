@@ -20,12 +20,6 @@ package org.apache.jena.shex.expressions;
 
 /** Misc  */
 class ShexConst {
-    // TODO these are not used. Remove ?
-    static final int hashShExprTrue     = 60;
-    static final int hashShExprFalse    = 61;
-    static final int hashShExprNone     = 62;
     static final int hashShExprExternal = 63;
-    static final int hashShExprDot      = 64;
-
-    static final int hashTripleExprNone     = 60;
+    static final int hashTripleExprEmpty = 60;
 }

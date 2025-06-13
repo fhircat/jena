@@ -66,7 +66,6 @@ public class ExpressionHReport extends ExpressionReport {
         }
         for (ExpressionHReport child : r.children) {
             sb.append(" ".repeat(indent));
-            // TODO indentation
             sb.append(String.format("%s", ExpressionHReport.toString(child, indent+2)));
         }
         return sb.toString();

@@ -39,7 +39,7 @@ public class TripleExprEmpty extends TripleExpr {
 
     @Override
     public int hashCode() {
-        return ShexConst.hashTripleExprNone;
+        return ShexConst.hashTripleExprEmpty;
     }
 
     @Override
