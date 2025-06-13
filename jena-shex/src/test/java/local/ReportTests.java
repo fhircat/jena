@@ -5,20 +5,17 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
 import org.apache.jena.shex.reporting.ExhaustiveReporter;
-import org.apache.jena.shex.reporting.ExpressionHReport;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ShexValidatorImpl2;
-import org.apache.jena.shex.validation.ShexValidationReport;
+import org.apache.jena.shex.sys.ShexValidatorImpl;
+import org.apache.jena.shex.reporting.ShexValidationReport;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ReportTests {
 
@@ -56,7 +53,7 @@ public class ReportTests {
             Node focus = ResourceFactory.createResource(p.getLeft()).asNode();
             Node shape = ResourceFactory.createResource(p.getRight()).asNode();
 
-            ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+            ShexValidatorImpl v = new ShexValidatorImpl(null);
             v.setReporter(ExhaustiveReporter.factory());
             ShexValidationReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Conforms: " + report.conforms());

@@ -1,236 +1,181 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.jena.shex.validation;
 
-import org.apache.jena.atlas.lib.InternalErrorException;
 import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.*;
-import org.apache.jena.shex.expressions.ShapeExpr;
-import org.apache.jena.shex.expressions.TripleExpr;
+import org.apache.jena.shex.ShapeDecl;
+import org.apache.jena.shex.ShexStatus;
+import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.ShexSchema;
+import org.apache.jena.shex.reporting.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
-import org.apache.jena.shex.sys.ReportItem;
+import org.apache.jena.shex.sys.SysShex;
 
 import java.util.*;
 
-/**
- * Context for a validation and collector of the results.
- */
 public class ValidationContext {
+
+    private final ValidationStack stack;
     private final ShexSchema schema;
-    private final Graph data;
+    private final ShexSchemaMem schemaMem;
     private final Map<String, SemanticActionPlugin> semActPluginIndex;
+    private final Graph graph;
+    private final Typing typing;
 
-
-    private final SorbeFactory sorbeFactory;
-    private final TypeHierarchyGraph typeHierarchyGraph;
-
-    private final Deque<ValidationStackElement> validationStack;
-
-    private final ShexReportOld.Builder reportBuilder = ShexReportOld.create();
-
-    /** @deprecated Use method {@link #create()} */
-    @Deprecated
-    public static ValidationContext create(ValidationContext vCxt) {
-        return vCxt.create();
-    }
-
-    public ValidationContext(Graph data, ShexSchema schema, Map<String, SemanticActionPlugin> semActPluginIndex) {
-            this(data, schema, new ArrayDeque<>(), semActPluginIndex, new SorbeFactory(schema));
-    }
-
-    private ValidationContext(Graph data, ShexSchema schema,
-                              Deque<ValidationStackElement> progress,
-                              Map<String, SemanticActionPlugin> semActPluginIndex,
-                              SorbeFactory sorbeFactory) {
-        this.data = data;
+    public ValidationContext(ShexSchema schema, Graph graph, boolean fixedSchema, boolean fixedGraph, Map<String, SemanticActionPlugin> semActPluginIndex) {
         this.schema = schema;
+        this.graph = graph;
         this.semActPluginIndex = semActPluginIndex;
-        this.validationStack = new ArrayDeque<>();
-        this.validationStack.addAll(progress); // TODO copying the stack ?
-        this.sorbeFactory = sorbeFactory;
-        this.typeHierarchyGraph = ShexSchema.computeTypeHierarchyGraph(schema);
+
+        this.schemaMem = new ShexSchemaMem(schema);
+        if (fixedGraph) this.typing = new Typing();
+        else this.typing = new EmptyTyping();
+
+        this.stack = new ValidationStack();
+    }
+
+    public Report validate(Node focus, Node label, Reporter factory) {
+        Report r = typing.get(focus, label);
+        if (r != null)
+            return r;
+        Reporter myReport = factory.createRoot(focus, ShapeExprRef.create(label));
+        computeIsValid(focus, label, myReport);
+        return myReport.getReport();
+    }
+
+    private boolean computeIsValid(Node focus, Node label, Reporter reporter) {
+        // Notifies the reporter about conformant / non-conformant.
+
+        List<Node> nonAbstractDescendants =
+                label == SysShex.startNode
+                        ? List.of(label)
+                        : nonAbstractDescendants(label);
+        for (Node descendant : nonAbstractDescendants) {
+            ShapeExpr expr = schema.get(descendant).getShapeExpr();
+            Reporter exprReporter = reporter.createChild(focus, expr, null);
+
+            stack.push(focus, descendant);
+            boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);
+            stack.pop();
+
+            if (isValid)
+                return reporter.setIsConformant(true, "Non-abstract descendant " + descendant + " is satisfied.");
+        }
+        String message = nonAbstractDescendants.size() == 1 ? "" : "No non-abstract descendant is satisfied.";
+        return reporter.setIsConformant(false, message);
+        // TODO memoization
+    }
+
+    /* package */ boolean validate(Node focus, ShapeExprRef shapeExprRef, Reporter reporter) {
+        // Notifies the reporter about conformant / non-conformant.
+
+        // The node has already been validated against this label and the result is known
+        Node shapeExprLabel = shapeExprRef.getLabel();
+        Report re = typing.get(focus, shapeExprLabel);
+        if (re != null)
+            return reporter.setIsConformant(re.getStatus() == ShexStatus.conformant, "", re);
+
+        // The node/label pair is on the stack
+        if (stack.contains(focus, shapeExprLabel))
+            return reporter.setIsConformant(true, "Cycle.");
+
+        // The node has not been validated against this label
+        return computeIsValid(focus, shapeExprLabel, reporter);
+    }
+
+    /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
+    public List<Node> nonAbstractDescendants(Node shexprLabel) {
+        return schemaMem.getTypeHierarchyGraph().getNonAbstractSubtypes(shexprLabel);
+    }
+
+    public Graph getGraph() {
+        return this.graph;
+    }
+
+    public boolean dispatchStartSemanticAction(ShexSchema schema) {
+        for (SemAct semAct: schema.getSemActs()) {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if (semActPlugin != null) {
+                boolean eval = semActPlugin.evaluateStart(semAct, schema);
+                if (!eval) return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean dispatchShapeExprSemanticAction(Node focus, ShapeExpr expr, Reporter reporter) {
+        if (expr.getSemActs() == null)
+            return true;
+        for (SemAct semAct: expr.getSemActs()) {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if (semActPlugin != null) {
+                boolean eval = semActPlugin.evaluateShapeExpr(semAct, expr, focus);
+                reporter.addSemanticActionsInfo(
+                        eval,
+                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
+                        semAct);
+                if (!eval) return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean dispatchTripleExprSemanticAction(TripleExpr expr, Set<Triple> triples, Reporter reporter, Node node) {
+        if (expr.getSemActs() == null)
+            return true;
+        for (SemAct semAct : expr.getSemActs()) {
+            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
+            if (semActPlugin != null) {
+                boolean eval = semActPlugin.evaluateTripleExpr(semAct, expr, triples);
+                reporter.addSemanticActionsInfo(
+                        eval,
+                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
+                        semAct);
+                if (!eval) return false;
+            }
+        }
+        return true;
     }
 
     public TripleExpr getTripleExpr(Node label) {
         return schema.getTripleExpr(label);
     }
 
-    public ShexSchema getSchema() {
-        return schema;
+    /* Duplicates-free list of the supertypes (ie extended shape declarations), including the given shape declaration. */
+    public List<Node> getSupertypes(Node shexprLabel) {
+        return schemaMem.getTypeHierarchyGraph().getSupertypes(shexprLabel);
     }
 
-    public ShapeDecl getShapeDecl(Node label) {
-        return schema.get(label);
+    public ShapeExpr getDefinition (Node shapeExprLabel) {
+        return this.schema.get(shapeExprLabel).getShapeExpr();
     }
 
-    public Graph getGraph() {
-        return data;
+    public ShapeDecl getShapeDecl (Node shapeExprLabel) {
+        return this.schema.get(shapeExprLabel);
     }
 
-    /**
-     * Creates a new validation context with the current one as its parent context.
-     * Initializes the new context with the state of the parent context.
-     *
-     * @return new ValidationContext with this as parent.
-     */
-    public ValidationContext create() {
-        // Fresh ShexReport.Builder
-        return new ValidationContext(this.data, this.schema,
-                this.validationStack, this.semActPluginIndex, this.sorbeFactory);
-    }
-
-    public void startValidate(ShapeDecl shape, Node data) {
-        validationStack.push(new ValidationStackElement(data, shape));
-    }
-
-    public void finishValidate(ShapeDecl shape, Node data) {
-        // TODO this check seems to be a debugging functionality, remove it ?
-        if (! validationStack.pop().equals(new ValidationStackElement(data, shape)))
-            throw new InternalErrorException("Eval stack error");
-    }
-
-    public boolean cycle(Node dataNode, ShapeDecl shapeDecl) {
-        ValidationStackElement el = new ValidationStackElement(dataNode, shapeDecl);
-        return validationStack.stream().anyMatch(p -> p.equals(el));
-    }
-
-    public boolean dispatchStartSemanticAction(ShexSchema schema, ValidationContext vCxt) {
-        return schema.getSemActs().stream().noneMatch(semAct -> {
-            String semActIri = semAct.getIri();
-            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semActIri);
-            if (semActPlugin != null) {
-                if (!semActPlugin.evaluateStart(semAct, schema)) {
-                    vCxt.reportEntry(String.format("%s start shape failed", semActIri));
-                    return true;
-                }
-            }
-            return false;
-        });
-    }
-
-    public boolean dispatchShapeExprSemanticAction(ShapeExpr se, Node focus) {
-        if (se.getSemActs() == null)
-            return true;
-        return se.getSemActs().stream().noneMatch(semAct -> {
-            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
-            if (semActPlugin != null) {
-                return !semActPlugin.evaluateShapeExpr(semAct, se, focus);
-            }
-            return false;
-        });
-    }
-
-    public boolean dispatchTripleExprSemanticAction(TripleExpr te, Set<Triple> matchables) {
-        if (te.getSemActs() == null)
-            return true;
-        return te.getSemActs().stream().noneMatch(semAct -> {
-            SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
-            if (semActPlugin != null) {
-                return !semActPlugin.evaluateTripleExpr(semAct, te, matchables);
-            }
-            return false;
-        });
+    public SorbeTripleExpr getSorbe(TripleExpr value) {
+        return this.schemaMem.getSorbeFactory().getSorbe(value);
     }
 
 
-    /**
-     * Update other with "this" state
-     */
-    public void copyInto(ValidationContext other) {
-        reportBuilder.getItems().forEach(item -> other.reportEntry(item));
-        reportBuilder.getReports().forEach(reportLine -> other.shexReport(reportLine));
-    }
+    private static class ValidationStack {
 
-    private void shexReport(ShapeMapElement reportLine) {
-        reportBuilder.shexReport(reportLine);
-    }
+        private Deque<Pair<Node, Node>> stack = new ArrayDeque<>();
 
-    /**
-     * Current state.
-     */
-    public List<ReportItem> getReportItems() {
-        return reportBuilder.getItems();
-    }
-
-    /**
-     * Current state.
-     */
-    public List<ShapeMapElement> getShexReportItems() {
-        return reportBuilder.getReports();
-    }
-
-    public void reportEntry(ReportItem item) {
-        reportBuilder.addReportItem(item);
-    }
-
-    // TODO Intermediary to compile validation, remove
-    public void reportEntry (String message) {
-        // Does nothing
-    }
-
-    public void shexReport(ShapeMapElement entry, Node focusNode, ShexStatus result, String reason) {
-        reportBuilder.shexReport(entry, focusNode, result, reason);
-
-    }
-
-    public ShexReportOld generateReport() {
-        return reportBuilder.build();
-
-    }
-
-    public SorbeTripleExpr getSorbe(TripleExpr tripleExpr) {
-        return sorbeFactory.getSorbe(tripleExpr);
-    }
-
-    public TypeHierarchyGraph getTypeHierarchyGraph () {
-        return typeHierarchyGraph;
-    }
-
-    private static class ValidationStackElement extends Pair<Node, ShapeDecl> {
-
-        public ValidationStackElement(Node dataNode, ShapeDecl shapeDecl) {
-            super(dataNode, shapeDecl);
+        void push(Node focus, Node shapeExprLabel) {
+            Pair<Node, Node> p = new Pair<>(focus, shapeExprLabel);
+            stack.push(p);
         }
 
-        public ShapeDecl getShapeDecl () {
-            return getRight();
+        // TODO chec this Pair's hash code and equals are as we want them
+        Pair<Node, Node> pop() {
+            return stack.pop();
         }
 
-        public Node getDataNode () {
-            return getLeft();
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getDataNode(), getShapeDecl().getLabel());
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if ( getClass() != other.getClass() )
-                return false;
-            ValidationStackElement e = (ValidationStackElement) other;
-            return Objects.equals(getDataNode(), e.getDataNode())
-                    && Objects.equals(getShapeDecl().getLabel(), e.getShapeDecl().getLabel());
+        boolean contains(Node focus, Node shapeExprLabel) {
+            return stack.contains(new Pair<>(focus, shapeExprLabel));
         }
     }
 
@@ -248,4 +193,52 @@ public class ValidationContext {
         }
     }
 
+    private static class ShexSchemaMem {
+
+        private final SorbeFactory sorbeFactory;
+        private final TypeHierarchyGraph typeHierarchyGraph;
+
+        public ShexSchemaMem(ShexSchema schema) {
+            this.sorbeFactory = new SorbeFactory(schema);
+            this.typeHierarchyGraph = TypeHierarchyGraph.create(schema.getShapeMap());
+        }
+
+        public SorbeFactory getSorbeFactory() {
+            return this.sorbeFactory;
+        }
+
+        public TypeHierarchyGraph getTypeHierarchyGraph() {
+            return this.typeHierarchyGraph;
+        }
+
+    }
+
+    private static class Typing {
+
+        private final Map<Pair<Node, Node>, Report> typing = new HashMap<>();
+
+        /** Returns null if the result is unknown. */
+        Report get(Node focus, Node shapeExprLabel) {
+            return typing.get(new Pair<>(focus, shapeExprLabel));
+        }
+
+        void put(Node focus, Node shapeExprLabel, Report report) {
+            typing.put(new Pair<>(focus, shapeExprLabel), report);
+        }
+    }
+
+    private static class EmptyTyping extends Typing {
+
+        final ExpressionHReport get(Node focus, Node shapeExprLabel) {
+            return null;
+        }
+
+        final void put(Node focus, Node shapeExprLabel, Report report) { /*empty*/ }
+    }
+
+
 }
+
+
+
+

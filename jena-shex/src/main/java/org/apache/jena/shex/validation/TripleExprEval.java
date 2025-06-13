@@ -53,7 +53,7 @@ public class TripleExprEval {
                                                                                 Shape shape,
                                                                                 Set<Triple> triples,
                                                                                 Map<Node, TripleExpr> mainTripleExprs,
-                                                                                ValidationContext2 vCxt,
+                                                                                ValidationContext vCxt,
                                                                                 Reporter shapeReporter) {
         // Does not notify the reporter about conformant / non-conformant
 
@@ -93,7 +93,7 @@ public class TripleExprEval {
                                                                              Set<Triple> triples,
                                                                              Collection<SorbeTripleExpr> exprsToBeMatched,
                                                                              Set<Node> extraPredicates,
-                                                                             ValidationContext2 vCxt,
+                                                                             ValidationContext vCxt,
                                                                              Reporter shapeReporter) {
         // 1. With every triple, associate all the triple constraints that this triple could match
         Map<Triple, List<TripleConstraint>> preMatching = predicateBasedPreMatching(triples, exprsToBeMatched);
@@ -181,7 +181,7 @@ public class TripleExprEval {
 
     /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t, by recursively validating t's object against the triple constraint's object constraint.*/
     private static void filterRecursiveValidation (Map<Triple, List<TripleConstraint>> preMatching,
-                                                  ValidationContext2 vCxt,
+                                                  ValidationContext vCxt,
                                                   Reporter shapeReporter) {
         preMatching.forEach((triple, matchingTripleConstraints) -> {
             Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
@@ -215,7 +215,7 @@ public class TripleExprEval {
     private static boolean matchingSatisfiesTripleExpression_sorbe(Node dataNode,
                                                                    Map<Triple, TripleConstraint> matching,
                                                                    Collection<SorbeTripleExpr> exprsToBeMatched,
-                                                                   ValidationContext2 vCxt,
+                                                                   ValidationContext vCxt,
                                                                    Reporter shapeReporter) {
         // Does not notify the reporter about conformant / non-conformant
 

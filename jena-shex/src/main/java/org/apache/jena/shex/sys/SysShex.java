@@ -22,7 +22,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shex.ShexValidator;
 import org.apache.jena.shex.reporting.ExhaustiveReporter;
-import org.apache.jena.shex.reporting.ValidateOnlyReporter;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +69,7 @@ public class SysShex {
         pz.forEach(p -> {
             p.getUris().forEach(u -> iriToPlugin.put(u, p));
         });
-        ShexValidator ret = new ShexValidatorImpl2(iriToPlugin);
+        ShexValidator ret = new ShexValidatorImpl(iriToPlugin);
         ret.setReporter(ExhaustiveReporter.factory());
         return ret;
     }

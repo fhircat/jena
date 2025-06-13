@@ -1,9 +1,8 @@
-package org.apache.jena.shex.validation;
+package org.apache.jena.shex.reporting;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.reporting.Report;
 
 import java.util.ArrayList;
 import java.util.List;

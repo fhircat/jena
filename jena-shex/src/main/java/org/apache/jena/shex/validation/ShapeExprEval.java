@@ -43,14 +43,14 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 public class ShapeExprEval {
 
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
-                                     ValidationContext2 vCxt, Reporter reporter) {
+                                     ValidationContext vCxt, Reporter reporter) {
         // Does not notify the reporter about conformant / non-conformant
         return _satisfies(dataNode, expr, null, vCxt, reporter)
             && vCxt.dispatchShapeExprSemanticAction(dataNode, expr, reporter);
     }
 
     private static boolean _satisfies(Node dataNode, ShapeExpr expr, Set<Triple> neigh,
-                                      ValidationContext2 vCxt, Reporter reporter) {
+                                      ValidationContext vCxt, Reporter reporter) {
         // Notifies the reporter about conformant / non-conformant.
         if (expr instanceof ShapeExprRef ref) {
             if (neigh == null)
@@ -78,7 +78,7 @@ public class ShapeExprEval {
     }
 
     private static boolean satisfiesNonRefExpr (Node node, ShapeExpr expr, Set<Triple> neigh,
-                                                ValidationContext2 vCxt, Reporter reporter) {
+                                                ValidationContext vCxt, Reporter reporter) {
         // Does not directly notify the reporter about conformant / non-conformant. Should be done by the visit method
         ShapeExprEvalVisitor evaluator = new ShapeExprEvalVisitor(node, neigh, vCxt);
         return expr.visit(evaluator, reporter);
@@ -87,7 +87,7 @@ public class ShapeExprEval {
     /** Validates a node's neighbourhood or a set of triples against a shape.
      * If triples is null, the whole node's neighbourhood is considered. */
     private static boolean satisfiesShape(Node dataNode, Shape shape, Set<Triple> triples,
-                                          ValidationContext2 vCxt, Reporter shapeReporter) {
+                                          ValidationContext vCxt, Reporter shapeReporter) {
         // Notifies the reporter about conformant / non-conformant.
 
         // 1. Collect the shapes to be satisfied (several if the shape is with extends)
@@ -139,7 +139,7 @@ public class ShapeExprEval {
                                                       Shape shape,
                                                       Map<Node, Set<Triple>> split,
                                                       Map<Node, List<ShapeExpr>> constraints,
-                                                      ValidationContext2 vCxt,
+                                                      ValidationContext vCxt,
                                                       Reporter shapeReporter) {
         // Does not directly notify the reporter about conformant / non-conformant.
         Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
@@ -170,11 +170,11 @@ public class ShapeExprEval {
 
     static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Reporter> {
 
-        private final ValidationContext2 vCxt;
+        private final ValidationContext vCxt;
         private final Node dataNode;
         private final Set<Triple> triples;
 
-        ShapeExprEvalVisitor(Node dataNode, Set<Triple> triples, ValidationContext2 vCxt) {
+        ShapeExprEvalVisitor(Node dataNode, Set<Triple> triples, ValidationContext vCxt) {
             this.vCxt = vCxt;
             this.dataNode = dataNode;
             this.triples = triples;

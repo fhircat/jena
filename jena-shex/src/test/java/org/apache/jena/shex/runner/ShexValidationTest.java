@@ -34,7 +34,7 @@ import org.apache.jena.shex.*;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.apache.jena.shex.semact.TestSemanticActionPlugin;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.validation.ShexValidationReport;
+import org.apache.jena.shex.reporting.ShexValidationReport;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

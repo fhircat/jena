@@ -29,7 +29,7 @@ import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shex.ShapeMapElement;
 import org.apache.jena.shex.reporting.Report;
-import org.apache.jena.shex.validation.ShexValidationReport;
+import org.apache.jena.shex.reporting.ShexValidationReport;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;

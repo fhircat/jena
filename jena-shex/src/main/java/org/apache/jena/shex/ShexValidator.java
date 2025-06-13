@@ -19,7 +19,7 @@
 package org.apache.jena.shex;
 
 import org.apache.jena.shex.reporting.Reporter;
-import org.apache.jena.shex.validation.ShexValidationReport;
+import org.apache.jena.shex.reporting.ShexValidationReport;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.semact.SemanticActionPlugin;

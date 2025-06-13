@@ -9,8 +9,8 @@ import org.apache.jena.shex.parser.ShExC;
 import org.apache.jena.shex.reporting.ExpressionHReport;
 import org.apache.jena.shex.reporting.ValidateOnlyReporter;
 import org.apache.jena.shex.sys.ShexLib;
-import org.apache.jena.shex.sys.ShexValidatorImpl2;
-import org.apache.jena.shex.validation.ShexValidationReport;
+import org.apache.jena.shex.sys.ShexValidatorImpl;
+import org.apache.jena.shex.reporting.ShexValidationReport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class FhirTest {
         Node shape = ResourceFactory.createResource(shapeStr).asNode();
         Node focus = ResourceFactory.createResource(focusStr).asNode();
 
-        ShexValidatorImpl2 v = new ShexValidatorImpl2(null);
+        ShexValidatorImpl v = new ShexValidatorImpl(null);
         v.setReporter(ValidateOnlyReporter.factory());
         ShexValidationReport report = v.validate(graph, sch, shape, focus);
         System.out.println("Conforms: " + report.conforms());

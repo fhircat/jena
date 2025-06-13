@@ -21,10 +21,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexSchemaStructureException;
 import org.apache.jena.shex.expressions.*;
-import org.apache.jena.shex.validation.ValidationContext2;
+import org.apache.jena.shex.validation.ValidationContext;
 import org.apache.jena.system.G;
 import org.apache.jena.util.iterator.ExtendedIterator;
 
@@ -106,7 +105,7 @@ public class Util {
     public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
                                                      Collection<TripleExpr> tripleExprs,
                                                      Set<Triple> accMatchables, Set<Triple> accNonMatchables,
-                                                     ValidationContext2 vCxt) {
+                                                     ValidationContext vCxt) {
 
         Set<Node> fwdPredicates = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
@@ -131,7 +130,7 @@ public class Util {
     public static Set<Triple> filterRelevantNeighbourhood(Set<Triple> neighbourhood,
                                                           Node dataNode,
                                                           TripleExpr tripleExpr,
-                                                          ValidationContext2 vCxt) {
+                                                          ValidationContext vCxt) {
 
         Set<Node> fwdPredicates = new HashSet<>();
         Set<Node> invPredicates = new HashSet<>();
