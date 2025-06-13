@@ -1,6 +1,6 @@
 PREFIX ex: <http://a.example/>
 
-ex:n @ ex:P1-IRI,
-ex:n @ ex:P1-INT,
-ex:n @ ex:P1-L-5,
-ex:n @ ex:P1-V-1
+ex:n @ ex:S-IRI,
+ex:n @ ex:S-INT,
+ex:n @ ex:S-len5,
+ex:n @ ex:S-1

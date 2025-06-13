@@ -54,11 +54,12 @@ public class ExhaustiveReporter implements Reporter {
             throw new IllegalStateException("Result set twice");
         report.setStatus(status);
         report.setMessage(message);
+        report.setDetails(details);
     }
 
     @Override
     public void addInfo(ShexStatus status, String message, Object details) {
-        report.addInfo(new SimpleReport(status, message));
+        report.addInfo(new SimpleReport(status, message, details));
     }
 
     @Override

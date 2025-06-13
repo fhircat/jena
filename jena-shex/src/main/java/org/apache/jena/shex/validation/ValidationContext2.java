@@ -4,6 +4,7 @@ import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.ShexSchema;
@@ -59,9 +60,10 @@ public class ValidationContext2 {
             stack.pop();
 
             if (isValid)
-                return reporter.setIsConformant(true, "Non-abstract subtype " + descendant + " is satisfied.");
+                return reporter.setIsConformant(true, "Non-abstract descendant " + descendant + " is satisfied.");
         }
-        return reporter.setIsConformant(false, "No non-abstract subtype is satisfied.");
+        String message = nonAbstractDescendants.size() == 1 ? "" : "No non-abstract descendant is satisfied.";
+        return reporter.setIsConformant(false, message);
         // TODO memoization
     }
 
@@ -147,6 +149,10 @@ public class ValidationContext2 {
 
     public ShapeExpr getDefinition (Node shapeExprLabel) {
         return this.schema.get(shapeExprLabel).getShapeExpr();
+    }
+
+    public ShapeDecl getShapeDecl (Node shapeExprLabel) {
+        return this.schema.get(shapeExprLabel);
     }
 
     public SorbeTripleExpr getSorbe(TripleExpr value) {

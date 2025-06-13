@@ -27,7 +27,7 @@ public class ShexValidatorImpl2 implements ShexValidator {
         boolean isValid = vCxt.dispatchStartSemanticAction(schema);
         ShexValidationReport.Builder builder = ShexValidationReport.builder();
         if (!isValid) {
-            builder.addReport(new SimpleReport(ShexStatus.nonconformant, "Start semantic actions failed."));
+            builder.addReport(new SimpleReport(ShexStatus.nonconformant, "Start semantic actions failed.", null));
             return builder.build();
         }
         for (ShapeMapElement e : shapeMap) {

@@ -1,0 +1,7 @@
+PREFIX ex: <http://a.example/>
+
+ex:n ex:p 1 .
+ex:n ex:p 2 .
+ex:n ex:p 3 .
+
+# none

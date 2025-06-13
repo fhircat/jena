@@ -3,6 +3,7 @@ package org.apache.jena.shex.reporting;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
 
 import java.util.ArrayList;
@@ -49,19 +50,95 @@ public class ExpressionHReport extends ExpressionReport {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(" ".repeat(indent));
-        sb.append(String.format("Report: node=%s, expr=%s, status=%s", r.node, r.expr, r.getStatus()));
+        sb.append("- ");
+        String sm = r.getMessage() == null || r.getMessage().isEmpty() ? "" : r.getMessage() + ", ";
+        String sd = r.getDetails() == null ? "" : String.format(" [%s] ", r.getDetails().toString());
+        sb.append(String.format("%s %s%s%s ?? %s neigh:%s",
+                r.getStatus() == ShexStatus.conformant ? "OK" : "KO",
+                sm, sd, r.node,
+                exprToPrettyString(r.expr),
+                r.getSubNeigh()));
         for (Report info : r.infos) {
             sb.append("\n");
             sb.append(" ".repeat(indent));
-            sb.append("details: ");
+            sb.append("  additional info: ");
             sb.append(info.toString());
         }
         for (ExpressionHReport child : r.children) {
             sb.append(" ".repeat(indent));
             // TODO indentation
-            sb.append(String.format("- %s", ExpressionHReport.toString((ExpressionHReport) child, indent+2)));
+            sb.append(String.format("%s", ExpressionHReport.toString(child, indent+2)));
         }
         return sb.toString();
     }
 
+    // TODO : quick fix, to move elsewhere
+    static String exprToPrettyString (Expression expr) {
+        if (expr instanceof TripleExpr te)
+            return tripleExprToPrettyString(te);
+        if (expr instanceof ShapeExpr se)
+            return shapeExprToPrettySting(se);
+        return expr.toString();
+    }
+
+    // TODO : quick fix, to move elsewhere
+    static String shapeExprToPrettySting (ShapeExpr expr) {
+        if (expr instanceof ShapeExprRef ref)
+            return "@" + ref.getLabel();
+        if (expr instanceof ShapeNot shapeNot)
+            return "NOT " + shapeExprToPrettySting(shapeNot.getShapeExpr());
+        if (expr instanceof ShapeAnd shapeAnd)
+            return String.join(" AND ",
+                    shapeAnd.getShapeExprs().stream()
+                            .map(ExpressionHReport::shapeExprToPrettySting)
+                            .toArray(String[]::new));
+
+        if (expr instanceof ShapeOr shapeOr)
+            return String.join(" AND ",
+                    shapeOr.getShapeExprs().stream()
+                            .map(ExpressionHReport::shapeExprToPrettySting)
+                            .toArray(String[]::new));
+
+        if (expr instanceof Shape shape) {
+            String extras = shape.getExtras().isEmpty()
+                    ? ""
+                    : "EXTRA " + shape.getExtras();
+            String closed = shape.isClosed() ? "CLOSED" : "";
+            String xtends = shape.getExtends().isEmpty()
+                    ? ""
+                    : "EXTEND " + shape.getExtends();
+            return String.format("%s %s %s %s", xtends, closed, extras,
+                    tripleExprToPrettyString(shape.getTripleExpr()));
+        }
+        if (expr instanceof NodeConstraint nc) {
+            String s = nc.toString();
+            return s.substring(0, s.length() - "/NodeConstraint".length());
+        }
+        return expr.toString();
+    }
+
+    // TODO : quick fix, to move elsewhere
+    static String tripleExprToPrettyString (TripleExpr expr) {
+        if (expr instanceof TripleConstraint tripleConstr) {
+            String p = tripleConstr.getPredicate().toString();
+            String pp = p.substring(p.lastIndexOf('/')+1);
+            return String.format("ex:%s %s", pp, shapeExprToPrettySting(tripleConstr.getValueExpr()));
+        }
+        if (expr instanceof EachOf eachOf)
+            return String.join (" ; ",
+                    eachOf.getTripleExprs().stream()
+                            .map(ExpressionHReport::tripleExprToPrettyString)
+                            .toArray(String[]::new));
+        if (expr instanceof OneOf oneOf)
+            return String.join (" ; ",
+                    oneOf.getTripleExprs().stream()
+                            .map(ExpressionHReport::tripleExprToPrettyString)
+                            .toArray(String[]::new));
+        if (expr instanceof TripleExprCardinality card)
+            return String.format("%s [%d, %d]",
+                    card.getSubExpr(),
+                    card.getCardinality().min,
+                    card.getCardinality().max);
+        return expr.toString();
+    }
 }

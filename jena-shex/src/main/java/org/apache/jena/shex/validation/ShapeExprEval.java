@@ -42,8 +42,6 @@ import static org.apache.jena.shex.sys.ShexLib.strDatatype;
 
 public class ShapeExprEval {
 
-
-
     public static boolean satisfies (Node dataNode, ShapeExpr expr,
                                      ValidationContext2 vCxt, Reporter reporter) {
         // Does not notify the reporter about conformant / non-conformant
@@ -58,7 +56,8 @@ public class ShapeExprEval {
             if (neigh == null)
                 return vCxt.validate(dataNode, ref, reporter);
             else {
-                for (Node descendant : vCxt.nonAbstractDescendants(ref.getLabel())) {
+                List<Node> nonAbstractDescendants = vCxt.nonAbstractDescendants(ref.getLabel());
+                for (Node descendant : nonAbstractDescendants) {
                     ShapeExpr defn = vCxt.getDefinition(descendant);
                     Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
@@ -67,8 +66,10 @@ public class ShapeExprEval {
                         return true;
                     }
                 }
-                reporter.addDescendantSatisfactionInfo(false,
-                        "No non-abstract descendant is satisfied.");
+                if (nonAbstractDescendants.size() > 1 || vCxt.getShapeDecl(ref.getLabel()).isAbstract()) {
+                    reporter.addDescendantSatisfactionInfo(false,
+                            "No non-abstract descendant is satisfied.");
+                }
                 return false;
             }
         } else {
@@ -162,7 +163,7 @@ public class ShapeExprEval {
                                                    Reporter reporter) {
         // Notifies the reporter about conformant / non-conformant
         NodeConstraintComponentEvalVisitor componentEval =
-                new NodeConstraintComponentEvalVisitor(dataNode, reporter, nodeConstraint);
+                new NodeConstraintComponentEvalVisitor(dataNode, reporter);
         return reporter.setIsConformant(nodeConstraint.getComponents().stream()
                 .allMatch(ncc -> ncc.visit(componentEval)));
     }
@@ -233,12 +234,10 @@ public class ShapeExprEval {
 
         private final Node dataNode;
         private final Reporter reporter;
-        private final NodeConstraint parentConstraint;
 
-        NodeConstraintComponentEvalVisitor(Node dataNode, Reporter reporter, NodeConstraint parentConstraint) {
+        NodeConstraintComponentEvalVisitor(Node dataNode, Reporter reporter) {
             this.dataNode = dataNode;
             this.reporter = reporter;
-            this.parentConstraint = parentConstraint;
         }
 
         @Override

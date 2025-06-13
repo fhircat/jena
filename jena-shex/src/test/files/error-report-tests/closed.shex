@@ -1,0 +1,4 @@
+PREFIX ex: <http://a.example/>
+
+
+ex:S CLOSED { ex:p1 . }

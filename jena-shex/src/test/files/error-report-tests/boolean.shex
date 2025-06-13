@@ -1,0 +1,4 @@
+PREFIX ex: <http://a.example/>
+
+ex:S { ex:p1 [1 2] } AND { ex:p1 [2 3] }
+

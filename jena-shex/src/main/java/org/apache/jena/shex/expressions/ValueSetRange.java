@@ -88,6 +88,13 @@ public class ValueSetRange {
         return Objects.equals(exclusions, other.exclusions) && Objects.equals(item, other.item);
     }
 
+    @Override
+    public String toString() {
+        // TODO quick fix, improve this
+        String excl = exclusions.isEmpty() ? "" : "\\" + exclusions.toString();
+        return item.toString() + excl;
+    }
+
     // Spot the visitor pattern.
 
     private static boolean contains(ValueSetItem item, Node node) {

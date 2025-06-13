@@ -1,4 +1,4 @@
-PREFIX ex: <http://a.example>
+PREFIX ex: <http://a.example/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-ex:n ex:p1 "12.3"^^xsd:float .
+ex:n ex:p "12.3"^^xsd:float .

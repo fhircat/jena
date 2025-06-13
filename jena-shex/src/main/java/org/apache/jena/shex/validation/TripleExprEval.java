@@ -94,17 +94,17 @@ public class TripleExprEval {
                                                                              Collection<SorbeTripleExpr> exprsToBeMatched,
                                                                              Set<Node> extraPredicates,
                                                                              ValidationContext2 vCxt,
-                                                                             Reporter reporter) {
+                                                                             Reporter shapeReporter) {
         // 1. With every triple, associate all the triple constraints that this triple could match
         Map<Triple, List<TripleConstraint>> preMatching = predicateBasedPreMatching(triples, exprsToBeMatched);
 
         // 2. Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
-        filterRecursiveValidation(preMatching, vCxt, reporter);
+        filterRecursiveValidation(preMatching, vCxt, shapeReporter);
 
         // 3. Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedNonExtra = filterExtra(preMatching, extraPredicates);
         if (null != unmatchedNonExtra) {
-            reporter.addForbiddenExtraInfo(
+            shapeReporter.addForbiddenExtraInfo(
                     "The triples match none of the triple constraints and are not allowed by extra",
                     unmatchedNonExtra);
             return null;
@@ -182,14 +182,14 @@ public class TripleExprEval {
     /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t, by recursively validating t's object against the triple constraint's object constraint.*/
     private static void filterRecursiveValidation (Map<Triple, List<TripleConstraint>> preMatching,
                                                   ValidationContext2 vCxt,
-                                                  Reporter reporter) {
+                                                  Reporter shapeReporter) {
         preMatching.forEach((triple, matchingTripleConstraints) -> {
             Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
             while (it.hasNext()) {
                 TripleConstraint tc = it.next();
                 ShapeExpr valueExpr = tc.getValueExpr();
                 Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                Reporter subReporter = reporter.createChild(opposite, valueExpr, null);
+                Reporter subReporter = shapeReporter.createChild(opposite, valueExpr, null);
                 if (!ShapeExprEval.satisfies(opposite, valueExpr, vCxt, subReporter))
                     it.remove();
             }});

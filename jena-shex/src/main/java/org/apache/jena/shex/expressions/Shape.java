@@ -77,6 +77,7 @@ public class Shape extends ShapeExpr {
                 .toString();
     }
 
+
     @Override
     public int hashCode() {
         return Objects.hash(closed, tripleExpr);
