@@ -15,8 +15,8 @@ public interface Reporter {
     Reporter createChild(Node node, Expression expr, Set<Triple> neigh);
     void setReferenceTo (Report report, String additionalMessage);
 
-    void setResult(ShexStatus status, String message, Object details);
-    void addInfo(ShexStatus status, String message, Object details);
+    void setResult(ShexStatus status);
+    void addInfo(String message, Object details, boolean isConformant);
 
     Report getReport();
 
@@ -26,35 +26,35 @@ public interface Reporter {
 
     /** Sets the result to conformant or non-conformant, and returns the boolean. */
     default boolean setIsConformant(boolean isConformant) {
-        setResult(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, "", null);
+        setResult(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant);
         return isConformant;
     }
 
     default void addDescendantSatisfactionInfo(boolean isConformant, String message) {
-        addInfo(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, message, null);
+        addInfo(message, null, isConformant);
     }
 
     default void addForbiddenExtraInfo(String message, Set<Triple> unallowedExtraTriples) {
-        addInfo(ShexStatus.nonconformant, message, unallowedExtraTriples);
+        addInfo(message, unallowedExtraTriples, false);
     }
 
     default void addSemanticActionsInfo(boolean isConformant, String message, SemAct semAct) {
-        addInfo(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant, message, semAct);
+        addInfo(message, semAct, isConformant);
     }
 
     default void addNodeConstraintInvalidInfo(NodeConstraintComponent c, String message) {
-        addInfo(ShexStatus.nonconformant, message, c);
+        addInfo(message, c, false);
     }
 
     default void addNotClosedInfo(String message, Set<Triple> unmatchedTriples) {
-        addInfo(ShexStatus.nonconformant, message, unmatchedTriples);
+        addInfo(message, unmatchedTriples, false);
     }
 
     default void addInfoExternalNotSupported() {
-        addInfo(ShexStatus.nonconformant, "Shape external not supported.", null);
+        addInfo("Shape external not supported.", null, false);
     }
 
     default void addInfoCycle() {
-        addInfo(ShexStatus.conformant, "Cycle", null);
+        addInfo("Cycle", null, true);
     }
 }

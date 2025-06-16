@@ -14,17 +14,27 @@ import java.util.Set;
 /**
  * Hierarchic report on validating a node or a neighbourhood against as {@link Expression}.
  */
-public class ExpressionHReport extends ExpressionReport {
+public class ExpressionHReport implements Report {
+
+
+    protected final Node node;
+    protected final Expression expr;
+    private Set<Triple> subNeigh;
+    private ShexStatus status;
 
     private final List<ExpressionHReport> children = new ArrayList<>();
-    private final List<Report> infos = new ArrayList<>();
+    private final List<ReportInfo> infos = new ArrayList<>();
     private Report refersTo = null;
 
 
     /* package */ ExpressionHReport(Node node, Expression expr, Set<Triple> neighbourhood) {
-        super(node, expr, neighbourhood);
-//        if (! (expr instanceof NodeConstraint || expr instanceof Shape || expr instanceof ShapeExprRef))
-//            throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference) or null.");
+        this.node = node;
+        this.expr = expr;
+        this.subNeigh = neighbourhood;
+    }
+
+    public ShexStatus getStatus() {
+        return status;
     }
 
     public void asReferenceTo(Report report, String additionalMessage) {
@@ -37,11 +47,13 @@ public class ExpressionHReport extends ExpressionReport {
         return Collections.emptyList();
     }
 
-    public List<Report> getInfos() {
+    public List<ReportInfo> getInfos() {
         if (refersTo == null)
             return Collections.unmodifiableList(infos);
         return Collections.emptyList();
     }
+
+
 
     /* package */ void addChild(ExpressionHReport child) {
         if (refersTo != null)
@@ -49,7 +61,7 @@ public class ExpressionHReport extends ExpressionReport {
         children.add(child);
     }
 
-    /* package */ void addInfo(Report info) {
+    /* package */ void addInfo(ReportInfo info) {
         if (refersTo != null)
             throw new UnsupportedOperationException("Reference report cannot be modified.");
         infos.add(info);
@@ -67,14 +79,14 @@ public class ExpressionHReport extends ExpressionReport {
         sb.append("\n");
         sb.append(" ".repeat(indent));
         sb.append("- ");
-        String sm = r.getMessage() == null || r.getMessage().isEmpty() ? "" : r.getMessage() + ", ";
-        String sd = r.getDetails() == null ? "" : String.format(" [%s] ", r.getDetails().toString());
-        sb.append(String.format("%s %s%s%s ?? %s neigh:%s",
-                r.getStatus() == ShexStatus.conformant ? "OK" : "KO",
-                sm, sd, r.node,
+        String sNeigh = r.getSubNeigh() == null ? "" :
+                String.format("neigh:%s", r.getSubNeigh());
+        sb.append(String.format("%s %s ?? %s %s",
+                r.status == ShexStatus.conformant ? "OK" : "KO",
+                r.node,
                 exprToPrettyString(r.expr),
-                r.getSubNeigh()));
-        for (Report info : r.infos) {
+                sNeigh));
+        for (ReportInfo info : r.infos) {
             sb.append("\n");
             sb.append(" ".repeat(indent));
             sb.append("  additional info: ");
@@ -155,5 +167,21 @@ public class ExpressionHReport extends ExpressionReport {
                     card.getCardinality().min,
                     card.getCardinality().max);
         return expr.toString();
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
+    public Expression getExpr() {
+        return expr;
+    }
+
+    public Set<Triple> getSubNeigh() {
+        return subNeigh;
+    }
+
+    public void setStatus(ShexStatus status) {
+        this.status = status;
     }
 }

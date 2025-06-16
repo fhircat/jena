@@ -6,25 +6,16 @@ public class SimpleReport implements Report {
 
     private String message = "";
     private ShexStatus status = null;
-    private Object details = null;
 
-    public SimpleReport(ShexStatus status, String message, Object details) {
+    public SimpleReport(ShexStatus status, String message) {
         this.message = message;
         this.status = status;
-        this.details = details;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
     }
 
     @Override
     public ShexStatus getStatus() {
         return status;
     }
-
-    public Object getDetails() { return details; }
 
     protected SimpleReport() {}
     protected void setMessage(String message) {
@@ -33,13 +24,11 @@ public class SimpleReport implements Report {
     protected void setStatus(ShexStatus status) {
         this.status = status;
     }
-    protected void setDetails(Object details) {
-        this.details = details;
-    }
 
     @Override
     public String toString() {
-        String ds = details == null ? "" : String.format(" : %s", details);
-        return message + ds;
+        return String.format("%s %s",
+                status == ShexStatus.conformant ? "OK" : "KO",
+                message != null ? message : "");
     }
 }

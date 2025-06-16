@@ -20,16 +20,15 @@ import java.util.List;
 public class ReportTests {
 
     static final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/error-report-tests/";
+    static String testName = "boolean";
+
 
     public static void main(String[] args) {
-        String schemaFile = "cardinality.shex";
-        String graphFile = "cardinality.ttl";
-        String mapFile = "cardinality-map.ttl";
-        //String node = "http://a.example/n";
-        //String shape = "http://a.example/S";
+        String schemaFile = testName + ".shex";
+        String graphFile = testName + ".ttl";
+        String mapFile = testName + "-map.ttl";
 
         List<Pair<String, String>> map = readMapFile(DIR+mapFile);
-        // map = List.of(new Pair<>(node, shape));
 
         printProblem(schemaFile, graphFile, map);
 

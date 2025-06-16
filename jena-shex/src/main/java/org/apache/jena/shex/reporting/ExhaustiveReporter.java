@@ -38,7 +38,7 @@ public class ExhaustiveReporter implements Reporter {
 
     @Override
     public void setReferenceTo(Report r, String additionalMessage) {
-        addInfo(ShexStatus.conformant, additionalMessage, null);
+        addInfo(additionalMessage, null, r.getStatus() == ShexStatus.conformant);
         this.report.asReferenceTo(r, additionalMessage);
     }
 
@@ -55,17 +55,15 @@ public class ExhaustiveReporter implements Reporter {
     */
 
     @Override
-    public void setResult(ShexStatus status, String message, Object details) {
+    public void setResult(ShexStatus status) {
         if (DEBUG && report.getStatus() != null)
             throw new IllegalStateException("Result set twice");
         report.setStatus(status);
-        report.setMessage(message);
-        report.setDetails(details);
     }
 
     @Override
-    public void addInfo(ShexStatus status, String message, Object details) {
-        report.addInfo(new SimpleReport(status, message, details));
+    public void addInfo(String message, Object details, boolean isConformant) {
+        report.addInfo(new ReportInfo(message, details, isConformant));
     }
 
     @Override

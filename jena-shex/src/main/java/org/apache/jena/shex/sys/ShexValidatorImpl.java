@@ -27,7 +27,7 @@ public class ShexValidatorImpl implements ShexValidator {
         ShexValidationReport resultReport = new ShexValidationReport();
         if (! vCxt.dispatchStartSemanticAction(schema)) {
             resultReport.setStartSemanticActionReport(new SimpleReport(ShexStatus.nonconformant,
-                    "Start semantic actions failed.", null));
+                    "Start semantic actions failed."));
             return resultReport;
         }
         for (ShapeMapElement shapeMapElement : shapeMap) {

@@ -32,14 +32,14 @@ public class ValidateOnlyReporter implements Reporter {
     }
 
     @Override
-    public void setResult(ShexStatus status, String message, Object details) {
+    public void setResult(ShexStatus status) {
         if (ExhaustiveReporter.DEBUG && report != null)
             throw new IllegalStateException("Result set twice");
-        report = new SimpleReport(status, message, details);
+        report = new SimpleReport(status, "");
     }
 
     @Override
-    public void addInfo(ShexStatus status, String message, Object details) {
+    public void addInfo(String message, Object details, boolean isConformant) {
         // empty
     }
 
@@ -69,12 +69,12 @@ public class ValidateOnlyReporter implements Reporter {
         }
 
         @Override
-        public void setResult(ShexStatus status, String message, Object details) {
+        public void setResult(ShexStatus status) {
             // empty
         }
 
         @Override
-        public void addInfo(ShexStatus status, String message, Object details) {
+        public void addInfo(String message, Object details, boolean isConformant) {
             // empty
         }
 
