@@ -26,6 +26,12 @@ public class ValidateOnlyReporter implements Reporter {
     }
 
     @Override
+    public void setReferenceTo(Report report, String additionalMessage) {
+        // TODO needs to be tested
+        this.report = report;
+    }
+
+    @Override
     public void setResult(ShexStatus status, String message, Object details) {
         if (ExhaustiveReporter.DEBUG && report != null)
             throw new IllegalStateException("Result set twice");
@@ -55,6 +61,11 @@ public class ValidateOnlyReporter implements Reporter {
         @Override
         public Reporter createChild(Node node, Expression expr, Set<Triple> neigh) {
             return this;
+        }
+
+        @Override
+        public void setReferenceTo(Report report, String additionalMessage) {
+            // empty
         }
 
         @Override

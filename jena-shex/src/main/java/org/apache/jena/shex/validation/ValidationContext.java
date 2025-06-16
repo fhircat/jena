@@ -59,11 +59,14 @@ public class ValidationContext {
             boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);
             stack.pop();
 
-            if (isValid)
-                return reporter.setIsConformant(true, "Non-abstract descendant " + descendant + " is satisfied.");
+            if (isValid) {
+                reporter.addDescendantSatisfactionInfo(true, "Non-abstract descendant " + descendant + " is satisfied.");
+                return reporter.setIsConformant(true);
+            }
         }
-        String message = nonAbstractDescendants.size() == 1 ? "" : "No non-abstract descendant is satisfied.";
-        return reporter.setIsConformant(false, message);
+        if (isExetendable(label))
+            reporter.addDescendantSatisfactionInfo(false, "No non-abstract descendant is satisfied.");
+        return reporter.setIsConformant(false);
         // TODO memoization
     }
 
@@ -73,12 +76,17 @@ public class ValidationContext {
         // The node has already been validated against this label and the result is known
         Node shapeExprLabel = shapeExprRef.getLabel();
         Report re = typing.get(focus, shapeExprLabel);
-        if (re != null)
-            return reporter.setIsConformant(re.getStatus() == ShexStatus.conformant, "", re);
+        if (re != null) {
+            reporter.setReferenceTo(re, "");
+            return re.getStatus() == ShexStatus.conformant;
+        }
+        //return reporter.setIsConformant(re.getStatus() == ShexStatus.conformant, "", re);
 
         // The node/label pair is on the stack
-        if (stack.contains(focus, shapeExprLabel))
-            return reporter.setIsConformant(true, "Cycle.");
+        if (stack.contains(focus, shapeExprLabel)) {
+            reporter.addInfoCycle();
+            return reporter.setIsConformant(true);
+        }
 
         // The node has not been validated against this label
         return computeIsValid(focus, shapeExprLabel, reporter);
@@ -87,6 +95,10 @@ public class ValidationContext {
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
     public List<Node> nonAbstractDescendants(Node shexprLabel) {
         return schemaMem.getTypeHierarchyGraph().getNonAbstractSubtypes(shexprLabel);
+    }
+
+    private boolean isExetendable(Node label) {
+        return schemaMem.getTypeHierarchyGraph().isExtendableLabel(label);
     }
 
     public Graph getGraph() {

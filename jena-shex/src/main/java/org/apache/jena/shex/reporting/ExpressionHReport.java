@@ -18,6 +18,8 @@ public class ExpressionHReport extends ExpressionReport {
 
     private final List<ExpressionHReport> children = new ArrayList<>();
     private final List<Report> infos = new ArrayList<>();
+    private Report refersTo = null;
+
 
     /* package */ ExpressionHReport(Node node, Expression expr, Set<Triple> neighbourhood) {
         super(node, expr, neighbourhood);
@@ -25,25 +27,39 @@ public class ExpressionHReport extends ExpressionReport {
 //            throw new IllegalArgumentException("Expression must be an atomic shape expression (node constraint, shape, or reference) or null.");
     }
 
+    public void asReferenceTo(Report report, String additionalMessage) {
+        this.refersTo = report;
+    }
+
     public List<ExpressionHReport> getChildren() {
-        return Collections.unmodifiableList(children);
+        if (refersTo == null)
+            return Collections.unmodifiableList(children);
+        return Collections.emptyList();
     }
 
     public List<Report> getInfos() {
-        return Collections.unmodifiableList(infos);
+        if (refersTo == null)
+            return Collections.unmodifiableList(infos);
+        return Collections.emptyList();
     }
 
     /* package */ void addChild(ExpressionHReport child) {
+        if (refersTo != null)
+            throw new UnsupportedOperationException("Reference report cannot be modified.");
         children.add(child);
     }
 
     /* package */ void addInfo(Report info) {
+        if (refersTo != null)
+            throw new UnsupportedOperationException("Reference report cannot be modified.");
         infos.add(info);
     }
 
     @Override
     public String toString() {
-        return toString(this, 2);
+        if (refersTo == null)
+            return toString(this, 2);
+        return refersTo.toString();
     }
 
     private static String toString(ExpressionHReport r, int indent) {

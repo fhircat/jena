@@ -22,6 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shex.ShexValidator;
 import org.apache.jena.shex.reporting.ExhaustiveReporter;
+import org.apache.jena.shex.reporting.ValidateOnlyReporter;
 import org.apache.jena.shex.semact.SemanticActionPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

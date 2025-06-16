@@ -36,6 +36,12 @@ public class ExhaustiveReporter implements Reporter {
         return r;
     }
 
+    @Override
+    public void setReferenceTo(Report r, String additionalMessage) {
+        addInfo(ShexStatus.conformant, additionalMessage, null);
+        this.report.asReferenceTo(r, additionalMessage);
+    }
+
     /*
     @Override
     public void addChild(Node node, Expression expr, Set<Triple> neigh, Reporter child) {

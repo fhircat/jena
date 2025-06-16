@@ -116,8 +116,8 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !nonMatchables.isEmpty()) {
-            return shapeReporter.setIsConformant(false,
-                    "CLOSED required but forbidden triples", matchables);
+            shapeReporter.addNotClosedInfo("CLOSED required but forbidden triples", matchables);
+            return shapeReporter.setIsConformant(false);
         }
 
         // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
@@ -215,8 +215,8 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExternal shapeExternal, Reporter reporter) {
             // TODO shape external never satisfied
-            return reporter.setIsConformant(false,
-                    "Shape external not supported.");
+            reporter.addInfoExternalNotSupported();
+            return reporter.setIsConformant(false);
         }
 
         @Override

@@ -24,17 +24,17 @@ public class ShexValidatorImpl implements ShexValidator {
         // TODO for now without memoization
         ValidationContext vCxt = new ValidationContext(schema, graph,
                 false, false, semanticActionPluginIndex);
-        boolean isValid = vCxt.dispatchStartSemanticAction(schema);
-        ShexValidationReport.Builder builder = ShexValidationReport.builder();
-        if (!isValid) {
-            builder.addReport(new SimpleReport(ShexStatus.nonconformant, "Start semantic actions failed.", null));
-            return builder.build();
+        ShexValidationReport resultReport = new ShexValidationReport();
+        if (! vCxt.dispatchStartSemanticAction(schema)) {
+            resultReport.setStartSemanticActionReport(new SimpleReport(ShexStatus.nonconformant,
+                    "Start semantic actions failed.", null));
+            return resultReport;
         }
-        for (ShapeMapElement e : shapeMap) {
-            Report re = vCxt.validate(e.nodeSelector, e.shapeExprLabel, reporter);
-            builder.addReport(e.nodeSelector, e.shapeExprLabel, re);
+        for (ShapeMapElement shapeMapElement : shapeMap) {
+            Report re = vCxt.validate(shapeMapElement.nodeSelector, shapeMapElement.shapeExprLabel, reporter);
+            resultReport.setReport(shapeMapElement, re);
         }
-        return builder.build();
+        return resultReport;
     }
 
     /** Is effective at the next validation. */

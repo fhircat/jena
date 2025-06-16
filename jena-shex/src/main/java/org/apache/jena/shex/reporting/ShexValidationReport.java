@@ -10,49 +10,24 @@ import java.util.function.Consumer;
 
 public class ShexValidationReport {
 
-    private final List<Report> directReports;
-    private final List<ShapeMapElement> mapElementsReports;
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    private ShexValidationReport(List<ShapeMapElement> mapElementsReports, List<Report> directReports) {
-        this.mapElementsReports = mapElementsReports;
-        this.directReports = directReports;
-    }
+    private final List<ShapeMapElement> mapElementsReports = new ArrayList<>();
 
     public void forEachReport(Consumer<ShapeMapElement> action) {
         mapElementsReports.forEach(action);
-        // TODO should treat direct reports as well
     }
 
     public boolean conforms() {
-        return mapElementsReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant)
-                && directReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
+        return mapElementsReports.stream().allMatch(it -> it.getStatus() == ShexStatus.conformant);
     }
 
-   public static class Builder {
-
-        private final List<Report> directReports = new ArrayList<>();
-        private final List<ShapeMapElement> shapeMapReports = new ArrayList<>();
-
-        public Builder() { }
-
-        public void addReport(ShapeMapElement shapeMapElement, Report report) {
-            shapeMapReports.add(shapeMapElement.createReportElement(report));
-        }
-
-        public void addReport(Node focusNode, Node shapeExprLabel, Report report) {
-            addReport(new ShapeMapElement(focusNode, shapeExprLabel), report);
-        }
-
-        public void addReport(Report report) {
-            directReports.add(report);
-        }
-
-        public ShexValidationReport build() {
-            return new ShexValidationReport(shapeMapReports, directReports);
-        }
+    public void setReport (ShapeMapElement shapeMapElement, Report report) {
+        mapElementsReports.add(
+                new ShapeMapElement(shapeMapElement.nodeSelector, shapeMapElement.shapeExprLabel).createReportElement(report));
     }
+
+    public void setStartSemanticActionReport (Report report) {
+        mapElementsReports.add(
+                new ShapeMapElement((Node) null, null).createReportElement(report));
+    }
+
 }

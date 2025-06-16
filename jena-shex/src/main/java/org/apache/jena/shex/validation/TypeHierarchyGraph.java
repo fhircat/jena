@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 public class TypeHierarchyGraph {
 
     private DefaultDirectedGraph<Node, DefaultEdge> graph;
-    private Map<Node, ShapeDecl> shapeDeclMap;
+    private final Map<Node, ShapeDecl> shapeDeclMap;
 
     private TypeHierarchyGraph(Map<Node, ShapeDecl> shapeDeclMap){
         this.shapeDeclMap = shapeDeclMap;
@@ -71,6 +71,11 @@ public class TypeHierarchyGraph {
         return graph.vertexSet().stream();
     }
 
+    /** True iff the label participates in the extension hierarchy (even if never extended). */
+    public boolean isExtendableLabel(Node label) {
+        return graph.vertexSet().contains(label);
+    }
+
     /** Duplicates-free list of the non-abstract subtypes, including the given shape declaration. */
     public List<Node> getNonAbstractSubtypes(Node shexprLabel) {
         return nonAbstractAncestorsMap.computeIfAbsent(shexprLabel,
@@ -84,9 +89,7 @@ public class TypeHierarchyGraph {
     /* Duplicates-free list of the supertypes (ie extended shape declarations), including the given shape declaration. */
     public List<Node> getSupertypes(Node shexprLabel) {
         return supertypesMap.computeIfAbsent(shexprLabel,
-                label -> getDescendants(shexprLabel)
-                        .stream()
-                        .collect(Collectors.toList()));
+                label -> new ArrayList<>(getDescendants(shexprLabel)));
     }
     private final Map<Node, List<Node>> supertypesMap = new HashMap<>();
 
