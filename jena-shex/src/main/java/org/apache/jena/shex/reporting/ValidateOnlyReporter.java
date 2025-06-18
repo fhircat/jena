@@ -33,7 +33,7 @@ public class ValidateOnlyReporter implements Reporter {
 
     @Override
     public void setResult(ShexStatus status) {
-        if (ExhaustiveReporter.DEBUG && report != null)
+        if (SimpleExhaustiveReporter.DEBUG && report != null)
             throw new IllegalStateException("Result set twice");
         report = new SimpleReport(status, "");
     }

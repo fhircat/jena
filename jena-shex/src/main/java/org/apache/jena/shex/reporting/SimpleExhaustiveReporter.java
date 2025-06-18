@@ -7,31 +7,31 @@ import org.apache.jena.shex.expressions.Expression;
 
 import java.util.Set;
 
-public class ExhaustiveReporter implements Reporter {
+public class SimpleExhaustiveReporter implements Reporter {
 
     public static final boolean DEBUG = true;  // TODO remove
 
-    private static ExhaustiveReporter factoryInstance = new ExhaustiveReporter();
-    public static ExhaustiveReporter factory() {
+    private static SimpleExhaustiveReporter factoryInstance = new SimpleExhaustiveReporter();
+    public static SimpleExhaustiveReporter factory() {
         return factoryInstance;
     }
 
     private ExpressionHReport report;
 
-    private ExhaustiveReporter() {}
+    private SimpleExhaustiveReporter() {}
 
-    private ExhaustiveReporter(Node node, Expression expr, Set<Triple> neigh) {
+    private SimpleExhaustiveReporter(Node node, Expression expr, Set<Triple> neigh) {
         report = new ExpressionHReport(node, expr, neigh);
     }
 
     @Override
-    public ExhaustiveReporter createRoot(Node node, Expression expr) {
-        return new ExhaustiveReporter(node, expr, null);
+    public SimpleExhaustiveReporter createRoot(Node node, Expression expr) {
+        return new SimpleExhaustiveReporter(node, expr, null);
     }
 
     @Override
-    public ExhaustiveReporter createChild(Node node, Expression expr, Set<Triple> neigh) {
-        ExhaustiveReporter r = new ExhaustiveReporter(node, expr, neigh);
+    public SimpleExhaustiveReporter createChild(Node node, Expression expr, Set<Triple> neigh) {
+        SimpleExhaustiveReporter r = new SimpleExhaustiveReporter(node, expr, neigh);
         report.addChild(r.report);
         return r;
     }

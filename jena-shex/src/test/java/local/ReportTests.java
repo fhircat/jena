@@ -7,7 +7,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
-import org.apache.jena.shex.reporting.ExhaustiveReporter;
+import org.apache.jena.shex.reporting.SimpleExhaustiveReporter;
 import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ShexValidatorImpl;
 import org.apache.jena.shex.reporting.ShexValidationReport;
@@ -20,7 +20,7 @@ import java.util.List;
 public class ReportTests {
 
     static final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/error-report-tests/";
-    static String testName = "boolean";
+    static String testName = "node-constraint";
 
 
     public static void main(String[] args) {
@@ -40,7 +40,6 @@ public class ReportTests {
         - "http://a.example/P1-V-1" : toString of value range constraint not good
         - in general, the messages for node constraints can be improved, e.g. "http://a.example/P1-IRI" there are repetetions
     -
-
      */
 
 
@@ -53,7 +52,7 @@ public class ReportTests {
             Node shape = ResourceFactory.createResource(p.getRight()).asNode();
 
             ShexValidatorImpl v = new ShexValidatorImpl(null);
-            v.setReporter(ExhaustiveReporter.factory());
+            v.setReporter(SimpleExhaustiveReporter.factory());
             ShexValidationReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Conforms: " + report.conforms());
             ShexLib.printReport(report);

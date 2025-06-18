@@ -26,7 +26,6 @@ public class ExpressionHReport implements Report {
     private final List<ReportInfo> infos = new ArrayList<>();
     private Report refersTo = null;
 
-
     /* package */ ExpressionHReport(Node node, Expression expr, Set<Triple> neighbourhood) {
         this.node = node;
         this.expr = expr;
@@ -42,8 +41,9 @@ public class ExpressionHReport implements Report {
     }
 
     public List<ExpressionHReport> getChildren() {
-        if (refersTo == null)
+        if (refersTo == null) {
             return Collections.unmodifiableList(children);
+        }
         return Collections.emptyList();
     }
 
@@ -134,10 +134,12 @@ public class ExpressionHReport implements Report {
             String xtends = shape.getExtends().isEmpty()
                     ? ""
                     : "EXTEND " + shape.getExtends();
-            return String.format("%s %s %s %s", xtends, closed, extras,
+            return String.format("Shape %s %s %s %s", xtends, closed, extras,
                     tripleExprToPrettyString(shape.getTripleExpr()));
         }
         if (expr instanceof NodeConstraint nc) {
+            if (nc.getComponents().isEmpty())
+                return "NodeConstraint[ . ]";
             String s = nc.toString();
             return s.substring(0, s.length() - "/NodeConstraint".length());
         }

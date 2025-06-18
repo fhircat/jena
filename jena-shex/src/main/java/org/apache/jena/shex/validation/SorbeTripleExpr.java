@@ -70,6 +70,11 @@ import java.util.stream.Collectors;
         this.tripleConstraintCopiesMap = tripleConstraintCopiesMap;
     }
 
+    /** Returns true if the original expression is already SORBE */
+    boolean isNativeSorbe() {
+        return this.originTripleExpr == this.sorbe;
+    }
+
     /* package */ TripleExpr getOriginTripleExpr() { return originTripleExpr; }
 
     /*package*/ static SorbeTripleExpr create(TripleExpr tripleExpr, ShexSchema schema) {
@@ -77,7 +82,7 @@ import java.util.stream.Collectors;
         List<TripleExpr> subExprsWithSemActs
                 = AccumulationUtil.collectSubExprsWithSemActs(tripleExpr, schema::getTripleExpr);
 
-        if (isSorbe(tripleExpr))
+        if (computeIsSorbe(tripleExpr))
             return new SorbeTripleExpr(tripleExpr, tripleExpr, subExprsWithSemActs, null);
 
         EMap<TripleConstraint, List<TripleConstraint>> tripleConstraintCopiesMap = new EMap<>();
@@ -208,7 +213,7 @@ import java.util.stream.Collectors;
     // --------------------------------------------------------------------------------------------------
 
 
-    private static boolean isSorbe(TripleExpr tripleExpr) {
+    private static boolean computeIsSorbe(TripleExpr tripleExpr) {
 
         // List with at most one element, artefact for reusing accumulation code
         List<Object> acc = new ArrayList<>(1) {

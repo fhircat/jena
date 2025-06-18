@@ -116,7 +116,7 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !nonMatchables.isEmpty()) {
-            shapeReporter.addNotClosedInfo("CLOSED required but forbidden triples", matchables);
+            shapeReporter.informUnmatchableTriplesClosedShape(nonMatchables);
             return shapeReporter.setIsConformant(false);
         }
 

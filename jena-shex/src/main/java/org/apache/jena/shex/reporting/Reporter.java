@@ -1,12 +1,13 @@
 package org.apache.jena.shex.reporting;
 
+import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
-import org.apache.jena.shex.expressions.Expression;
-import org.apache.jena.shex.expressions.NodeConstraintComponent;
-import org.apache.jena.shex.expressions.SemAct;
+import org.apache.jena.shex.expressions.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface Reporter {
@@ -30,12 +31,10 @@ public interface Reporter {
         return isConformant;
     }
 
+    // TODO which of the following facility methods should be implemented here, and which in the particular reporters ?
+
     default void addDescendantSatisfactionInfo(boolean isConformant, String message) {
         addInfo(message, null, isConformant);
-    }
-
-    default void addForbiddenExtraInfo(String message, Set<Triple> unallowedExtraTriples) {
-        addInfo(message, unallowedExtraTriples, false);
     }
 
     default void addSemanticActionsInfo(boolean isConformant, String message, SemAct semAct) {
@@ -46,10 +45,6 @@ public interface Reporter {
         addInfo(message, c, false);
     }
 
-    default void addNotClosedInfo(String message, Set<Triple> unmatchedTriples) {
-        addInfo(message, unmatchedTriples, false);
-    }
-
     default void addInfoExternalNotSupported() {
         addInfo("Shape external not supported.", null, false);
     }
@@ -57,4 +52,23 @@ public interface Reporter {
     default void addInfoCycle() {
         addInfo("Cycle", null, true);
     }
+
+    default void informUnmatchableTriplesClosedShape(Set<Triple> unmatchableTriples) {
+        addInfo("CLOSED required but forbidden triples", unmatchableTriples, false);
+    }
+
+    default void informMatchableTriples(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching) {}
+
+    default void informMatchedTriples(Map<Triple, List<TripleConstraint>> cleanPreMatching) {}
+
+    default void informUnmatchedTriples(Set<Triple> unmatchedTriples) {
+        addInfo("Unmatched triples.", unmatchedTriples, false);
+    }
+
+    default void informCandidateMatching(Map<Triple, TripleConstraint> matching) {}
+
+    default void informCandidateMatchingFailedForTripleExpression(Map<Triple, TripleConstraint> matching, TripleExpr tripleExpr) {
+        addInfo("Triple expression not satisfied by the matching", new Pair<>(tripleExpr, matching), false);
+    }
+
 }
