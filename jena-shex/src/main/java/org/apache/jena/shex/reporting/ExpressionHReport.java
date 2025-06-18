@@ -148,6 +148,7 @@ public class ExpressionHReport implements Report {
 
     // TODO : quick fix, to move elsewhere
     static String tripleExprToPrettyString (TripleExpr expr) {
+        //return PrettyPrinter.asPrettyString(expr);
         if (expr instanceof TripleConstraint tripleConstr) {
             String p = tripleConstr.getPredicate().toString();
             String pp = p.substring(p.lastIndexOf('/')+1);

@@ -53,6 +53,9 @@ public interface Reporter {
         addInfo("Cycle", null, true);
     }
 
+
+
+
     default void informUnmatchableTriplesClosedShape(Set<Triple> unmatchableTriples) {
         addInfo("CLOSED required but forbidden triples", unmatchableTriples, false);
     }

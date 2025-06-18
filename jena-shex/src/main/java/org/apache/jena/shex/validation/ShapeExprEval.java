@@ -60,6 +60,7 @@ public class ShapeExprEval {
                 for (Node descendant : nonAbstractDescendants) {
                     ShapeExpr defn = vCxt.getDefinition(descendant);
                     Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
+                    // TODO possible problem if the the definition is a reference itself
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
                         reporter.addDescendantSatisfactionInfo(true,
                                 "The non-abstract descendant " + descendant + " is satisfied.");
@@ -124,6 +125,7 @@ public class ShapeExprEval {
         Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(dataNode, shape, matchables,
                 mainTripleExprs, vCxt, shapeReporter);
 
+        // TODO we need a test case in which the main parti is satisfied, but not the restriction
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
             if (splitSatisfiesConstraints(dataNode, shape, split, constraints, vCxt, shapeReporter)) {

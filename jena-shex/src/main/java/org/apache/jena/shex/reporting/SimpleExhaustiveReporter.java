@@ -16,11 +16,11 @@ public class SimpleExhaustiveReporter implements Reporter {
         return factoryInstance;
     }
 
-    private ExpressionHReport report;
+    protected ExpressionHReport report;
 
-    private SimpleExhaustiveReporter() {}
+    protected SimpleExhaustiveReporter() {}
 
-    private SimpleExhaustiveReporter(Node node, Expression expr, Set<Triple> neigh) {
+    protected SimpleExhaustiveReporter(Node node, Expression expr, Set<Triple> neigh) {
         report = new ExpressionHReport(node, expr, neigh);
     }
 
