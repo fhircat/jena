@@ -19,7 +19,7 @@ public class ExpressionHReport implements Report {
 
     protected final Node node;
     protected final Expression expr;
-    private Set<Triple> subNeigh;
+    private final Set<Triple> subNeigh;
     private ShexStatus status;
 
     private final List<ExpressionHReport> children = new ArrayList<>();

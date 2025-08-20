@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+/** A map which keys are expressions, but stored as their id's for efficiency. */
 public class EMap<K extends Expression, V> implements Map<K, V> {
 
     private final Map<Integer, Map.Entry<K,V>> map = new LinkedHashMap<>();

@@ -67,17 +67,16 @@ public class TripleExprEval {
         // Construct the SORBE expressions
         Map<Node, SorbeTripleExpr> exprsToBeMatched = new HashMap<>(mainTripleExprs.size());
         for (Map.Entry<Node, TripleExpr> e: mainTripleExprs.entrySet()) {
-            /* SorbeTripleExpr s = vCxt.getSorbe(e.getValue()); TODO for debugging, remove eventually
-            if (! s.isNativeSorbe()) {
-                throw new IllegalStateException("NOT SORBE");
-            } */
+
+            // if (! vCxt.getSorbe(e.getValue()).isNativeSorbe()) throw new IllegalStateException("NOT SORBE"); // TODO for debugging, remove eventually together with isNativeSorbe
+
             exprsToBeMatched.put(e.getKey(), vCxt.getSorbe(e.getValue()));
         }
 
         // With every triple, associate all the triple constraints that this triple could match, based on predicate
         Map<Triple, List<TripleConstraint>> predicateBasedPreMatching
                 = predicateBasedPreMatching(triples, exprsToBeMatched.values());
-        shapeReporter.informMatchableTriples(predicateBasedPreMatching);
+        shapeReporter.informPredicateBasedPreMatching(Collections.unmodifiableMap(predicateBasedPreMatching));
 
         // Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
         Map<Triple, List<TripleConstraint>> preMatching = filterRecursiveValidation(predicateBasedPreMatching, vCxt, shapeReporter);
@@ -85,16 +84,16 @@ public class TripleExprEval {
         // Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedTriples = new HashSet<>();
         Map<Triple, List<TripleConstraint>> cleanPreMatching = filterUnmatchedTriples(preMatching, unmatchedTriples, shapeReporter);
-        shapeReporter.informMatchedTriples(cleanPreMatching);
+        shapeReporter.informPreMatching(Collections.unmodifiableMap(cleanPreMatching));
 
         if (! unmatchedTriplesAreExtra(unmatchedTriples, shape.getExtras())) {
-            shapeReporter.informUnmatchedTriples(unmatchedTriples);
+            shapeReporter.informUnexpectedTriples(unmatchedTriples, Reporter.UnexpectedTriplesReason.EXTRA);
             return Collections.emptyIterator();
         }
 
         // NOTE: SORBE used
         Iterator<Map<Triple, TripleConstraint>> correctMatchingsIterator = new FilterIterator<>(
-                m -> matchingSatisfiesTripleExpression_sorbe(dataNode,
+                m -> checkSatisfiesTripleExpressionsAndReport_sorbe(dataNode,
                         m, exprsToBeMatched.values(), vCxt, shapeReporter),
                 new MatchingsIterator(cleanPreMatching));
 
@@ -110,6 +109,116 @@ public class TripleExprEval {
             }
         };
     }
+
+    /** Matches every triple to the list of expressions that have the same predicate. */
+    private static Map<Triple, List<TripleConstraint>> predicateBasedPreMatching (Set<Triple> triples,
+                                                                                 Collection<SorbeTripleExpr> toBeMatched) {
+        Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
+                .collect(Collectors.toMap(Function.identity(),
+                        t -> new ArrayList<>()));
+        for (SorbeTripleExpr sorbeTripleExpr : toBeMatched) {
+            // this loop is needed only for extends, but does no harm w/o extends
+            Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
+            pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
+        }
+        return preMatching;
+    }
+
+    /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t,
+     * by recursively validating t's object against the triple constraint's object constraint.
+     * Returns the filtered pre matching (which is possibly a modified version of the one given in parameter) */
+    private static Map<Triple, List<TripleConstraint>> filterRecursiveValidation (
+            Map<Triple, List<TripleConstraint>> preMatching,
+            ValidationContext vCxt,
+            Reporter shapeReporter) {
+        //if (! shapeReporter.isValidateOnly()) {
+        //    preMatching = new HashMap<>(preMatching);
+        //}
+        preMatching.forEach((triple, matchingTripleConstraints) -> {
+            Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
+            while (it.hasNext()) {
+                TripleConstraint tc = it.next();
+                ShapeExpr valueExpr = tc.getValueExpr();
+                Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
+                Reporter subReporter = shapeReporter.createChild(opposite, valueExpr, null);
+                if (!ShapeExprEval.satisfies(opposite, valueExpr, vCxt, subReporter))
+                    it.remove();
+            }});
+        return preMatching;
+    }
+
+    /* The triples that are unmatched in preMatching, i.e. which associated value is an empty list.*/
+    private static Map<Triple, List<TripleConstraint>> filterUnmatchedTriples(
+            Map<Triple, List<TripleConstraint>> preMatching,
+            Set<Triple> removedTriples,
+            Reporter shapeReporter) {
+
+        //if (! shapeReporter.isValidateOnly())
+        //    preMatching = new HashMap<>(preMatching);
+
+        preMatching.entrySet().stream()
+                .filter(e -> e.getValue().isEmpty())
+                .map(Map.Entry::getKey)
+                .forEach(removedTriples::add);
+        removedTriples.forEach(preMatching::remove);
+        return preMatching;
+    }
+
+    /** Checks whether a matching satisfies a hierarchy of triple expressions. */
+    private static boolean checkSatisfiesTripleExpressionsAndReport_sorbe(Node dataNode,
+                                                                          Map<Triple, TripleConstraint> matching,
+                                                                          Collection<SorbeTripleExpr> exprsToBeMatched,
+                                                                          ValidationContext vCxt,
+                                                                          Reporter shapeReporter) {
+        // Does not notify the reporter about conformant / non-conformant
+
+        boolean teValid = true;
+        boolean seValid = true;
+        exprsToBeMatchedLoop:
+        for (SorbeTripleExpr sorbeTripleExpr : exprsToBeMatched) {
+            // this loop is needed only for extends, but does no harm w/o extends
+
+            Cardinality interval = sorbeTripleExpr.computeInterval(matching);
+            // here, teValid is always true (because of break when ! teValid)
+            teValid = interval.min <= 1 && 1 <= interval.max;
+
+            // TODO is the tripleExprReporter needed ?
+            //Reporter tripleExprReporter = shapeReporter.createChild(dataNode, sorbeTripleExpr.getOriginTripleExpr(),
+            //        getMatchedTriplesForReporter(matching, vCxt, shapeReporter, sorbeTripleExpr));
+
+            //shapeReporter.informCandidateMatchingConformance(teValid, matching, sorbeTripleExpr.getOriginTripleExpr());
+
+            if (!teValid) break;
+
+            for (Pair<TripleExpr, Set<Triple>> p : sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt)) {
+                if (! vCxt.dispatchTripleExprSemanticAction(
+                        p.getKey(), p.getValue(), /*tripleExprReporter*/ shapeReporter, dataNode)) {
+                    seValid = false;
+                    break exprsToBeMatchedLoop;
+                }
+            }
+        }
+        if (teValid && seValid) {
+            shapeReporter.informCandidateMatchingConformance(true, matching, (Reporter.MatchingNotSatisfiedReason) null);
+            return true;
+        }
+        shapeReporter.informCandidateMatchingConformance(false, matching,
+                !teValid ? Reporter.MatchingNotSatisfiedReason.TRIPLE_EXPRS : Reporter.MatchingNotSatisfiedReason.SEM_ACTS);
+        return false;
+    }
+
+    private static Set<Triple> getMatchedTriplesForReporter(
+            Map<Triple, TripleConstraint> matching,
+            ValidationContext vCxt,
+            Reporter shapeReporter,
+            SorbeTripleExpr sorbeTripleExpr) {
+
+        if (shapeReporter.isValidateOnly())
+            return null;
+
+        return sorbeTripleExpr.triplesMatchedInOriginSubExpr(matching, sorbeTripleExpr.getOriginTripleExpr(), vCxt);
+    }
+
 
     private static boolean unmatchedTriplesAreExtra(Set<Triple> unmatchedTriples, Set<Node> extraPredicates) {
         return unmatchedTriples.stream().allMatch(t -> extraPredicates.contains(t.getPredicate()));
@@ -144,108 +253,4 @@ public class TripleExprEval {
     }
 
 
-
-    /** Matches every triple to the list of expressions that have the same predicate. */
-    private static Map<Triple, List<TripleConstraint>> predicateBasedPreMatching (Set<Triple> triples,
-                                                                                 Collection<SorbeTripleExpr> toBeMatched) {
-        Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
-                .collect(Collectors.toMap(Function.identity(),
-                        t -> new ArrayList<>()));
-        for (SorbeTripleExpr sorbeTripleExpr : toBeMatched) {
-            // this loop is needed only for extends, but does no harm w/o extends
-            Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
-            pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
-        }
-        return preMatching;
-    }
-
-    /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t,
-     * by recursively validating t's object against the triple constraint's object constraint.
-     * Returns the filtered pre matching (which is possibly a modified version of the one given in parameter) */
-    private static Map<Triple, List<TripleConstraint>> filterRecursiveValidation (
-            Map<Triple, List<TripleConstraint>> preMatching,
-            ValidationContext vCxt,
-            Reporter shapeReporter) {
-        if (! shapeReporter.isValidateOnly()) {
-            preMatching = new HashMap<>(preMatching);
-        }
-        preMatching.forEach((triple, matchingTripleConstraints) -> {
-            Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
-            while (it.hasNext()) {
-                TripleConstraint tc = it.next();
-                ShapeExpr valueExpr = tc.getValueExpr();
-                Node opposite = tc.isInverse() ? triple.getSubject() : triple.getObject();
-                Reporter subReporter = shapeReporter.createChild(opposite, valueExpr, null);
-                if (!ShapeExprEval.satisfies(opposite, valueExpr, vCxt, subReporter))
-                    it.remove();
-            }});
-        return preMatching;
-    }
-
-    private static void collectUnmatchedAndForbiddenByExtra() {
-
-    }
-
-    /* The triples that are unmatched in preMatching, i.e. which associated value is an empty list.*/
-    private static Map<Triple, List<TripleConstraint>> filterUnmatchedTriples(
-            Map<Triple, List<TripleConstraint>> preMatching,
-            Set<Triple> removedTriples,
-            Reporter shapeReporter) {
-
-        if (! shapeReporter.isValidateOnly())
-            preMatching = new HashMap<>(preMatching);
-
-        preMatching.entrySet().stream()
-                .filter(e -> e.getValue().isEmpty())
-                .map(Map.Entry::getKey)
-                .forEach(removedTriples::add);
-        removedTriples.forEach(preMatching::remove);
-        return preMatching;
-    }
-
-    /** Checks whether a matching satisfies a hierarchy of triple expressions. */
-    private static boolean matchingSatisfiesTripleExpression_sorbe(Node dataNode,
-                                                                   Map<Triple, TripleConstraint> matching,
-                                                                   Collection<SorbeTripleExpr> exprsToBeMatched,
-                                                                   ValidationContext vCxt,
-                                                                   Reporter shapeReporter) {
-        // Does not notify the reporter about conformant / non-conformant
-
-        shapeReporter.informCandidateMatching(matching); // TODO maybe remap for original expression if non SORBE
-
-        return exprsToBeMatched.stream().allMatch(sorbeTripleExpr -> {
-            // this loop is needed only for extends, but does no harm w/o extends
-
-            Cardinality interval = sorbeTripleExpr.computeInterval(matching);
-            boolean teValid = interval.min <= 1 && 1 <= interval.max;
-
-            Reporter tripleExprReporter = shapeReporter.createChild(dataNode, sorbeTripleExpr.getOriginTripleExpr(),
-                    getMatchedTriplesForReporter(matching, vCxt, shapeReporter, sorbeTripleExpr));
-
-            if (! teValid) {
-                shapeReporter.informCandidateMatchingFailedForTripleExpression(matching, sorbeTripleExpr.getOriginTripleExpr());
-                return tripleExprReporter.setIsConformant(false);
-            }
-
-            for (Pair<TripleExpr, Set<Triple>> p : sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt)) {
-                if (! vCxt.dispatchTripleExprSemanticAction(
-                            p.getKey(), p.getValue(), tripleExprReporter, dataNode)) {
-                    return tripleExprReporter.setIsConformant(false);
-                }
-            }
-            return tripleExprReporter.setIsConformant(true);
-        });
-    }
-
-    static private Set<Triple> getMatchedTriplesForReporter(
-            Map<Triple, TripleConstraint> matching,
-            ValidationContext vCxt,
-            Reporter shapeReporter,
-            SorbeTripleExpr sorbeTripleExpr) {
-
-        if (shapeReporter.isValidateOnly())
-            return null;
-
-        return  sorbeTripleExpr.triplesMatchedInOriginSubExpr(matching, sorbeTripleExpr.getOriginTripleExpr(), vCxt);
-    }
 }

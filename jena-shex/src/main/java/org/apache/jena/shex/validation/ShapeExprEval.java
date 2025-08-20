@@ -62,14 +62,12 @@ public class ShapeExprEval {
                     Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
                     // TODO possible problem if the the definition is a reference itself
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
-                        reporter.addDescendantSatisfactionInfo(true,
-                                "The non-abstract descendant " + descendant + " is satisfied.");
+                        reporter.informDescendantConformance(true, descendant);
                         return true;
                     }
                 }
                 if (nonAbstractDescendants.size() > 1 || vCxt.getShapeDecl(ref.getLabel()).isAbstract()) {
-                    reporter.addDescendantSatisfactionInfo(false,
-                            "No non-abstract descendant is satisfied.");
+                    reporter.informDescendantConformance(false, null);
                 }
                 return false;
             }
@@ -117,15 +115,16 @@ public class ShapeExprEval {
 
         // 3. Check if the closed constraint is satisfied, if any
         if (shape.isClosed() && !nonMatchables.isEmpty()) {
-            shapeReporter.informUnmatchableTriplesClosedShape(nonMatchables);
+            shapeReporter.informUnexpectedTriples(nonMatchables, Reporter.UnexpectedTriplesReason.CLOSED);
             return shapeReporter.setIsConformant(false);
         }
 
         // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
         Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(dataNode, shape, matchables,
                 mainTripleExprs, vCxt, shapeReporter);
+        // TODO specific reporting needed when a split satisfies the main shapes but not the constraints
 
-        // TODO we need a test case in which the main parti is satisfied, but not the restriction
+        // TODO we need a test case in which the main parti is satisfied, but not the restriction. This should have several equivalent shapes, but in which the ordering is different
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
             if (splitSatisfiesConstraints(dataNode, shape, split, constraints, vCxt, shapeReporter)) {
@@ -217,7 +216,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(ShapeExternal shapeExternal, Reporter reporter) {
             // TODO shape external never satisfied
-            reporter.addInfoExternalNotSupported();
+            reporter.informExternalNotSupported();
             return reporter.setIsConformant(false);
         }
 
@@ -255,7 +254,7 @@ public class ShapeExprEval {
 
             // TODO Bad.
             if (!satisfied)
-                reporter.addNodeConstraintInvalidInfo(nodeKindCstr,
+                reporter.informInvalidNodeConstraintComponent(nodeKindCstr,
                         nodeKindCstr + ": Expected " + nodeKind + " for " + displayStr(dataNode));
             return satisfied;
         }
@@ -263,7 +262,7 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(DatatypeConstraint datatypeCstr) {
             if (!dataNode.isLiteral()) {
-                reporter.addNodeConstraintInvalidInfo(datatypeCstr,
+                reporter.informInvalidNodeConstraintComponent(datatypeCstr,
                         datatypeCstr + " : Not a literal");
                 return false;
             }
@@ -271,12 +270,12 @@ public class ShapeExprEval {
             if (datatypeCstr.getDatatypeURI().equals(dataNode.getLiteralDatatypeURI())) {
                 // Must be valid for the type
                 if (!datatypeCstr.getRDFDatatype().isValid(dataNode.getLiteralLexicalForm())) {
-                    reporter.addNodeConstraintInvalidInfo(datatypeCstr,
+                    reporter.informInvalidNodeConstraintComponent(datatypeCstr,
                             datatypeCstr + " : Not valid value : Node " + displayStr(dataNode));
                     return false;
                 }
             } else {
-                reporter.addNodeConstraintInvalidInfo(datatypeCstr,
+                reporter.informInvalidNodeConstraintComponent(datatypeCstr,
                         datatypeCstr + " -- Wrong datatype: " + strDatatype(dataNode) + " for focus node: " + displayStr(dataNode));
                 return false;
             }
@@ -286,25 +285,25 @@ public class ShapeExprEval {
         @Override
         public Boolean visit(NumLengthConstraint numLengthCstr) {
             if (!dataNode.isLiteral()) {
-                reporter.addNodeConstraintInvalidInfo(numLengthCstr, format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode)));
+                reporter.informInvalidNodeConstraintComponent(numLengthCstr, format("NumericConstraint: Not numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             RDFDatatype rdfDT = dataNode.getLiteralDatatype();
             if (!(rdfDT instanceof XSDDatatype)) {
-                reporter.addNodeConstraintInvalidInfo(numLengthCstr,
+                reporter.informInvalidNodeConstraintComponent(numLengthCstr,
                         format("NumericConstraint: Not a numeric: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
 
             if (XSDDatatype.XSDfloat.equals(rdfDT) || XSDDatatype.XSDdouble.equals(rdfDT)) {
-                reporter.addNodeConstraintInvalidInfo(numLengthCstr,
+                reporter.informInvalidNodeConstraintComponent(numLengthCstr,
                         format("NumericConstraint: Numeric not compatible with xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
             String lexicalForm = dataNode.getLiteralLexicalForm();
             if (!rdfDT.isValid(lexicalForm)) {
-                reporter.addNodeConstraintInvalidInfo(numLengthCstr,
+                reporter.informInvalidNodeConstraintComponent(numLengthCstr,
                         format("NumericConstraint: Not a valid xsd:decimal: %s ", ShexLib.displayStr(dataNode)));
                 return false;
             }
@@ -365,14 +364,14 @@ public class ShapeExprEval {
 
             String msg = format("Expected %s %d : got = %d", numLengthCstr.getLengthType().label(),
                     numLengthCstr.getLength(), lexicalForm.length());
-            reporter.addNodeConstraintInvalidInfo(numLengthCstr, msg);
+            reporter.informInvalidNodeConstraintComponent(numLengthCstr, msg);
             return false;
         }
 
         @Override
         public Boolean visit(NumRangeConstraint numRangeCstr) {
             if (!dataNode.isLiteral()) {
-                reporter.addNodeConstraintInvalidInfo(numRangeCstr, "NumRange: Not a literal number");
+                reporter.informInvalidNodeConstraintComponent(numRangeCstr, "NumRange: Not a literal number");
                 return false;
             }
             NodeValue nv = NodeValue.makeNode(dataNode);
@@ -402,7 +401,7 @@ public class ShapeExprEval {
                     break;
             }
             String msg = format("Expected %s %s : got = %s", numRangeCstr.getRangeKind().label(), NodeFmtLib.strTTL(nv.getNode()), NodeFmtLib.strTTL(dataNode));
-            reporter.addNodeConstraintInvalidInfo(numRangeCstr, msg);
+            reporter.informInvalidNodeConstraintComponent(numRangeCstr, msg);
             return false;
         }
 
@@ -410,7 +409,7 @@ public class ShapeExprEval {
         public Boolean visit(StrRegexConstraint strRegexCstr) {
             if (dataNode.isBlank()) {
                 String msg = toString() + ": Blank node: " + displayStr(dataNode);
-                reporter.addNodeConstraintInvalidInfo(strRegexCstr, msg);
+                reporter.informInvalidNodeConstraintComponent(strRegexCstr, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -418,7 +417,7 @@ public class ShapeExprEval {
                 return true;
             }
             String msg = strRegexCstr + ": Does not match: '" + str + "'";
-            reporter.addNodeConstraintInvalidInfo(strRegexCstr, msg);
+            reporter.informInvalidNodeConstraintComponent(strRegexCstr, msg);
             return false;
         }
 
@@ -428,7 +427,7 @@ public class ShapeExprEval {
             int length = strLengthCstr.getLength();
             if (!dataNode.isLiteral() && !dataNode.isURI()) {
                 String msg = format("%s: Not a literal or URI: %s", lengthType.label(), ShexLib.displayStr(dataNode));
-                reporter.addNodeConstraintInvalidInfo(strLengthCstr, msg);
+                reporter.informInvalidNodeConstraintComponent(strLengthCstr, msg);
                 return false;
             }
             String str = NodeFunctions.str(dataNode);
@@ -451,7 +450,7 @@ public class ShapeExprEval {
             }
 
             String msg = format("Expected %s %d : got = %d", lengthType.label(), length, str.length());
-            reporter.addNodeConstraintInvalidInfo(strLengthCstr, msg);
+            reporter.informInvalidNodeConstraintComponent(strLengthCstr, msg);
             return false;
         }
 
@@ -460,7 +459,7 @@ public class ShapeExprEval {
             boolean b = valueCstr.getValueSetRanges().stream()
                     .anyMatch(valueSetRange -> validateRange(valueSetRange, dataNode));
             if (!b) {
-                reporter.addNodeConstraintInvalidInfo(valueCstr, "Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr);
+                reporter.informInvalidNodeConstraintComponent(valueCstr, "Value " + ShexLib.displayStr(dataNode) + " not in range: " + valueCstr);
                 return false;
             }
             return true;

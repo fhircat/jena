@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
 
 /** A SORBE triple expression is a triple expression that satisfies:
  * <ul>
- *     <li>it does not contain triple expression references</li>
- *     <li>cardinalities other than ?, *, + appear only on triple constraints</li>
- *     <li>cardinality + appears only on sub-expressions that cannot be satisfied by an empty neighbourhood</li>
+ *     <li>it does not contain triple expression references,</li>
+ *     <li>cardinalities other than ?, *, + appear only on triple constraints,</li>
+ *     <li>cardinality + appears only on sub-expressions that cannot be satisfied by an empty neighbourhood.</li>
  * </ul>
  *
  * <p>
@@ -100,6 +100,7 @@ import java.util.stream.Collectors;
                 .collect(Collectors.toMap(Function.identity(),
                     t -> new ArrayList<>(tcsByPredicate.get(t.getPredicate()))));
     }
+
 
     /*package*/ Cardinality computeInterval (Map<Triple, TripleConstraint> matching) {
         Bag bag = Bag.fromMatching(matching, getAllSorbeTripleConstraints());

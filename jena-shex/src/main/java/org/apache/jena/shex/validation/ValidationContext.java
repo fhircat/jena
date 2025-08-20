@@ -60,12 +60,12 @@ public class ValidationContext {
             stack.pop();
 
             if (isValid) {
-                reporter.addDescendantSatisfactionInfo(true, "Non-abstract descendant " + descendant + " is satisfied.");
+                reporter.informDescendantConformance(true, descendant);
                 return reporter.setIsConformant(true);
             }
         }
         if (isExetendable(label))
-            reporter.addDescendantSatisfactionInfo(false, "No non-abstract descendant is satisfied.");
+            reporter.informDescendantConformance(false, null);
         return reporter.setIsConformant(false);
         // TODO memoization
     }
@@ -123,10 +123,7 @@ public class ValidationContext {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateShapeExpr(semAct, expr, focus);
-                reporter.addSemanticActionsInfo(
-                        eval,
-                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
-                        semAct);
+                reporter.informSemanticActionsConformance(eval, semAct);
                 if (!eval) return false;
             }
         }
@@ -140,10 +137,7 @@ public class ValidationContext {
             SemanticActionPlugin semActPlugin = this.semActPluginIndex.get(semAct.getIri());
             if (semActPlugin != null) {
                 boolean eval = semActPlugin.evaluateTripleExpr(semAct, expr, triples);
-                reporter.addSemanticActionsInfo(
-                        eval,
-                        eval ? "Semantic actions satisfied" : "Semantic actions not satisfied",
-                        semAct);
+                reporter.informSemanticActionsConformance(eval, semAct);
                 if (!eval) return false;
             }
         }
@@ -205,6 +199,7 @@ public class ValidationContext {
         }
     }
 
+    /** Used to memorize static analysis information about a ShEx schema. */
     private static class ShexSchemaMem {
 
         private final SorbeFactory sorbeFactory;

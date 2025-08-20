@@ -2,17 +2,17 @@ package org.apache.jena.shex.reporting;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.shex.expressions.Expression;
-import org.apache.jena.shex.expressions.TripleConstraint;
-import org.apache.jena.shex.expressions.TripleExpr;
+import org.apache.jena.shex.expressions.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
 
-    private static FancyExhaustiveReporter factoryInstance = new FancyExhaustiveReporter();
+    private static final FancyExhaustiveReporter factoryInstance = new FancyExhaustiveReporter();
     public static FancyExhaustiveReporter factory() {
         return factoryInstance;
     }
@@ -25,7 +25,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     }
 
     @Override
-    public FancyExhaustiveReporter createRoot(Node node, Expression expr) {
+    public FancyExhaustiveReporter createRoot(Node node, ShapeExprRef expr) {
         return new FancyExhaustiveReporter(node, expr, null);
     }
 
@@ -36,28 +36,76 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         return r;
     }
 
+    // -----------------------------------------------------------
+    // Attributes for reporting errors in TripleExpr
+    // -----------------------------------------------------------
+    private Map<Triple, List<TripleConstraint>> predicateBasedPreMatching = null;
+    private Map<Triple, List<TripleConstraint>> preMatching = null;
+    private Map<Triple, TripleConstraint> lastNonConformantMatching = null;
+    private Reporter.MatchingNotSatisfiedReason lastNonConformantMatchingReason = null;
+
     @Override
-    public void informMatchableTriples(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching) {
-        super.informMatchableTriples(predicateBasedPreMatching);
+    public void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching) {
+        this.predicateBasedPreMatching = new HashMap<>(predicateBasedPreMatching);
     }
 
     @Override
-    public void informMatchedTriples(Map<Triple, List<TripleConstraint>> cleanPreMatching) {
-        super.informMatchedTriples(cleanPreMatching);
+    public void informPreMatching(Map<Triple, List<TripleConstraint>> cleanPreMatching) {
+        this.preMatching = new HashMap<>(cleanPreMatching);
     }
 
     @Override
-    public void informUnmatchedTriples(Set<Triple> unmatchedTriples) {
-        super.informUnmatchedTriples(unmatchedTriples);
+    public void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
+                                                   Reporter.MatchingNotSatisfiedReason reasonIfNonConformant) {
+        if (! isConformant) {
+            this.lastNonConformantMatching = matching;
+            this.lastNonConformantMatchingReason = reasonIfNonConformant;
+        }
+        super.informCandidateMatchingConformance(isConformant, matching, reasonIfNonConformant);
     }
 
+    // -----------------------------------------------------------------------------
+    // Generate the error message
+    // -----------------------------------------------------------------------------
     @Override
-    public void informCandidateMatching(Map<Triple, TripleConstraint> matching) {
-        super.informCandidateMatching(matching);
+    public boolean setIsConformant (boolean isConformant) {
+        if (! isConformant) {
+            if (report.expr instanceof Shape
+                    // Conditions fancy error reporting for shapes
+                    && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
+                    && isDeterministic((Shape) report.expr)
+                    && isSorbe((Shape) report.expr)) {
+                addErrorMessageShapeUnmatched();
+            }
+        }
+        return super.setIsConformant(isConformant);
     }
 
-    @Override
-    public void informCandidateMatchingFailedForTripleExpression(Map<Triple, TripleConstraint> matching, TripleExpr tripleExpr) {
-        super.informCandidateMatchingFailedForTripleExpression(matching, tripleExpr);
+    private boolean isDeterministic(Shape shape) {
+        // TODO
+        return true;
     }
+
+    private boolean isSorbe(Shape shape) {
+        // TODO
+        return true;
+    }
+
+    private void addErrorMessageShapeUnmatched() {
+        Shape shape = (Shape) report.expr;
+        // Is this a cardinality error ?
+        Map<TripleConstraint, List<Triple>> invertedMatching = lastNonConformantMatching.entrySet()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getValue,                   // group by value
+                        Collectors.mapping(Map.Entry::getKey,  // collect keys
+                                Collectors.toList())
+                ));
+        TripleConstraint constraint = null;
+        /*
+        invertedMatching.entrySet().stream()
+                .filter(e -> e.getValue().size() )
+        */
+    }
+
 }

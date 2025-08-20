@@ -4,6 +4,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
+import org.apache.jena.shex.expressions.ShapeExprRef;
 
 import java.util.Set;
 
@@ -16,7 +17,7 @@ public class ValidateOnlyReporter implements Reporter {
     }
 
     @Override
-    public Reporter createRoot(Node node, Expression expr) {
+    public Reporter createRoot(Node node, ShapeExprRef expr) {
         return new ValidateOnlyReporter();
     }
 
@@ -34,12 +35,12 @@ public class ValidateOnlyReporter implements Reporter {
     @Override
     public void setResult(ShexStatus status) {
         if (SimpleExhaustiveReporter.DEBUG && report != null)
-            throw new IllegalStateException("Result set twice");
+            throw new IllegalStateException("Result has already been set.");
         report = new SimpleReport(status, "");
     }
 
     @Override
-    public void addInfo(String message, Object details, boolean isConformant) {
+    public void addInfo(boolean isConformant, String message, Object details) {
         // empty
     }
 
@@ -51,10 +52,10 @@ public class ValidateOnlyReporter implements Reporter {
     @Override
     public boolean isValidateOnly() {return true;}
 
-    private class EmptyReporter implements Reporter {
+    private static class EmptyReporter implements Reporter {
 
         @Override
-        public Reporter createRoot(Node node, Expression expr) {
+        public Reporter createRoot(Node node, ShapeExprRef expr) {
             return this;
         }
 
@@ -74,7 +75,7 @@ public class ValidateOnlyReporter implements Reporter {
         }
 
         @Override
-        public void addInfo(String message, Object details, boolean isConformant) {
+        public void addInfo(boolean isConformant, String message, Object details) {
             // empty
         }
 

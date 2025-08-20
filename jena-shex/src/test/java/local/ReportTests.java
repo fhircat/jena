@@ -25,6 +25,8 @@ public class ReportTests {
 
 
     public static void main(String[] args) {
+        System.out.println(System.getProperty("user.dir"));
+
         String schemaFile = testName + ".shex";
         String graphFile = testName + ".ttl";
         String mapFile = testName + "-map.ttl";

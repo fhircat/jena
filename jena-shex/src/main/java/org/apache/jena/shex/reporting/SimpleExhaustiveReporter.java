@@ -4,6 +4,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.Expression;
+import org.apache.jena.shex.expressions.ShapeExprRef;
 
 import java.util.Set;
 
@@ -25,7 +26,7 @@ public class SimpleExhaustiveReporter implements Reporter {
     }
 
     @Override
-    public SimpleExhaustiveReporter createRoot(Node node, Expression expr) {
+    public SimpleExhaustiveReporter createRoot(Node node, ShapeExprRef expr) {
         return new SimpleExhaustiveReporter(node, expr, null);
     }
 
@@ -38,7 +39,7 @@ public class SimpleExhaustiveReporter implements Reporter {
 
     @Override
     public void setReferenceTo(Report r, String additionalMessage) {
-        addInfo(additionalMessage, null, r.getStatus() == ShexStatus.conformant);
+        addInfo(r.getStatus() == ShexStatus.conformant, additionalMessage, null);
         this.report.asReferenceTo(r, additionalMessage);
     }
 
@@ -62,7 +63,7 @@ public class SimpleExhaustiveReporter implements Reporter {
     }
 
     @Override
-    public void addInfo(String message, Object details, boolean isConformant) {
+    public void addInfo(boolean isConformant, String message, Object details) {
         report.addInfo(new ReportInfo(message, details, isConformant));
     }
 
