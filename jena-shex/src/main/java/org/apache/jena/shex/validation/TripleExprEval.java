@@ -64,13 +64,12 @@ public class TripleExprEval {
         // Does not notify the reporter about conformant / non-conformant
 
         // NOTE: SORBE used
-        // Construct the SORBE expressions
-        Map<Node, SorbeTripleExpr> exprsToBeMatched = new HashMap<>(mainTripleExprs.size());
+        // Constructs the thriple expressions to be validated
+        Map<Node, TripleExprForValidation> exprsToBeMatched = new HashMap<>(mainTripleExprs.size());
         for (Map.Entry<Node, TripleExpr> e: mainTripleExprs.entrySet()) {
 
             // if (! vCxt.getSorbe(e.getValue()).isNativeSorbe()) throw new IllegalStateException("NOT SORBE"); // TODO for debugging, remove eventually together with isNativeSorbe
-
-            exprsToBeMatched.put(e.getKey(), vCxt.getSorbe(e.getValue()));
+            exprsToBeMatched.put(e.getKey(), vCxt.getExprForValidation(e.getValue()));
         }
 
         // With every triple, associate all the triple constraints that this triple could match, based on predicate
@@ -111,14 +110,16 @@ public class TripleExprEval {
     }
 
     /** Matches every triple to the list of expressions that have the same predicate. */
-    private static Map<Triple, List<TripleConstraint>> predicateBasedPreMatching (Set<Triple> triples,
-                                                                                 Collection<SorbeTripleExpr> toBeMatched) {
+    private static Map<Triple, List<TripleConstraint>> predicateBasedPreMatching (
+            Set<Triple> triples,
+            Collection<TripleExprForValidation> toBeMatched) {
+
         Map<Triple, List<TripleConstraint>> preMatching = triples.stream()
                 .collect(Collectors.toMap(Function.identity(),
                         t -> new ArrayList<>()));
-        for (SorbeTripleExpr sorbeTripleExpr : toBeMatched) {
+        for (TripleExprForValidation teVal : toBeMatched) {
             // this loop is needed only for extends, but does no harm w/o extends
-            Map<Triple, List<TripleConstraint>> pm = sorbeTripleExpr.getPredicateBasedPreMatching(triples);
+            Map<Triple, List<TripleConstraint>> pm = teVal.getPredicateBasedPreMatching(triples);
             pm.forEach((triple, list) -> preMatching.get(triple).addAll(list));
         }
         return preMatching;
@@ -167,7 +168,7 @@ public class TripleExprEval {
     /** Checks whether a matching satisfies a hierarchy of triple expressions. */
     private static boolean checkSatisfiesTripleExpressionsAndReport_sorbe(Node dataNode,
                                                                           Map<Triple, TripleConstraint> matching,
-                                                                          Collection<SorbeTripleExpr> exprsToBeMatched,
+                                                                          Collection<TripleExprForValidation> exprsToBeMatched,
                                                                           ValidationContext vCxt,
                                                                           Reporter shapeReporter) {
         // Does not notify the reporter about conformant / non-conformant
@@ -175,22 +176,21 @@ public class TripleExprEval {
         boolean teValid = true;
         boolean seValid = true;
         exprsToBeMatchedLoop:
-        for (SorbeTripleExpr sorbeTripleExpr : exprsToBeMatched) {
+        for (TripleExprForValidation teVal : exprsToBeMatched) {
             // this loop is needed only for extends, but does no harm w/o extends
 
-            Cardinality interval = sorbeTripleExpr.computeInterval(matching);
             // here, teValid is always true (because of break when ! teValid)
-            teValid = interval.min <= 1 && 1 <= interval.max;
+            teValid = teVal.isValid(matching);
 
             // TODO is the tripleExprReporter needed ?
-            //Reporter tripleExprReporter = shapeReporter.createChild(dataNode, sorbeTripleExpr.getOriginTripleExpr(),
-            //        getMatchedTriplesForReporter(matching, vCxt, shapeReporter, sorbeTripleExpr));
+            //Reporter tripleExprReporter = shapeReporter.createChild(dataNode, teVal.getOriginTripleExpr(),
+            //        getMatchedTriplesForReporter(matching, vCxt, shapeReporter, teVal));
 
-            //shapeReporter.informCandidateMatchingConformance(teValid, matching, sorbeTripleExpr.getOriginTripleExpr());
+            //shapeReporter.informCandidateMatchingConformance(teValid, matching, teVal.getOriginTripleExpr());
 
             if (!teValid) break;
 
-            for (Pair<TripleExpr, Set<Triple>> p : sorbeTripleExpr.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt)) {
+            for (Pair<TripleExpr, Set<Triple>> p : teVal.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt)) {
                 if (! vCxt.dispatchTripleExprSemanticAction(
                         p.getKey(), p.getValue(), /*tripleExprReporter*/ shapeReporter, dataNode)) {
                     seValid = false;
@@ -207,16 +207,17 @@ public class TripleExprEval {
         return false;
     }
 
+    // TODO: useful ?
     private static Set<Triple> getMatchedTriplesForReporter(
             Map<Triple, TripleConstraint> matching,
             ValidationContext vCxt,
             Reporter shapeReporter,
-            SorbeTripleExpr sorbeTripleExpr) {
+            TripleExprForValidation teVal) {
 
         if (shapeReporter.isValidateOnly())
             return null;
 
-        return sorbeTripleExpr.triplesMatchedInOriginSubExpr(matching, sorbeTripleExpr.getOriginTripleExpr(), vCxt);
+        return teVal.triplesMatchedInOriginSubExpr(matching, teVal.getOriginTripleExpr(), vCxt);
     }
 
 
@@ -224,15 +225,17 @@ public class TripleExprEval {
         return unmatchedTriples.stream().allMatch(t -> extraPredicates.contains(t.getPredicate()));
     }
 
-    /** With every shape expression label l from expressions.keySet(), associates the triples t from matching.keySet() s.t. matching.get(t) is a sub-expression of expressions.get(l).
+    /** With every shape expression label (in an extension hierarchy), associates the triples that {@param matching}
+     * matched to a triple constraint from the definition of that label.
+     * More precisely, with every label l in {@param expressions}.keySet(), associates the set of triples t from
+     * {@param matching}.keySet() s.t. {@param matching.get(t)} is a sub-expression of {@param expressions}.get(l).
      *
      * @param expressions Can contain null as key.
      * @param matching
-     * @return
+     * @return Has the same key set as {@param expressions}, thus can contain null key.
      */
-    private static Map<Node, Set<Triple>> groupByLabel(Map<Node, SorbeTripleExpr> expressions,
+    private static Map<Node, Set<Triple>> groupByLabel(Map<Node, TripleExprForValidation> expressions,
                                                        Map<Triple, TripleConstraint> matching) {
-        // TODO: expressions contains the null key for the base shape. The same holds for the returned map
         // With every triple constraint associates the set of triples matched to it
         EMap<TripleConstraint, Set<Triple>> inverseMatching = matching.entrySet().stream()
                 .collect(Collectors.groupingBy(
@@ -240,12 +243,11 @@ public class TripleExprEval {
                         EMap::new,
                         Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
 
-        // With every label associates the set of triples matched to some triple constraint the SORBE associated
-        // to this label
+        // Associate the triples with the labels by tracking the label in which definition the triple constraint appears
         Map<Node, Set<Triple>> result = new HashMap<>();
-        for (Map.Entry<Node, SorbeTripleExpr> e: expressions.entrySet()) {
+        for (Map.Entry<Node, TripleExprForValidation> e: expressions.entrySet()) {
             result.put(e.getKey(),
-                    e.getValue().getSorbeTripleConstraintsOfSorbeSubExpr(e.getValue().sorbe).stream()
+                    e.getValue().getTripleConstraints().stream()
                             .flatMap(tc -> inverseMatching.getOrDefault(tc, Set.of()).stream())
                             .collect(Collectors.toSet()));
         }

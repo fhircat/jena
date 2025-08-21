@@ -161,8 +161,8 @@ public class ValidationContext {
         return this.schema.get(shapeExprLabel);
     }
 
-    public SorbeTripleExpr getSorbe(TripleExpr value) {
-        return this.schemaMem.getSorbeFactory().getSorbe(value);
+    public TripleExprForValidation getExprForValidation(TripleExpr value) {
+        return this.schemaMem.getSorbeFactory().getValExpr(value);
     }
 
 
@@ -185,32 +185,32 @@ public class ValidationContext {
         }
     }
 
-    static class SorbeFactory {
+    static class TripleExprForValidationFactory {
 
-        private final EMap<TripleExpr, SorbeTripleExpr> sourceToSorbeMap = new EMap<>();
+        private final EMap<TripleExpr, TripleExprForValidation> sourceToTEValMap = new EMap<>();
         private final ShexSchema schema;
 
-        private SorbeFactory(ShexSchema schema) {
+        private TripleExprForValidationFactory(ShexSchema schema) {
             this.schema = schema;
         }
 
-        SorbeTripleExpr getSorbe (TripleExpr tripleExpr) {
-            return sourceToSorbeMap.computeIfAbsent(tripleExpr, e -> SorbeTripleExpr.create(tripleExpr, schema));
+        TripleExprForValidation getValExpr(TripleExpr tripleExpr) {
+            return sourceToTEValMap.computeIfAbsent(tripleExpr, e -> TripleExprForValidation.create(tripleExpr, schema));
         }
     }
 
     /** Used to memorize static analysis information about a ShEx schema. */
     private static class ShexSchemaMem {
 
-        private final SorbeFactory sorbeFactory;
+        private final TripleExprForValidationFactory sorbeFactory;
         private final TypeHierarchyGraph typeHierarchyGraph;
 
         public ShexSchemaMem(ShexSchema schema) {
-            this.sorbeFactory = new SorbeFactory(schema);
+            this.sorbeFactory = new TripleExprForValidationFactory(schema);
             this.typeHierarchyGraph = TypeHierarchyGraph.create(schema.getShapeMap());
         }
 
-        public SorbeFactory getSorbeFactory() {
+        public TripleExprForValidationFactory getSorbeFactory() {
             return this.sorbeFactory;
         }
 

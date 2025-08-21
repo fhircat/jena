@@ -27,11 +27,11 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
     /*package*/ static Cardinality EMPTY_INTERVAL = new Cardinality(2, 1);
 
     private final Bag bag;
-    private final SorbeTripleExpr sorbeTripleExpr;
+    private final TripleExprForValidation tripleExpr;
 
-    public IntervalComputation(SorbeTripleExpr sorbeTripleExpr, Bag bag) {
+    public IntervalComputation(TripleExprForValidation tripleExpr, Bag bag) {
         this.bag = bag;
-        this.sorbeTripleExpr = sorbeTripleExpr;
+        this.tripleExpr = tripleExpr;
     }
 
     @Override
@@ -70,14 +70,14 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
         TripleExpr subExpr = tripleExprCardinality.getSubExpr();
 
         if (card.equals(Cardinality.STAR))
-            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
+            if (tripleExpr.isEmptySubbag(bag, tripleExprCardinality))
                 return Cardinality.STAR;
             else {
                 Cardinality subResult = subExpr.visit(this);
                 return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : Cardinality.PLUS;
             }
         if (card.equals(Cardinality.PLUS))
-            if (sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality))
+            if (tripleExpr.isEmptySubbag(bag, tripleExprCardinality))
                 return ZERO_INTERVAL;
             else {
                 Cardinality subResult = subExpr.visit(this);
@@ -92,7 +92,7 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
             return div(nbOcc, card);
         }
         if (card.equals(ZERO_INTERVAL))
-            return sorbeTripleExpr.isEmptySubbag(bag, tripleExprCardinality) ? Cardinality.STAR : EMPTY_INTERVAL;
+            return tripleExpr.isEmptySubbag(bag, tripleExprCardinality) ? Cardinality.STAR : EMPTY_INTERVAL;
 
         throw new IllegalArgumentException("Arbitrary repetition " + card + "allowed on triple constraints only.");
     }
