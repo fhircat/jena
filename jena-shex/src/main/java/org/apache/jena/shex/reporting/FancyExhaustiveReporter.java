@@ -3,6 +3,7 @@ package org.apache.jena.shex.reporting;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.calc.ExpressionWalker;
 import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
 import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.validation.TripleExprForValidation;
@@ -63,6 +64,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             this.lastNonConformantMatching = matching;
             this.lastNonConformantMatchingReason = reasonIfNonConformant;
         }
+        // TODO: this should go where all the error reports are dealt with, only when more specific report was not found. Especially if several matching are to be considered
         super.informCandidateMatchingConformance(isConformant, matching, reasonIfNonConformant);
     }
 
@@ -132,13 +134,12 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                 String m = String.format(
                         "Cardinality error. Incorrect number of triples matched a triple expression. Expected: between %d and %d; found: %d",
                         card.min, card.max, nb);
-                addInfo(false, m, Pair.of(tc, invertedMatching.get(tc)));
+                addInfo(false, m, Pair.of(tc, invertedMatching.getOrDefault(tc, Collections.emptyList())));
                 hasError.set(true);
             }
         });
         return hasError.get();
     }
-
 
     /** The cardinality directly on the triple constraint (or default 1 cardinality), or null if this is not the case. */
     private static Map<TripleConstraint, Cardinality> cardinalities (Collection<TripleExprForValidation> expressions) {
@@ -156,8 +157,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                 accumulate(Pair.of(tc, Cardinality.ONE));
             }
         };
-        for (TripleExprForValidation expr : expressions)
-            expr.getOriginalExpr().visit(cardinalityFinder);
+        ExpressionWalker walker = ExpressionWalker.builder()
+                .processTripleExprsWith(cardinalityFinder)
+                .dontRecurseInto(TripleExprCardinality.class)
+                .build();
+        expressions.forEach(te -> te.getOriginalExpr().visit(walker));
         return cardMap.stream()
                 .collect(Collectors.toMap(
                         Pair::getKey,

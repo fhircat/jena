@@ -5,3 +5,4 @@ ex:S0    { ex:p .{0} }
 ex:S0-1  { ex:p .? }
 ex:S1    { ex:p . }
 ex:Splus { ex:p .+ }
+ex:T     { ex:r . ; (ex:p . | ex:q .)* }

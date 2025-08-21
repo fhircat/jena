@@ -22,8 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.expressions.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 /** Walks recursively through an expression (shape expression or triple expression) applying visitors on its sub-expressions.
@@ -50,12 +49,14 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
     private final boolean followTripleExprRefs;
     private final Function<Node, TripleExpr> tripleExprDereferencer;
     private final Function<Node, ShapeDecl> shapeDeclDereferencer;
+    private final Set<Class<? extends Expression>> dontRecurseInto;
 
     private ExpressionWalker(List<VoidShapeExprVisitor> shapeExprProcessors, List<VoidTripleExprVisitor> tripleExprProcessors,
                              boolean traverseShapes, boolean traverseTripleConstraints,
                              boolean followShapeExprRefs, boolean followTripleExprRefs,
                              Function<Node, ShapeDecl> shapeDeclDereferencer,
-                             Function<Node, TripleExpr> tripleExprDereferencer) {
+                             Function<Node, TripleExpr> tripleExprDereferencer,
+                             Set<Class<? extends Expression>> dontRecurseInto) {
         this.shapeExprProcessors = shapeExprProcessors;
         this.tripleExprProcessors = tripleExprProcessors;
         this.traverseShapes = traverseShapes;
@@ -64,6 +65,7 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
         this.followTripleExprRefs = followTripleExprRefs;
         this.shapeDeclDereferencer = shapeDeclDereferencer;
         this.tripleExprDereferencer = tripleExprDereferencer;
+        this.dontRecurseInto = dontRecurseInto;
     }
 
     private void process(TripleExpr tripleExpr) {
@@ -77,19 +79,22 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
     @Override
     public void visit(ShapeAnd shapeAnd) {
         process(shapeAnd);
-        shapeAnd.getShapeExprs().forEach(sh->sh.visit(this));
+        if (! dontRecurseInto.contains(ShapeAnd.class))
+            shapeAnd.getShapeExprs().forEach(sh->sh.visit(this));
     }
 
     @Override
     public void visit(ShapeOr shapeOr) {
         process(shapeOr);
-        shapeOr.getShapeExprs().forEach(sh->sh.visit(this));
+        if (! dontRecurseInto.contains(ShapeOr.class))
+            shapeOr.getShapeExprs().forEach(sh->sh.visit(this));
     }
 
     @Override
     public void visit(ShapeNot shapeNot) {
         process(shapeNot);
-        shapeNot.getShapeExpr().visit(this);
+        if (! dontRecurseInto.contains(ShapeNot.class))
+            shapeNot.getShapeExpr().visit(this);
     }
 
     /**
@@ -126,19 +131,22 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
     @Override
     public void visit(TripleExprCardinality tripleExprCardinality) {
         process(tripleExprCardinality);
-        tripleExprCardinality.getSubExpr().visit(this);
+        if (! dontRecurseInto.contains(TripleExprCardinality.class))
+            tripleExprCardinality.getSubExpr().visit(this);
     }
 
     @Override
     public void visit(EachOf eachOf) {
         process(eachOf);
-        eachOf.getTripleExprs().forEach(sh->sh.visit(this));
+        if (! dontRecurseInto.contains(EachOf.class))
+            eachOf.getTripleExprs().forEach(sh->sh.visit(this));
     }
 
     @Override
     public void visit(OneOf oneOf) {
         process(oneOf);
-        oneOf.getTripleExprs().forEach(sh->sh.visit(this));
+        if (! dontRecurseInto.contains(OneOf.class))
+            oneOf.getTripleExprs().forEach(sh->sh.visit(this));
     }
 
     @Override
@@ -181,6 +189,7 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
         private boolean _followTripleExprRefs = false;
         private Function<Node, TripleExpr> _tripleExprDereferencer = null;
         private Function<Node, ShapeDecl> _shapeExprDereferencer = null;
+        private Set<Class<? extends Expression>> _dontRecurseInto = null;
 
         private Builder () {}
 
@@ -230,12 +239,30 @@ public class ExpressionWalker implements VoidTripleExprVisitor, VoidShapeExprVis
             return this;
         }
 
+        static final Set<Class<? extends Expression>> recSubclasess =
+                Set.of(ShapeAnd.class, ShapeOr.class, ShapeNot.class,
+                        EachOf.class, OneOf.class, TripleExprCardinality.class);
+
+        /** Indicate not to make recursive calls into expressions of this type.
+         * The parameter must be an expression type that has sub-expressions
+         * (among {@link ShapeAnd}, {@link ShapeOr}, {@link ShapeNot},
+         * {@link TripleExprCardinality}, {@link EachOf}, {@link OneOf}). */
+        public Builder dontRecurseInto(Class<? extends Expression> clazz) {
+            if (! recSubclasess.contains(clazz))
+                throw new IllegalArgumentException("Not an expression type with sub-expressions: " + clazz);
+            if (this._dontRecurseInto == null)
+                this._dontRecurseInto = new HashSet<>();
+            this._dontRecurseInto.add(clazz);
+            return this;
+        }
+
         /** Builds the instance of the expression walker. */
         public ExpressionWalker build() {
             return new ExpressionWalker(_shapeExprProcessors, _tripleExprProcessors,
                     _traverseShapes, _traverseTripleConstraints,
                     _followShapeExprRefs, _followTripleExprRefs,
-                    _shapeExprDereferencer, _tripleExprDereferencer);
+                    _shapeExprDereferencer, _tripleExprDereferencer,
+                    _dontRecurseInto == null ? Collections.emptySet() : _dontRecurseInto);
         }
 
     }
