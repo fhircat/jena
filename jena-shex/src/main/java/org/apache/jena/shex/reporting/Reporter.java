@@ -5,6 +5,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.validation.TripleExprForValidation;
 
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,7 @@ public interface Reporter {
         setResult(isConformant ? ShexStatus.conformant : ShexStatus.nonconformant);
         return isConformant;
     }
-
-    // TODO which of the following facility methods should be implemented here, and which in the particular reporters ?
-
+    
     /** Informs whether this reporter's shape expression is satisfied directly, or through one of its non-abstract descendants. */
     default void informDescendantConformance(boolean isConformant, Node satisfiedDescendantIfConformant) {
         if (isConformant)
@@ -97,7 +96,6 @@ public interface Reporter {
 
 
     default void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
-
                                                     MatchingNotSatisfiedReason reasonIfNonConformant) {
         String m = isConformant ? "" :
                 switch(reasonIfNonConformant) {
@@ -117,7 +115,11 @@ public interface Reporter {
      * The map given as parameter might change during validation, so any implementation that uses the pre-matching should make a copy of this map. */
     default void informPreMatching(Map<Triple, List<TripleConstraint>> cleanPreMatching) {}
 
-
+    /** In the case when the expression is a Shape, inform about the triple expressions against which it is being
+     * validated. In particular, these are the expressions against which the mappings are defined. */
+    default void informShapeTripleExpressions(Map<Node, TripleExprForValidation> expressions) {}
+    
+    
     enum UnexpectedTriplesReason { CLOSED, EXTRA }
 
     enum MatchingNotSatisfiedReason { TRIPLE_EXPRS, SEM_ACTS }

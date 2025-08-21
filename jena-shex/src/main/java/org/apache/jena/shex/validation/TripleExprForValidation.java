@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
  * This origin information is used to determine which triples matched which triple constraint from <em>origin</em>.
  *
  */
-/*package*/ class TripleExprForValidation {
+public class TripleExprForValidation {
 
     /** The encapsulated triple expression. */
     private final TripleExpr expr;
@@ -93,7 +93,7 @@ import java.util.stream.Collectors;
     }
 
     // ------------------------------------------------------------------------
-    // Package accessible methods
+    // Public/package accessible methods
     // ------------------------------------------------------------------------
 
     /*package*/ static TripleExprForValidation create(TripleExpr tripleExpr, ShexSchema schema) {
@@ -108,6 +108,16 @@ import java.util.stream.Collectors;
         SorbeConstructor constructor = new SorbeConstructor(tripleConstraintCopiesMap, schema);
         TripleExpr sorbe = tripleExpr.visit(constructor);
         return new TripleExprForValidation(tripleExpr, sorbe, subExprsWithSemActs, tripleConstraintCopiesMap);
+    }
+
+    /** Returns true if the original expression is already SORBE */
+    public boolean isNativeSorbe() {
+        return sorbeForm == null;
+    }
+
+    /** The original expression that was given on creation. */
+    public TripleExpr getOriginalExpr() {
+        return expr;
     }
 
     /** With every triple in the input, associates the triple constraints of this triple expression that have the same
@@ -155,7 +165,7 @@ import java.util.stream.Collectors;
 
     /** The triple constraints of this triple expression. Memorized.
      * Uses the original expression if it is SORBE, or its {@link #sorbeForm} otherwise. */
-    /*package*/ Set<TripleConstraint> getTripleConstraints() {
+    public List<TripleConstraint> getTripleConstraints() {
         return getTripleConstraintsOfSubExpr(getRelevantExpression());
     }
 
@@ -163,11 +173,6 @@ import java.util.stream.Collectors;
     // Unclassified : these seem to be used for reporting or for debugging
     // ------------------------------------------------------------------------
     // TODO which of these are still useful after reporter is written (also whether public or private)
-
-    /** Returns true if the original expression is already SORBE */
-    boolean isNativeSorbe() {
-        return sorbeForm == null;
-    }
 
     /* package */ TripleExpr getOriginTripleExpr() { return expr; }
 
@@ -249,14 +254,14 @@ import java.util.stream.Collectors;
 
     /** The triple constraints of a sub-expression of this triple expression. Memorized.
      * Uses the original expression if it is SORBE, or its {@link #sorbeForm} otherwise. */
-    private Set<TripleConstraint> getTripleConstraintsOfSubExpr(TripleExpr subExpr) {
+    private List<TripleConstraint> getTripleConstraintsOfSubExpr(TripleExpr subExpr) {
         return subExprToItsTripleConstraintsMap.computeIfAbsent(subExpr, e -> {
-            Set<TripleConstraint> tripleConstraints = new ESet<>();
+            List<TripleConstraint> tripleConstraints = new ArrayList<>();
             AccumulationUtil.accumulateDirectTripleConstraints(subExpr, tripleConstraints);
             return tripleConstraints;
         });
     }
-    private final EMap<TripleExpr, Set<TripleConstraint>> subExprToItsTripleConstraintsMap = new EMap<>();
+    private final EMap<TripleExpr, List<TripleConstraint>> subExprToItsTripleConstraintsMap = new EMap<>();
 
 
     // --------------------------------------------------------------------------------------------------

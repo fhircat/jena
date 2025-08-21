@@ -29,6 +29,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+// TODO remove the use of the word sorbe whenever non relevant
+
 /** Utilities for matching triple expressions.
  *
  * Vocabulary:
@@ -71,6 +73,7 @@ public class TripleExprEval {
             // if (! vCxt.getSorbe(e.getValue()).isNativeSorbe()) throw new IllegalStateException("NOT SORBE"); // TODO for debugging, remove eventually together with isNativeSorbe
             exprsToBeMatched.put(e.getKey(), vCxt.getExprForValidation(e.getValue()));
         }
+        shapeReporter.informShapeTripleExpressions(exprsToBeMatched);
 
         // With every triple, associate all the triple constraints that this triple could match, based on predicate
         Map<Triple, List<TripleConstraint>> predicateBasedPreMatching

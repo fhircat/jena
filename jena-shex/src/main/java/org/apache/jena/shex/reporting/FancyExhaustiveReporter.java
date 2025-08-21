@@ -1,13 +1,14 @@
 package org.apache.jena.shex.reporting;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.validation.TripleExprForValidation;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
@@ -39,6 +40,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     // -----------------------------------------------------------
     // Attributes for reporting errors in TripleExpr
     // -----------------------------------------------------------
+    private Map<Node, TripleExprForValidation> shapeTripleExpressions = null;
     private Map<Triple, List<TripleConstraint>> predicateBasedPreMatching = null;
     private Map<Triple, List<TripleConstraint>> preMatching = null;
     private Map<Triple, TripleConstraint> lastNonConformantMatching = null;
@@ -64,6 +66,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         super.informCandidateMatchingConformance(isConformant, matching, reasonIfNonConformant);
     }
 
+    @Override
+    public void informShapeTripleExpressions (Map<Node, TripleExprForValidation> expressions) {
+        this.shapeTripleExpressions = expressions;
+    }
+
     // -----------------------------------------------------------------------------
     // Generate the error message
     // -----------------------------------------------------------------------------
@@ -73,27 +80,44 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             if (report.expr instanceof Shape
                     // Conditions fancy error reporting for shapes
                     && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
-                    && isDeterministic((Shape) report.expr)
-                    && isSorbe((Shape) report.expr)) {
+                    && isDeterministic(shapeTripleExpressions)) {
                 addErrorMessageShapeUnmatched();
             }
         }
         return super.setIsConformant(isConformant);
     }
 
-    private boolean isDeterministic(Shape shape) {
-        // TODO
-        return true;
-    }
-
-    private boolean isSorbe(Shape shape) {
-        // TODO
-        return true;
+    /** All the expressions are natively SORBE and if there are repeated predicates among all the expressions, then
+     * we can statically establish that every triple could match at most one triple constraint. */
+    private boolean isDeterministic(Map<Node, TripleExprForValidation> expressions) {
+        if (! expressions.values().stream().allMatch(TripleExprForValidation::isNativeSorbe))
+            return false;
+        Map<Node, List<TripleConstraint>> repeatedPredicates = expressions.values()
+                .stream()
+                .flatMap(e -> e.getTripleConstraints().stream())
+                .collect(Collectors.groupingBy(
+                        TripleConstraint::getPredicate,
+                        Collectors.mapping(t->t, Collectors.toList())));
+        repeatedPredicates.entrySet().removeIf(e -> e.getValue().size() <= 1);
+        // TODO a more complete version which looks at the values of triple constraints
+        return repeatedPredicates.isEmpty();
     }
 
     private void addErrorMessageShapeUnmatched() {
-        Shape shape = (Shape) report.expr;
-        // Is this a cardinality error ?
+        reportSimpleCardinalityErrors();
+
+        TripleConstraint constraint = null;
+        /*
+        invertedMatching.entrySet().stream()
+                .filter(e -> e.getValue().size() )
+        */
+    }
+
+    /** A simple cardinality error is about triple constraints that have a directly attached cardinality (or default 1)
+     * and the number of triples that matched is incorrect.
+     * Reports the error, and returns whether some error was found or reported. */
+    private boolean reportSimpleCardinalityErrors() {
+        AtomicBoolean hasError = new AtomicBoolean(false);
         Map<TripleConstraint, List<Triple>> invertedMatching = lastNonConformantMatching.entrySet()
                 .stream()
                 .collect(Collectors.groupingBy(
@@ -101,11 +125,46 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                         Collectors.mapping(Map.Entry::getKey,  // collect keys
                                 Collectors.toList())
                 ));
-        TripleConstraint constraint = null;
-        /*
-        invertedMatching.entrySet().stream()
-                .filter(e -> e.getValue().size() )
-        */
+        Map<TripleConstraint, Cardinality> cards = cardinalities(shapeTripleExpressions.values());
+        cards.forEach((tc, card) -> {
+            int nb = invertedMatching.getOrDefault(tc, Collections.emptyList()).size();
+            if (nb < card.min || nb > card.max) {
+                String m = String.format(
+                        "Cardinality error. Incorrect number of triples matched a triple expression. Expected: between %d and %d; found: %d",
+                        card.min, card.max, nb);
+                addInfo(false, m, Pair.of(tc, invertedMatching.get(tc)));
+                hasError.set(true);
+            }
+        });
+        return hasError.get();
     }
+
+
+    /** The cardinality directly on the triple constraint (or default 1 cardinality), or null if this is not the case. */
+    private static Map<TripleConstraint, Cardinality> cardinalities (Collection<TripleExprForValidation> expressions) {
+        List<Pair<TripleConstraint, Cardinality>> cardMap = new ArrayList<>(1);
+        TripleExprAccumulationVisitor<Pair<TripleConstraint, Cardinality>> cardinalityFinder =
+                new TripleExprAccumulationVisitor<>(cardMap) {
+            @Override
+            public void visit(TripleExprCardinality te) {
+                if (te.getSubExpr() instanceof TripleConstraint)
+                    accumulate(Pair.of((TripleConstraint) te.getSubExpr(), te.getCardinality()));
+            }
+
+            @Override
+            public void visit(TripleConstraint tc) {
+                accumulate(Pair.of(tc, Cardinality.ONE));
+            }
+        };
+        for (TripleExprForValidation expr : expressions)
+            expr.getOriginalExpr().visit(cardinalityFinder);
+        return cardMap.stream()
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        Pair::getValue,
+                        (c1, c2) -> c1 == Cardinality.ONE ? c2 : c1
+                ));
+    }
+
 
 }
