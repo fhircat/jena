@@ -1,3 +1,5 @@
 PREFIX ex: <http://a.example/>
 
 ex:n@ex:S
+ex:n@ex:T
+ex:n@ex:X

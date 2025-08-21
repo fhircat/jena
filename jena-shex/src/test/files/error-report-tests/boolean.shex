@@ -1,4 +1,5 @@
 PREFIX ex: <http://a.example/>
 
 ex:S { ex:p1 [1 2] } AND { ex:p1 [2 3] }
-
+ex:T { ex:p1 [3 4] } OR { ex:p1 [2 3] }
+ex:X NOT { ex:p1 [1 2] }
