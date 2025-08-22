@@ -29,8 +29,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// TODO remove the use of the word sorbe whenever non relevant
-
 /** Utilities for matching triple expressions.
  *
  * Vocabulary:
@@ -44,33 +42,11 @@ public class TripleExprEval {
             Node dataNode, Shape shape, Set<Triple> triples,
             Map<Node, TripleExpr> mainTripleExprs, ValidationContext vCxt, Reporter shapeReporter) {
 
-        return correctSplitsIterator_sorbe(dataNode, shape, triples, mainTripleExprs, vCxt, shapeReporter);
-    }
-
-    /**
-     * Iterator over all valid splittings of a set of triples between the triple expressions along the supertypes of a shape.
-     * A split is valid if the set of triples split.get(supertypeLabel) satisfies the triple expression baseTripleExprs.get(supertypeLabel)
-     *
-     * @param dataNode
-     * @param shape           The shape that is being validated
-     * @param triples         The set of triples to be split
-     * @param mainTripleExprs The triple expressions of the shape's supertypes, indexed by the supertype's labels
-     * @param vCxt
-     * @param shapeReporter
-     * @return An element of this iterator associates a subset of triples with every supertype label key of baseTripleExprs
-     */
-    private static Iterator<Map<Node, Set<Triple>>> correctSplitsIterator_sorbe(
-            Node dataNode, Shape shape, Set<Triple> triples,
-            Map<Node, TripleExpr> mainTripleExprs, ValidationContext vCxt, Reporter shapeReporter) {
-
         // Does not notify the reporter about conformant / non-conformant
 
-        // NOTE: SORBE used
         // Constructs the thriple expressions to be validated
         Map<Node, TripleExprForValidation> exprsToBeMatched = new HashMap<>(mainTripleExprs.size());
         for (Map.Entry<Node, TripleExpr> e: mainTripleExprs.entrySet()) {
-
-            // if (! vCxt.getSorbe(e.getValue()).isNativeSorbe()) throw new IllegalStateException("NOT SORBE"); // TODO for debugging, remove eventually together with isNativeSorbe
             exprsToBeMatched.put(e.getKey(), vCxt.getExprForValidation(e.getValue()));
         }
         shapeReporter.informShapeTripleExpressions(exprsToBeMatched);
@@ -93,9 +69,8 @@ public class TripleExprEval {
             return Collections.emptyIterator();
         }
 
-        // NOTE: SORBE used
         Iterator<Map<Triple, TripleConstraint>> correctMatchingsIterator = new FilterIterator<>(
-                m -> checkSatisfiesTripleExpressionsAndReport_sorbe(dataNode,
+                m -> checkSatisfiesTripleExpressionsAndReport(dataNode,
                         m, exprsToBeMatched.values(), vCxt, shapeReporter),
                 new MatchingsIterator(cleanPreMatching));
 
@@ -169,11 +144,11 @@ public class TripleExprEval {
     }
 
     /** Checks whether a matching satisfies a hierarchy of triple expressions. */
-    private static boolean checkSatisfiesTripleExpressionsAndReport_sorbe(Node dataNode,
-                                                                          Map<Triple, TripleConstraint> matching,
-                                                                          Collection<TripleExprForValidation> exprsToBeMatched,
-                                                                          ValidationContext vCxt,
-                                                                          Reporter shapeReporter) {
+    private static boolean checkSatisfiesTripleExpressionsAndReport(Node dataNode,
+                                                                    Map<Triple, TripleConstraint> matching,
+                                                                    Collection<TripleExprForValidation> exprsToBeMatched,
+                                                                    ValidationContext vCxt,
+                                                                    Reporter shapeReporter) {
         // Does not notify the reporter about conformant / non-conformant
 
         boolean teValid = true;
@@ -184,13 +159,6 @@ public class TripleExprEval {
 
             // here, teValid is always true (because of break when ! teValid)
             teValid = teVal.isValid(matching);
-
-            // TODO is the tripleExprReporter needed ?
-            //Reporter tripleExprReporter = shapeReporter.createChild(dataNode, teVal.getOriginTripleExpr(),
-            //        getMatchedTriplesForReporter(matching, vCxt, shapeReporter, teVal));
-
-            //shapeReporter.informCandidateMatchingConformance(teValid, matching, teVal.getOriginTripleExpr());
-
             if (!teValid) break;
 
             for (Pair<TripleExpr, Set<Triple>> p : teVal.getSemActsSubExprsAndTheirMatchedTriples(matching, vCxt)) {
@@ -202,27 +170,13 @@ public class TripleExprEval {
             }
         }
         if (teValid && seValid) {
-            shapeReporter.informCandidateMatchingConformance(true, matching, (Reporter.MatchingNotSatisfiedReason) null);
+            shapeReporter.informCandidateMatchingConformance(true, matching, null);
             return true;
         }
         shapeReporter.informCandidateMatchingConformance(false, matching,
                 !teValid ? Reporter.MatchingNotSatisfiedReason.TRIPLE_EXPRS : Reporter.MatchingNotSatisfiedReason.SEM_ACTS);
         return false;
     }
-
-    // TODO: useful ?
-    private static Set<Triple> getMatchedTriplesForReporter(
-            Map<Triple, TripleConstraint> matching,
-            ValidationContext vCxt,
-            Reporter shapeReporter,
-            TripleExprForValidation teVal) {
-
-        if (shapeReporter.isValidateOnly())
-            return null;
-
-        return teVal.triplesMatchedInOriginSubExpr(matching, teVal.getOriginTripleExpr(), vCxt);
-    }
-
 
     private static boolean unmatchedTriplesAreExtra(Set<Triple> unmatchedTriples, Set<Node> extraPredicates) {
         return unmatchedTriples.stream().allMatch(t -> extraPredicates.contains(t.getPredicate()));

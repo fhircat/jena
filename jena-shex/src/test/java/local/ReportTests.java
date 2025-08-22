@@ -21,7 +21,7 @@ import java.util.List;
 public class ReportTests {
 
     static final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/error-report-tests/";
-    static String testName = "one-of";
+    static String testName = "repeated";
 
 
     public static void main(String[] args) {

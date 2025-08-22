@@ -88,13 +88,6 @@ public interface Reporter {
         addInfo(false, "Unexpected triples. " + m, triples);
     }
 
-    /* Informs that the given matching has been tested against the triple expression, and whether it is conformant or not. */
-    /*default void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching, TripleExpr tripleExpr) {
-        String m = isConformant ? "satisfied" : "not satisfied";
-        addInfo(isConformant, "Triple expression " + m + " by the matching", new Pair<>(tripleExpr, matching));
-    }*/
-
-
     default void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
                                                     MatchingNotSatisfiedReason reasonIfNonConformant) {
         String m = isConformant ? "" :

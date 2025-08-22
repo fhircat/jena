@@ -41,23 +41,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     }
 
     // -----------------------------------------------------------
-    // Attributes for reporting errors in TripleExpr
+    // Attributes for reporting errors in Shape
     // -----------------------------------------------------------
     private Map<Node, TripleExprForValidation> shapeTripleExpressions = null;
-    private Map<Triple, List<TripleConstraint>> predicateBasedPreMatching = null;
-    private Map<Triple, List<TripleConstraint>> preMatching = null;
     private Map<Triple, TripleConstraint> lastNonConformantMatching = null;
     private Reporter.MatchingNotSatisfiedReason lastNonConformantMatchingReason = null;
-
-    @Override
-    public void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching) {
-        this.predicateBasedPreMatching = new HashMap<>(predicateBasedPreMatching);
-    }
-
-    @Override
-    public void informPreMatching(Map<Triple, List<TripleConstraint>> cleanPreMatching) {
-        this.preMatching = new HashMap<>(cleanPreMatching);
-    }
 
     @Override
     public void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
@@ -66,8 +54,6 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             this.lastNonConformantMatching = matching;
             this.lastNonConformantMatchingReason = reasonIfNonConformant;
         }
-        // TODO: this should go where all the error reports are dealt with, only when more specific report was not found. Especially if several matching are to be considered
-
     }
 
     @Override
@@ -81,12 +67,8 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     @Override
     public boolean setIsConformant (boolean isConformant) {
         if (! isConformant) {
-            if (report.expr instanceof Shape
-                    // Conditions fancy error reporting for shapes
-                    && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
-                    && isDeterministic(shapeTripleExpressions)) {
-                if (!addErrorMessageShapeUnmatched())
-                    super.informCandidateMatchingConformance(isConformant, lastNonConformantMatching, lastNonConformantMatchingReason);
+            if (report.expr instanceof Shape) {
+                reportShapeErrors();
             } else if (report.expr instanceof ShapeAnd) {
                 addInfo(false,"One of the conjuncts of ShapeAnd was not satisfied.", null);
             } else if (report.expr instanceof ShapeOr) {
@@ -96,6 +78,25 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             }
         }
         return super.setIsConformant(isConformant);
+    }
+
+    /** Reports for some kinds of errors when a shape is not satisfied. */
+    private void reportShapeErrors() {
+        boolean errorFound = false;
+
+        // Conditions under which we search specific errors:
+        //   the triple expression was not matched, and the triple expression is deterministic
+        if (lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
+            && isDeterministic(shapeTripleExpressions)) {
+
+            // The kinds of specific errors we are looking for
+            errorFound |= reportSimpleCardinalityErrors();
+            errorFound |= reportOneOfErrors();
+        }
+
+        if (!errorFound && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS)
+            // If no specific error found, then add a generic errer message
+            super.informCandidateMatchingConformance(false, lastNonConformantMatching, lastNonConformantMatchingReason);
     }
 
     /** All the expressions are natively SORBE and if there are repeated predicates among all the expressions, then
@@ -112,13 +113,6 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         repeatedPredicates.entrySet().removeIf(e -> e.getValue().size() <= 1);
         // TODO a more complete version that looks at the values of triple constraints
         return repeatedPredicates.isEmpty();
-    }
-
-    private boolean addErrorMessageShapeUnmatched() {
-        boolean errorFound = false;
-        errorFound |= reportSimpleCardinalityErrors();
-        errorFound |= reportOneOfErrors();
-        return errorFound;
     }
 
     /** A simple cardinality error is about triple constraints that have a directly attached cardinality (or default 1)

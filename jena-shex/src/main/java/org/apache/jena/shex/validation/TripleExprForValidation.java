@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
  * If the original expression is not SORBE, then the <pre>create</pre> method computes and stores its equivalent
  * SORBE form {@link #sorbeForm}.
  * The SORBE form has a different set of atomic triple constraints, which are going to be used in the matchings.
- * Methods allow to return back to the triple constraints of the original expression // TODO document after cleaning.
  *
  * <p>
  * A SORBE triple expression is a triple expression that satisfies:
@@ -176,32 +175,6 @@ public class TripleExprForValidation {
         return getTripleConstraintsOfSubExpr(getRelevantExpression());
     }
 
-    // ------------------------------------------------------------------------
-    // Unclassified : these seem to be used for reporting or for debugging
-    // ------------------------------------------------------------------------
-    // TODO which of these are still useful after reporter is written (also whether public or private)
-
-    /* package */ TripleExpr getOriginTripleExpr() { return expr; }
-
-    /** The triples that are matched with an origin sub-expression.
-     *
-     * @param matching Matching to origin triple constraints if SORBE, to {@link #sorbeForm} triple constraints otherwise.
-     * @param originSubExpr Origin sub-expression
-     * @param vCxt
-     * @return The set of triples that {@code matching} matches to some sorbe triple constraint which origin is in {@code originSubExpr}
-     */
-    /* package */ Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> matching,
-                                                            TripleExpr originSubExpr,
-                                                            ValidationContext vCxt) {
-
-        ESet<TripleConstraint> tripleConstraints = getTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
-        return matching.entrySet().stream()
-                .filter(e -> tripleConstraints.contains(e.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-    }
-
-
 
     // ---------------------------------------------------------------------------------------------------------
     // Accessors and memoized information
@@ -269,6 +242,24 @@ public class TripleExprForValidation {
         });
     }
     private final EMap<TripleExpr, List<TripleConstraint>> subExprToItsTripleConstraintsMap = new EMap<>();
+
+    /** The triples that are matched with an origin sub-expression.
+     *
+     * @param matching Matching to origin triple constraints if SORBE, to {@link #sorbeForm} triple constraints otherwise.
+     * @param originSubExpr Origin sub-expression
+     * @param vCxt
+     * @return The set of triples that {@code matching} matches to some sorbe triple constraint which origin is in {@code originSubExpr}
+     */
+    private Set<Triple> triplesMatchedInOriginSubExpr(Map<Triple, TripleConstraint> matching,
+                                                      TripleExpr originSubExpr,
+                                                      ValidationContext vCxt) {
+
+        ESet<TripleConstraint> tripleConstraints = getTripleConstraintsOfOriginSubExpr(originSubExpr, vCxt);
+        return matching.entrySet().stream()
+                .filter(e -> tripleConstraints.contains(e.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
 
 
     // --------------------------------------------------------------------------------------------------
