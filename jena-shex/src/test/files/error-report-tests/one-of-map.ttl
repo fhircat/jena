@@ -8,3 +8,5 @@ ex:nabc@ex:AeBoC
 ex:nbc@ex:AeBoC
 # no choice satisfied
 ex:na@ex:AeBoC
+
+ex:none@ex:AoBoC

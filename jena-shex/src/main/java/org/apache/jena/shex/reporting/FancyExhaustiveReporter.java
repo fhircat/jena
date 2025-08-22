@@ -212,6 +212,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(oneOfFinder)
                 .dontRecurseInto(TripleExprCardinality.class)
+                .dontRecurseInto(OneOf.class)
                 .build();
         teVal.getOriginalExpr().visit(walker);
         return result;
