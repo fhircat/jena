@@ -1,0 +1,10 @@
+PREFIX ex: <http://a.example/>
+
+# both choices satisfied
+ex:nab@ex:AoB
+# both choices satisfied
+ex:nabc@ex:AeBoC
+# both choices satisfied + missing a
+ex:nbc@ex:AeBoC
+# no choice satisfied
+ex:na@ex:AeBoC

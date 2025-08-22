@@ -6,8 +6,10 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.calc.ExpressionWalker;
 import org.apache.jena.shex.calc.TripleExprAccumulationVisitor;
 import org.apache.jena.shex.expressions.*;
+import org.apache.jena.shex.validation.EMap;
 import org.apache.jena.shex.validation.TripleExprForValidation;
 
+import javax.smartcardio.Card;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -65,7 +67,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             this.lastNonConformantMatchingReason = reasonIfNonConformant;
         }
         // TODO: this should go where all the error reports are dealt with, only when more specific report was not found. Especially if several matching are to be considered
-        super.informCandidateMatchingConformance(isConformant, matching, reasonIfNonConformant);
+
     }
 
     @Override
@@ -83,7 +85,8 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                     // Conditions fancy error reporting for shapes
                     && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
                     && isDeterministic(shapeTripleExpressions)) {
-                addErrorMessageShapeUnmatched();
+                if (!addErrorMessageShapeUnmatched())
+                    super.informCandidateMatchingConformance(isConformant, lastNonConformantMatching, lastNonConformantMatchingReason);
             } else if (report.expr instanceof ShapeAnd) {
                 addInfo(false,"One of the conjuncts of ShapeAnd was not satisfied.", null);
             } else if (report.expr instanceof ShapeOr) {
@@ -107,12 +110,15 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                         TripleConstraint::getPredicate,
                         Collectors.mapping(t->t, Collectors.toList())));
         repeatedPredicates.entrySet().removeIf(e -> e.getValue().size() <= 1);
-        // TODO a more complete version which looks at the values of triple constraints
+        // TODO a more complete version that looks at the values of triple constraints
         return repeatedPredicates.isEmpty();
     }
 
-    private void addErrorMessageShapeUnmatched() {
-        reportSimpleCardinalityErrors();
+    private boolean addErrorMessageShapeUnmatched() {
+        boolean errorFound = false;
+        errorFound |= reportSimpleCardinalityErrors();
+        errorFound |= reportOneOfErrors();
+        return errorFound;
     }
 
     /** A simple cardinality error is about triple constraints that have a directly attached cardinality (or default 1)
@@ -141,11 +147,36 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         return hasError.get();
     }
 
-    /** The cardinality directly on the triple constraint (or default 1 cardinality), or null if this is not the case. */
+    private boolean reportOneOfErrors() {
+        // Two kinds of errors: 1) several choices satisfied, 2) none satisfied
+        boolean errorFound = false;
+        for (TripleExprForValidation teVal : shapeTripleExpressions.values()) {
+            for (OneOf oneOf: oneOfs(teVal)) {
+                List<TripleExpr> satisfiedSubExprs = new ArrayList<>();
+                for (TripleExpr e: oneOf.getTripleExprs()) {
+                    if (teVal.subExprIsValid(e, lastNonConformantMatching)) {
+                        satisfiedSubExprs.add(e);
+                    }
+                }
+                if (satisfiedSubExprs.isEmpty()) {
+                    addInfo(false, "None of the choices of a OneOf is satisfied.", oneOf);
+                    errorFound = true;
+                } else if (satisfiedSubExprs.size() > 1) {
+                    addInfo(false, "Several choices of a OneOf are satisfied.", satisfiedSubExprs);
+                    errorFound = true;
+                }
+
+            }
+        }
+        return errorFound;
+    }
+
+    /** Returns a map containing the triple constraints that have a directly attached cardinality,
+     * or that are on the top level EachOf with a default one cardinality. */
     private static Map<TripleConstraint, Cardinality> cardinalities (Collection<TripleExprForValidation> expressions) {
-        List<Pair<TripleConstraint, Cardinality>> cardMap = new ArrayList<>(1);
+        List<Pair<TripleConstraint, Cardinality>> cardPairs = new ArrayList<>(1);
         TripleExprAccumulationVisitor<Pair<TripleConstraint, Cardinality>> cardinalityFinder =
-                new TripleExprAccumulationVisitor<>(cardMap) {
+                new TripleExprAccumulationVisitor<>(cardPairs) {
             @Override
             public void visit(TripleExprCardinality te) {
                 if (te.getSubExpr() instanceof TripleConstraint)
@@ -160,15 +191,30 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(cardinalityFinder)
                 .dontRecurseInto(TripleExprCardinality.class)
+                .dontRecurseInto(OneOf.class)
                 .build();
         expressions.forEach(te -> te.getOriginalExpr().visit(walker));
-        return cardMap.stream()
-                .collect(Collectors.toMap(
-                        Pair::getKey,
-                        Pair::getValue,
-                        (c1, c2) -> c1 == Cardinality.ONE ? c2 : c1
-                ));
+        EMap<TripleConstraint, Cardinality> result = new EMap<>();
+        for (Pair<TripleConstraint, Cardinality> p: cardPairs)
+            result.put(p.getLeft(), p.getRight());
+        return result;
     }
 
+    private List<OneOf> oneOfs(TripleExprForValidation teVal) {
+        List<OneOf> result = new ArrayList<>();
+        TripleExprAccumulationVisitor<OneOf> oneOfFinder =
+                new TripleExprAccumulationVisitor<>(result) {
+                    @Override
+                    public void visit(OneOf te) {
+                        accumulate(te);
+                    }
+                };
+        ExpressionWalker walker = ExpressionWalker.builder()
+                .processTripleExprsWith(oneOfFinder)
+                .dontRecurseInto(TripleExprCardinality.class)
+                .build();
+        teVal.getOriginalExpr().visit(walker);
+        return result;
+    }
 
 }

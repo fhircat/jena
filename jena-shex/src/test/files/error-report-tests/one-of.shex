@@ -1,0 +1,4 @@
+PREFIX ex: <http://a.example/>
+
+ex:AoB { ex:a . | ex:b . }
+ex:AeBoC { ex:a . ; (ex:b . | ex:c .) }

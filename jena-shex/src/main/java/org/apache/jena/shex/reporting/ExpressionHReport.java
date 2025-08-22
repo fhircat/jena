@@ -160,7 +160,7 @@ public class ExpressionHReport implements Report {
                             .map(ExpressionHReport::tripleExprToPrettyString)
                             .toArray(String[]::new));
         if (expr instanceof OneOf oneOf)
-            return String.join (" ; ",
+            return String.join (" | ",
                     oneOf.getTripleExprs().stream()
                             .map(ExpressionHReport::tripleExprToPrettyString)
                             .toArray(String[]::new));

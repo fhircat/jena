@@ -134,8 +134,15 @@ public class TripleExprForValidation {
     /** Checks whether the matching is valid for this triple expression.
      * Uses the original expression if it is SORBE, or its {@link #sorbeForm} otherwise. */
     /*package*/ boolean isValid(Map<Triple, TripleConstraint> matching) {
+        return subExprIsValid(getRelevantExpression(), matching);
+    }
+
+    /** Checks whether the matching is valid for a sub-expression of this triple expression.
+     * It must be a sub-expression of the original expression if it is SORBE,
+     * or of its {@link #sorbeForm} otherwise. */
+    public boolean subExprIsValid (TripleExpr subExpr, Map<Triple, TripleConstraint> matching) {
         Bag bag = Bag.fromMatching(matching, getAllTripleConstraints());
-        Cardinality interval =  getRelevantExpression().visit(new IntervalComputation(this, bag));
+        Cardinality interval = subExpr.visit(new IntervalComputation(this, bag));
         return interval.min <= 1 && 1 <= interval.max;
     }
 

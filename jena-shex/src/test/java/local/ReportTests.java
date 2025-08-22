@@ -21,7 +21,7 @@ import java.util.List;
 public class ReportTests {
 
     static final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/error-report-tests/";
-    static String testName = "cardinality";
+    static String testName = "one-of";
 
 
     public static void main(String[] args) {
@@ -59,6 +59,8 @@ public class ReportTests {
             ShexValidationReport report = v.validate(graph, sch, shape, focus);
             System.out.println("Conforms: " + report.conforms());
             ShexLib.printReport(report);
+            if (report.conforms())
+                System.out.println(p.getLeft() + " @ " + p.getRight());
             System.out.println("-----------------------------------------");
         }
     }
@@ -93,6 +95,7 @@ public class ReportTests {
         try {
             List<String> lines = Files.readAllLines(Paths.get(mapFile));
             for (String l: lines) {
+                if (l.startsWith("#")) continue;
                 if (! l.contains("@")) continue;
                 String[] ns = l.split("@");
                 String node = ns[0].trim().replace("ex:", "http://a.example/");

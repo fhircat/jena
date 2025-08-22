@@ -1,0 +1,11 @@
+PREFIX ex: <http://a.example/>
+
+ex:na ex:a 1 .
+ex:nb ex:b 1 .
+ex:nc ex:c 1 .
+ex:nab ex:a 1 ; ex:b 1 .
+ex:nac ex:a 1 ; ex:c 1 .
+ex:nbc ex:b 1 ; ex:c 1 .
+ex:nabc ex:a 1 ; ex:b 1; ex:c 1 .
+
+#none
