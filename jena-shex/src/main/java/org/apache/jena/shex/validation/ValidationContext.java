@@ -54,6 +54,7 @@ public class ValidationContext {
         for (Node descendant : nonAbstractDescendants) {
             ShapeExpr expr = schema.get(descendant).getShapeExpr();
             Reporter exprReporter = reporter.createChild(focus, expr, null);
+            exprReporter.informValidatingDescendant(descendant);
 
             stack.push(focus, descendant);
             boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);

@@ -58,8 +58,10 @@ public class ShapeExprEval {
             else {
                 List<Node> nonAbstractDescendants = vCxt.nonAbstractDescendants(ref.getLabel());
                 for (Node descendant : nonAbstractDescendants) {
+                    // TODO why not recurse on the reference here ? -> there is a reason I do not recall
                     ShapeExpr defn = vCxt.getDefinition(descendant);
-                    Reporter defnReporter = reporter.createChild(dataNode, expr, neigh);
+                    Reporter defnReporter = reporter.createChild(dataNode, defn, neigh);
+                    defnReporter.informValidatingDescendant(descendant);
                     // TODO possible problem if the the definition is a reference itself
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
                         reporter.informDescendantConformance(true, descendant);

@@ -39,7 +39,7 @@ public class SimpleExhaustiveReporter implements Reporter {
 
     @Override
     public void setReferenceTo(Report r, String additionalMessage) {
-        addInfo(r.getStatus() == ShexStatus.conformant, additionalMessage, null);
+        addInfo(additionalMessage, null);
         this.report.asReferenceTo(r, additionalMessage);
     }
 
@@ -63,8 +63,8 @@ public class SimpleExhaustiveReporter implements Reporter {
     }
 
     @Override
-    public void addInfo(boolean isConformant, String message, Object details) {
-        report.addInfo(new ReportInfo(message, details, isConformant));
+    public void addInfo(String message, Object details) {
+        report.addInfo(new ReportInfo(message, details));
     }
 
     @Override

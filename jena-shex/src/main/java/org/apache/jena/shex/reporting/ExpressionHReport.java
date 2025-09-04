@@ -70,7 +70,7 @@ public class ExpressionHReport implements Report {
     @Override
     public String toString() {
         if (refersTo == null)
-            return toString(this, 2);
+            return toString(this, 4);
         return refersTo.toString();
     }
 

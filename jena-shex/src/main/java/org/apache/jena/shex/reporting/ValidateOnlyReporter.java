@@ -40,7 +40,7 @@ public class ValidateOnlyReporter implements Reporter {
     }
 
     @Override
-    public void addInfo(boolean isConformant, String message, Object details) {
+    public void addInfo(String message, Object details) {
         // empty
     }
 
@@ -75,7 +75,7 @@ public class ValidateOnlyReporter implements Reporter {
         }
 
         @Override
-        public void addInfo(boolean isConformant, String message, Object details) {
+        public void addInfo(String message, Object details) {
             // empty
         }
 

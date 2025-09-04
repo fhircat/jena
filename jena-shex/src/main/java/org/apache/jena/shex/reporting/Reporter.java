@@ -1,6 +1,5 @@
 package org.apache.jena.shex.reporting;
 
-import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.ShexStatus;
@@ -36,7 +35,7 @@ public interface Reporter {
     void setResult(ShexStatus status);
 
     /** A generic method for informing the reporter about events regarding validation. Should not be used directly, but through the other more specific inform methods.*/
-    void addInfo(boolean isConformant, String message, Object details);
+    void addInfo(String message, Object details);
 
     /** Indicates whether the reporter is only interested in the result of the validation, but not in detailed reports.
      * Used to speed up validation whenever the reporter is validate-only. */
@@ -52,31 +51,35 @@ public interface Reporter {
     /** Informs whether this reporter's shape expression is satisfied directly, or through one of its non-abstract descendants. */
     default void informDescendantConformance(boolean isConformant, Node satisfiedDescendantIfConformant) {
         if (isConformant)
-            addInfo(true, "The non-abstract descedant " + satisfiedDescendantIfConformant + " is satisfied", null);
+            addInfo("The non-abstract descedant " + satisfiedDescendantIfConformant + " is satisfied", null);
         else
-            addInfo(false, "No non-abstract descendant is satisfied.", null);
+            addInfo("No non-abstract descendant is satisfied.", null);
+    }
 
+    /** Informs that this reporter's expression has the given IRI as reference. */
+    default void informValidatingDescendant(Node ref) {
+        addInfo("When validating the descendant", ref);
     }
 
     /** Informs whether the semantic actions are satisfied. */
     default void informSemanticActionsConformance(boolean isConformant, SemAct semAct) {
         String m = isConformant ? "Semantic actions satisfied." : "Semantic actions not satisfied.";
-        addInfo(isConformant, m, semAct);
+        addInfo(m, semAct);
     }
 
     /** Informs that a component of a node constraint is not satisfied. Used when validating against a node constraint. */
     default void informInvalidNodeConstraintComponent(NodeConstraintComponent c, String message) {
-        addInfo(false, message, c);
+        addInfo(message, c);
     }
 
     /** Informs that external shape definitions are not supported. */
     default void informExternalNotSupported() {
-        addInfo(false, "Shape external not supported.", null);
+        addInfo("Shape external not supported.", null);
     }
 
     /** Informs that the expression is satisfied because of a cycle on the validation stack. */
     default void addInfoCycle() {
-        addInfo(true, "Cycle.", null);
+        addInfo("Cycle.", null);
     }
 
     /** Informs about unexpected triples because of closed shape or missing extra. */
@@ -85,7 +88,7 @@ public interface Reporter {
             case CLOSED -> "Closed shape";
             case EXTRA -> "The triples didn't match any of the triple constraints.";
         };
-        addInfo(false, "Unexpected triples. " + m, triples);
+        addInfo("Unexpected triples. " + m, triples);
     }
 
     default void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
@@ -95,7 +98,7 @@ public interface Reporter {
                     case TRIPLE_EXPRS -> "Shape not satisfied by the matching.";
                     case SEM_ACTS -> "Semantic actions not satisfied.";
                 };
-        addInfo(isConformant, m, matching);
+        addInfo(m, matching);
     }
 
     /** Informs about the predicate-based pre-matching computed during validation of a triple expression, ie with every triple, associate the triple constraints having the same predicate.

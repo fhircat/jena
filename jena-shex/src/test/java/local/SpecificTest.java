@@ -6,6 +6,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shex.reporting.SimpleExhaustiveReporter;
 import org.apache.jena.shex.reporting.ShexValidationReport;
+import org.apache.jena.shex.sys.ShexLib;
 import org.apache.jena.shex.sys.ShexValidatorImpl;
 import org.apache.jena.shex.ShexSchema;
 import org.apache.jena.shex.parser.ShExC;
@@ -19,14 +20,14 @@ public class SpecificTest {
     public static void main(String[] args) {
 
         final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/shexTest/";
-        String schemaFile = "startCode1fail.shex";
-        String graphFile = "Is1_Ip1_Io1.ttl";
+        String schemaFile = "vitals-RESTRICTS.shex";
+        String graphFile = "vitals.ttl";
         List<String> focusShapePairs = new ArrayList<>();
         // Shape
-        focusShapePairs.add("http://a.example/S1");
+        focusShapePairs.add("http://a.example/#Vital");
         // Focus node
-        focusShapePairs.add("http://a.example/s1");
-        focusShapePairs.add("invalid");
+        focusShapePairs.add("http://a.example/#lie");
+        focusShapePairs.add("valid");
         /*
         focusShapePairs.add("http://inst.example/Issue2");
         focusShapePairs.add("http://schema.example/IssueShape");
@@ -55,7 +56,9 @@ public class SpecificTest {
             reports.add(report);
         }
         System.out.println("-----------------------------------");
-        for (ShexValidationReport report : reports)
-            System.out.println(report);
+        for (ShexValidationReport report : reports) {
+            ShexLib.printReport(report);
+            System.out.println("----------------------------------");
+        }
     }
 }

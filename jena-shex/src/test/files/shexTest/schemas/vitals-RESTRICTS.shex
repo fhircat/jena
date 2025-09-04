@@ -12,6 +12,12 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   }*
 }
 
+<#Posture> {
+  fhir:component {
+    fhir:code ["posture"]
+  }
+}
+
 # -- super-classes --
 ABSTRACT <#Vital> EXTENDS @<#Observation> CLOSED { }
 ABSTRACT <#PostureVital> EXTENDS @<#Vital> EXTENDS @<#Posture> CLOSED { }
@@ -35,12 +41,6 @@ ABSTRACT <#ReclinedVital> EXTENDS @<#PostureVital> EXTENDS @<#Reclined> CLOSED {
 <#ReclinedPulse> EXTENDS @<#Pulse> EXTENDS @<#ReclinedVital> CLOSED { }
 
 # -- postures --
-<#Posture> {
-  fhir:component {
-    fhir:code ["posture"]
-  }
-}
-
 <#Reclined> EXTENDS @<#Posture> CLOSED { } AND {
   fhir:component CLOSED {
     fhir:code ["posture"] ;

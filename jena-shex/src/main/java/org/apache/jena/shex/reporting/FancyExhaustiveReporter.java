@@ -9,7 +9,6 @@ import org.apache.jena.shex.expressions.*;
 import org.apache.jena.shex.validation.EMap;
 import org.apache.jena.shex.validation.TripleExprForValidation;
 
-import javax.smartcardio.Card;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -70,11 +69,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             if (report.expr instanceof Shape) {
                 reportShapeErrors();
             } else if (report.expr instanceof ShapeAnd) {
-                addInfo(false,"One of the conjuncts of ShapeAnd was not satisfied.", null);
+                addInfo("One of the conjuncts of ShapeAnd was not satisfied.", null);
             } else if (report.expr instanceof ShapeOr) {
-                addInfo(false, "None of the disjuncts of ShapeOr was satisfied.", null);
+                addInfo("None of the disjuncts of ShapeOr was satisfied.", null);
             } else if (report.expr instanceof ShapeNot) {
-                addInfo(false, "A negated shape expression was satisfied.", null);
+                addInfo("A negated shape expression was satisfied.", null);
             }
         }
         return super.setIsConformant(isConformant);
@@ -134,7 +133,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                 String m = String.format(
                         "Cardinality error. Incorrect number of triples matched a triple expression. Expected: between %d and %d; found: %d",
                         card.min, card.max, nb);
-                addInfo(false, m, Pair.of(tc, invertedMatching.getOrDefault(tc, Collections.emptyList())));
+                addInfo(m, Pair.of(tc, invertedMatching.getOrDefault(tc, Collections.emptyList())));
                 hasError.set(true);
             }
         });
@@ -153,10 +152,10 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
                     }
                 }
                 if (satisfiedSubExprs.isEmpty()) {
-                    addInfo(false, "None of the choices of a OneOf is satisfied.", oneOf);
+                    addInfo("None of the choices of a OneOf is satisfied.", oneOf);
                     errorFound = true;
                 } else if (satisfiedSubExprs.size() > 1) {
-                    addInfo(false, "Several choices of a OneOf are satisfied.", satisfiedSubExprs);
+                    addInfo("Several choices of a OneOf are satisfied.", satisfiedSubExprs);
                     errorFound = true;
                 }
 
