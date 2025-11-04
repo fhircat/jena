@@ -27,11 +27,10 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.jena.arq.junit.manifest.*;
 import org.apache.jena.atlas.io.IndentedWriter;
-import org.apache.jena.atlas.lib.ArrayUtils;
-import org.apache.jena.base.Sys;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.junit.EarlReport;
 import org.apache.jena.sparql.vocabulary.VocabTestQuery;
@@ -164,35 +163,33 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
 
     public static void prepareTests(EarlReport report, RunnerOneManifest level, Manifest manifest, Function<ManifestEntry, Runnable> maker, String prefix) {
         String testsEnv = System.getenv("TESTS");
-        List<Pattern> selected;
-        if (testsEnv != null) {
-            selected = Arrays.stream(testsEnv.split(";"))
+        List<Pattern> selected = testsEnv == null
+                ? new ArrayList<>(List.of(Pattern.compile(".*")))
+                : Arrays.stream(testsEnv.split(";"))
                     .map(s -> Pattern.compile(s))
                     .collect(Collectors.toList());
-        } else {
-            selected = null; // Why does this have to be "effectively final"?
-        }
-        List<String> skipped = new ArrayList<>();
-        manifest.entries().forEach(entry->{
-            String label = prepareTestLabel(entry, prefix);
-            if (selected == null || selected.stream()
-                    .filter(pattern -> {
-                        if (pattern.matcher(label).matches())
-                            return true;
-                        skipped.add(label);
-                        return false;
-                    })
-                    .findAny()
-                    .isPresent()) {
-                Runnable runnable = maker.apply(entry);
-                if (runnable != null) {
-                    Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
-                    level.add(r);
+
+        selected.forEach(pattern->{
+            Stream<ManifestEntry> matched = manifest.entries().stream().filter(entry->{
+                String label = prepareTestLabel(entry, prefix);
+                if (pattern.matcher(label).matches()) {
+                    Runnable runnable = maker.apply(entry);
+                    if (runnable != null) {
+                        Runner r = new RunnerOneTest(label, runnable, entry.getURI(), report);
+                        level.add(r);
+                    }
+                    return true;
+                }
+                return false;
+            });
+            if (matched.count() == 0) {
+                if (testsEnv == null) {
+                    throw new RuntimeException("No manifest entries found");
+                } else {
+                    throw new RuntimeException("TESTS pattern " + pattern + " did not match any of " + manifest.entries().stream().map(l -> "\n  " + l.getName()).collect(Collectors.joining()));
                 }
             }
         });
-        if (skipped.size() == manifest.entries().size())
-            throw new RuntimeException("TESTS pattern " + System.getenv("TESTS") + " did not match any of " + skipped.stream().map(l -> "\n  " + l).collect(Collectors.joining()));
     }
 
     public static String fixupName(String string) {
@@ -215,25 +212,24 @@ public abstract class AbstractRunnerOfTests extends ParentRunner<Runner> {
     private static String[] getManifests(Class<? > klass) throws InitializationError {
         String manifestEnv = System.getenv("MANIFESTS");
         String[] ret;
-        if (manifestEnv != null) {
-            ret = Arrays.stream(manifestEnv.split(";")).toArray(String[]::new);
-        } else {
+        if (manifestEnv == null) {
             Manifests annotation = klass.getAnnotation(Manifests.class);
             if ( annotation == null ) {
                 throw new InitializationError(String.format("class '%s' must have a @Manifests annotation", klass.getName()));
             }
             ret = annotation.value();
-        }
+        } else {
+            ret = Arrays.stream(manifestEnv.split(";")).toArray(String[]::new);
 
-        for (String manifestEntry : ret) {
-            Path absoluteManifestPath = Path.of(manifestEntry);
-            String absolutePathStr = absoluteManifestPath.toAbsolutePath().toString();
-            File override = new File(absolutePathStr);
-            if (!override.exists())
-                throw new InitializationError("Can't find manifest file " + absolutePathStr);
-            // System.out.println("Reading manifest file " + absolutePathStr);
+            // Make sure manifest files exist (assumed unnecessary if found by annotation).
+            for (String manifestEntry : ret) {
+                Path absoluteManifestPath = Path.of(manifestEntry);
+                String absolutePathStr = absoluteManifestPath.toAbsolutePath().toString();
+                File override = new File(absolutePathStr);
+                if (!override.exists())
+                    throw new InitializationError("Can't find manifest file " + absolutePathStr);
+            }
         }
-
         return ret;
     }
 
