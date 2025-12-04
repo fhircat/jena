@@ -31,6 +31,9 @@ public class ShexValidatorImpl implements ShexValidator {
             return resultReport;
         }
         for (ShapeMapElement shapeMapElement : shapeMap) {
+            if (! graph.contains(shapeMapElement.nodeSelector, null, null)) {
+                System.err.println("Node " + shapeMapElement.nodeSelector + " not in graph");
+            }
             Report re = vCxt.validate(shapeMapElement.nodeSelector, shapeMapElement.shapeExprLabel, reporter);
             resultReport.setReport(shapeMapElement, re);
         }
