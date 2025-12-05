@@ -209,9 +209,7 @@ public class AccumulationUtil {
             }
 
             @Override
-            public void visit(TripleExprEmpty tripleExprEmpty) {
-                _visit(tripleExpr);
-            }
+            public void visit(TripleExprEmpty tripleExprEmpty) {}
 
             @Override
             public void visit(TripleExprRef tripleExprRef) {
