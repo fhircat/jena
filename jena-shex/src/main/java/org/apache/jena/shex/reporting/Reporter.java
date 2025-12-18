@@ -118,15 +118,23 @@ public interface Reporter {
         addInfo(m, matching);
     }
 
-    /** Informs about the predicate-based pre-matching computed during validation of a triple expression, ie with every triple, associate the triple constraints having the same predicate.
-     * Useful for precise error reporting.
-     * The map given as parameter might change during validation, so any implementation that uses the pre-matching should make a copy of this map. */
-    default void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching) {}
+    /** Informs about the predicate-based pre-matching computed during validation of a triple expression
+     * I.e. with every triple, associate the triple constraints having the same predicate.
+     * @param predicateBasedPreMatching The predicate based pre-matching
+     * @param allowsConformance If not null, indicates whether this predicate based pre-matching allowed to satisfy the expression
+     */
+    default void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching, Boolean allowsConformance) {}
 
-    /** Informs about the pre-matching computed during validation of a triple expression, ie with every triple, associate the triple constraints that this triple satisfies, both w.r.t. the predicate and the value constraint.
+    /** Informs about the pre-matching computed during validation of a triple expression., ie with
      * Useful for precise error reporting.
-     * The map given as parameter might change during validation, so any implementation that uses the pre-matching should make a copy of this map. */
-    default void informPreMatching(Map<Triple, List<TripleConstraint>> cleanPreMatching) {}
+     * The map given as parameter might change during validation, so implementations might want to make a copy. */
+
+    /** Informs about the pre-matching computed during validation of a triple expression.
+     * I.e. with every triple, associate the triple constraints that this triple satisfies (predicate and value constraint are satisfied).
+     * @param preMatching The pre-matching
+     * @param allowsConformance If not null, indicates whether this pre-matching allowed to satisfy the expression.
+     */
+    default void informPreMatching(Map<Triple, List<TripleConstraint>> preMatching, Boolean allowsConformance) {}
 
     /** In the case when the expression is a Shape, inform about the triple expressions against which it is being
      * validated. In particular, these are the expressions against which the mappings are defined. */

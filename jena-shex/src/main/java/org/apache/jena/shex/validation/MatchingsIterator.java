@@ -22,6 +22,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.shex.expressions.TripleConstraint;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /** Starting from a map that with every {@link Triple} associates a collection of matching triple constraints, allows to iterate over all possible ways to match every triple with a unique triple constraint.
  * This is equivalent to computing a Cartesian product of the sets associated with the triples.
@@ -37,7 +38,7 @@ public class MatchingsIterator implements Iterator<Map<Triple, TripleConstraint>
     private final int[] sizes;
     /** Used for the iteration: 0 <= currentIndexes[i] < sizes[i] */
     private final int[] currentIndexes;
-    
+
     public MatchingsIterator(Map<Triple, List<TripleConstraint>> preMatching) {
 
         neighbourhood = new ArrayList<>(preMatching.size());

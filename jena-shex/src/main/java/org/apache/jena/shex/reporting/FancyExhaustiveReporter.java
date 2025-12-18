@@ -60,6 +60,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     // Attributes for reporting errors in Shape
     // -----------------------------------------------------------
     private Map<Node, TripleExprForValidation> shapeTripleExpressions = null;
+    private Map<Triple, List<TripleConstraint>> lastNonConformantPreMatching = null;
     private Map<Triple, TripleConstraint> lastNonConformantMatching = null;
     private Reporter.MatchingNotSatisfiedReason lastNonConformantMatchingReason = null;
 
@@ -75,6 +76,12 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
     @Override
     public void informShapeTripleExpressions (Map<Node, TripleExprForValidation> expressions) {
         this.shapeTripleExpressions = expressions;
+    }
+
+    @Override
+    public void informPreMatching(Map<Triple, List<TripleConstraint>> cleanPreMatching, Boolean allowsConformance) {
+        if (allowsConformance != null && ! allowsConformance)
+            this.lastNonConformantPreMatching = new HashMap<>(cleanPreMatching);
     }
 
     // -----------------------------------------------------------------------------
@@ -102,12 +109,14 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
 
         // Conditions under which we search specific errors:
         //   the triple expression was not matched, and the triple expression is deterministic
-        if (lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS
-            && isDeterministic(shapeTripleExpressions)) {
+        if (lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS) {
+            if (isPreMatchingDeterministic(lastNonConformantPreMatching)) {
 
-            // The kinds of specific errors we are looking for
-            errorFound |= reportSimpleCardinalityErrors();
-            errorFound |= reportOneOfErrors();
+                // The kinds of specific errors we are looking for
+                errorFound |= reportSimpleCardinalityErrors();
+                errorFound |= reportOneOfErrors();
+            }
+            errorFound |= reportSimpleEachOfErrors();
         }
 
         if (!errorFound && lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS)
@@ -129,6 +138,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         repeatedPredicates.entrySet().removeIf(e -> e.getValue().size() <= 1);
         // TODO a more complete version that looks at the values of triple constraints
         return repeatedPredicates.isEmpty();
+    }
+
+    /** Determines whether the pre-matching associates at most one triple constraint to every triple. */
+    private boolean isPreMatchingDeterministic(Map<Triple, List<TripleConstraint>> preMatching) {
+        return preMatching.values().stream().allMatch(l -> l.size() <= 1);
     }
 
     /** A simple cardinality error is about triple constraints that have a directly attached cardinality (or default 1)
@@ -181,6 +195,24 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         return errorFound;
     }
 
+    private boolean reportSimpleEachOfErrors() {
+        boolean errorFound = false;
+        for (TripleExprForValidation teVal : shapeTripleExpressions.values()) {
+            for (EachOf eachOf: eachOfs(teVal)) {
+                List<TripleExpr> nonSatisfiedSubExprs = new ArrayList<>();
+                for (TripleExpr e: eachOf.getTripleExprs())
+                    if (! teVal.subExprIsValid(e, lastNonConformantMatching))
+                        nonSatisfiedSubExprs.add(e);
+
+                if (! nonSatisfiedSubExprs.isEmpty()) {
+                    //nonSatisfiedSubExprs.add(0, eachOf);
+                    addInfo("These sub-expressions of EachOf are not satisfied.", nonSatisfiedSubExprs);
+                }
+            }
+        }
+        return errorFound;
+    }
+
     /** Returns a map containing the triple constraints that have a directly attached cardinality,
      * or that are on the top level EachOf with a default one cardinality. */
     private static Map<TripleConstraint, Cardinality> cardinalities (Collection<TripleExprForValidation> expressions) {
@@ -210,6 +242,9 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         return result;
     }
 
+
+
+
     private List<OneOf> oneOfs(TripleExprForValidation teVal) {
         List<OneOf> result = new ArrayList<>();
         TripleExprAccumulationVisitor<OneOf> oneOfFinder =
@@ -222,10 +257,29 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         ExpressionWalker walker = ExpressionWalker.builder()
                 .processTripleExprsWith(oneOfFinder)
                 .dontRecurseInto(TripleExprCardinality.class)
-                .dontRecurseInto(OneOf.class)
+                .dontRecurseInto(OneOf.class)   // TODO why ?
                 .build();
         teVal.getOriginalExpr().visit(walker);
         return result;
     }
+
+    private List<EachOf> eachOfs(TripleExprForValidation teVal) {
+        List<EachOf> result = new ArrayList<>();
+        TripleExprAccumulationVisitor<EachOf> eachOfFinder =
+                new TripleExprAccumulationVisitor<>(result) {
+                    @Override
+                    public void visit(EachOf te) {
+                        accumulate(te);
+                    }
+                };
+        ExpressionWalker walker = ExpressionWalker.builder()
+                .processTripleExprsWith(eachOfFinder)
+                .dontRecurseInto(TripleExprCardinality.class)
+                .dontRecurseInto(EachOf.class)  // TODO why ?
+                .build();
+        teVal.getOriginalExpr().visit(walker);
+        return result;
+    }
+
 
 }

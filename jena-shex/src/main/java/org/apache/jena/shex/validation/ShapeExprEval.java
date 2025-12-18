@@ -57,11 +57,13 @@ public class ShapeExprEval {
                 return vCxt.validate(dataNode, ref, reporter);
             else {
                 List<Node> nonAbstractDescendants = vCxt.nonAbstractDescendants(ref.getLabel());
+                boolean isDescendant = nonAbstractDescendants.get(0) != ref.getLabel(); // for error reporting
                 for (Node descendant : nonAbstractDescendants) {
                     // TODO why not recurse on the reference here ? -> there is a reason I do not recall
                     ShapeExpr defn = vCxt.getDefinition(descendant);
                     Reporter defnReporter = reporter.createChild(dataNode, defn, neigh);
-                    defnReporter.informValidatingDescendant(descendant);
+                    if (! isDescendant) isDescendant = true;  // only the first elmt of nonAbstractDescendants is possibly a non-descendant
+                    else defnReporter.informValidatingDescendant(descendant);
                     // TODO possible problem if the the definition is a reference itself
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
                         reporter.informDescendantConformance(true, descendant);
@@ -126,7 +128,7 @@ public class ShapeExprEval {
                 mainTripleExprs, vCxt, shapeReporter);
         // TODO specific reporting needed when a split satisfies the main shapes but not the constraints
 
-        // TODO we need a test case in which the main parti is satisfied, but not the restriction. This should have several equivalent shapes, but in which the ordering is different
+        // TODO we need a test case in which the main part is satisfied, but not the restriction. This should have several equivalent shapes, but in which the ordering is different
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
             if (splitSatisfiesConstraints(dataNode, shape, split, constraints, vCxt, shapeReporter)) {

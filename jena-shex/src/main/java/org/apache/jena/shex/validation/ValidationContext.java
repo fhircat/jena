@@ -68,10 +68,12 @@ public class ValidationContext {
                 label == SysShex.startNode
                         ? List.of(label)
                         : nonAbstractDescendants(label);
+        boolean isDescendant = nonAbstractDescendants.get(0) != label; // for error reporting
         for (Node descendant : nonAbstractDescendants) {
             ShapeExpr expr = schema.get(descendant).getShapeExpr();
             Reporter exprReporter = reporter.createChild(focus, expr, null);
-            exprReporter.informValidatingDescendant(descendant);
+            if (! isDescendant) isDescendant = true;  // only the first elmt of nonAbstractDescendants is possibly a non-descendant
+            else exprReporter.informValidatingDescendant(descendant);
 
             stack.push(focus, descendant);
             boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);

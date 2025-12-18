@@ -261,6 +261,16 @@ public class TripleExprForValidation {
                 .collect(Collectors.toSet());
     }
 
+    /** Returns the triple constraints of this triple expression that would be matched to at least one triple in every correct matching. */
+    ESet<TripleConstraint> mandatoryTripleConstraints() {
+        if (this.mandatoryTripleConstraints == null) {
+            this.mandatoryTripleConstraints = computeMandatoryTripleConstraints(getRelevantExpression());
+        }
+        return this.mandatoryTripleConstraints;
+    }
+    // TODO make this unmodifiable
+    private ESet<TripleConstraint> mandatoryTripleConstraints = null;
+
 
     // --------------------------------------------------------------------------------------------------
     // Visitor-based traversals of the expression
@@ -461,5 +471,26 @@ public class TripleExprForValidation {
                 return EachOf.create(newSubExprs, null);
             }
         }
+    }
+
+    private static ESet<TripleConstraint> computeMandatoryTripleConstraints (TripleExpr tripleExpr) {
+
+        ESet<TripleConstraint> acc = new ESet<>();
+
+        TripleExprAccumulationVisitor<TripleConstraint> step = new TripleExprAccumulationVisitor<>(acc) {
+            @Override
+            public void visit(TripleConstraint tripleConstraint) {
+                accumulate(tripleConstraint);
+            }
+        };
+
+        ExpressionWalker walker = ExpressionWalker.builder()
+                .processTripleExprsWith(step)
+                .dontRecurseIf(expr -> expr.getClass() == TripleExprCardinality.class
+                                && ((TripleExprCardinality) expr).min() == 0)
+                .dontRecurseInto(OneOf.class)
+                .build();
+        tripleExpr.visit(walker);
+        return acc;
     }
 }
