@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
  * - a split is a Map<Node, Set<Triple>> that with a node representing a shape expression label associates a set of triples. It is used to indicate which triples are matched with which supertypes of a given shape.
  */
 public class TripleExprEval {
+    // TODO replace streams with loops for efficiency
 
     /* package */ static Iterator<Map<Node, Set<Triple>>> correctSplitsIterator(
             Node dataNode, Shape shape, Set<Triple> triples,
@@ -44,39 +45,58 @@ public class TripleExprEval {
 
         // Does not notify the reporter about conformant / non-conformant
 
-        // Constructs the thriple expressions to be validated
+        // Constructs the triple expressions to be validated
         Map<Node, TripleExprForValidation> exprsToBeMatched = new HashMap<>(mainTripleExprs.size());
         for (Map.Entry<Node, TripleExpr> e: mainTripleExprs.entrySet()) {
             exprsToBeMatched.put(e.getKey(), vCxt.getExprForValidation(e.getValue()));
         }
         shapeReporter.informShapeTripleExpressions(exprsToBeMatched);
 
-        // With every triple, associate all the triple constraints that this triple could match, based on predicate
-        Map<Triple, List<TripleConstraint>> predicateBasedPreMatching
+        // With every triple, associate all the triple constraints having the same predicate
+        Map<Triple, List<TripleConstraint>> preMatching
                 = predicateBasedPreMatching(triples, exprsToBeMatched.values());
-        shapeReporter.informPredicateBasedPreMatching(Collections.unmodifiableMap(predicateBasedPreMatching), null);
+        shapeReporter.informPredicateBasedPreMatching(Collections.unmodifiableMap(preMatching), null);
 
         // Recursively validate every pair (triple, tripleConstraint), while removing those that are not valid
-        Map<Triple, List<TripleConstraint>> preMatching = filterRecursiveValidation(predicateBasedPreMatching, vCxt, shapeReporter);
+        filterRecursiveValidation(preMatching, vCxt, shapeReporter);
 
         // Check that all unmatched triples are allowed by extra and remove them from the pre-matching
         Set<Triple> unmatchedTriples = new HashSet<>();
-        Map<Triple, List<TripleConstraint>> cleanPreMatching = filterUnmatchedTriples(preMatching, unmatchedTriples, shapeReporter);
-        shapeReporter.informPreMatching(Collections.unmodifiableMap(cleanPreMatching), null);
+        filterUnmatchedTriples(preMatching, unmatchedTriples);
 
         if (! unmatchedTriplesAreExtra(unmatchedTriples, shape.getExtras())) {
             shapeReporter.informUnexpectedTriples(unmatchedTriples, Reporter.UnexpectedTriplesReason.EXTRA);
             return Collections.emptyIterator();
         }
 
+        // Prepare the iterator over matchings to be returned
+
+        Iterator<Map<Triple, TripleConstraint>> allMatchingsIterator = new MatchingsIterator(preMatching);
+
+        /// <errorReporting>
+        /// Keep only the matchings that associate at least one triple with every mandatory triple constraint
+        ///      as they are more suitable for error reporting
+        Iterator<Map<Triple, TripleConstraint>> mandatoryTCSatisfiedMatchingsIterator = new FilterIterator<> (
+                m -> checkAllMandatoryTripleConstraintsAreMatched(m, exprsToBeMatched),
+                allMatchingsIterator);
+
+        if (! shapeReporter.isValidateOnly() && ! mandatoryTCSatisfiedMatchingsIterator.hasNext()) {
+            // Take one matching on which to report
+            Iterator<Map<Triple, TripleConstraint>> it = new MatchingsIterator(preMatching);
+            if (it.hasNext()) {
+                Map<Triple, TripleConstraint> matching = it.next();
+                shapeReporter.informUnmatchedTripleConstraints(unmatchedMandatoryTripleConstraints(matching, exprsToBeMatched));
+            }
+        }
+        /// </errorReporting>
+
+        // Iterator over the matchings that satisfy all the triple expressions
         Iterator<Map<Triple, TripleConstraint>> correctMatchingsIterator = new FilterIterator<>(
                 m ->
-                        checkAllMandatoryTripleConstraintsAreMatched(m, exprsToBeMatched) && // TODO with this condition, the validation is not even called when there are not enough triples for all the triple constraints
-                                                                                             //      this should be dealt with for the reporting
                         checkSatisfiesTripleExpressionsAndReport(dataNode, m, exprsToBeMatched.values(), vCxt, shapeReporter),
-                new MatchingsIterator(cleanPreMatching));
+                mandatoryTCSatisfiedMatchingsIterator);
 
-
+        // Iterator over the elements of split of the set of triples among the triple expressions to be matched
         Iterator<Map<Node, Set<Triple>>> result = new Iterator<>(){
             @Override
             public boolean hasNext() {
@@ -88,8 +108,12 @@ public class TripleExprEval {
                 return groupByLabel(exprsToBeMatched, correctMatchingsIterator.next());
             }
         };
+
+        ///  Error reporting : in case the expressions are not satisfiable, communicate the pre-matching to the
+        ///        error reporter
         if (! result.hasNext())
-            shapeReporter.informPreMatching(Collections.unmodifiableMap(cleanPreMatching), false);
+            shapeReporter.informPreMatching(Collections.unmodifiableMap(preMatching), false);
+
         return result;
     }
 
@@ -110,15 +134,11 @@ public class TripleExprEval {
     }
 
     /** Filters a pre-matching by keeping in preMatching.get(t) only those triple constraints that are satisfied by t,
-     * by recursively validating t's object against the triple constraint's object constraint.
-     * Returns the filtered pre matching (which is possibly a modified version of the one given in parameter) */
-    private static Map<Triple, List<TripleConstraint>> filterRecursiveValidation (
+     * by recursively validating t's object against the triple constraint's object constraint. */
+    private static void filterRecursiveValidation (
             Map<Triple, List<TripleConstraint>> preMatching,
             ValidationContext vCxt,
             Reporter shapeReporter) {
-        //if (! shapeReporter.isValidateOnly()) {
-        //    preMatching = new HashMap<>(preMatching);
-        //}
         preMatching.forEach((triple, matchingTripleConstraints) -> {
             Iterator<TripleConstraint> it = matchingTripleConstraints.iterator();
             while (it.hasNext()) {
@@ -129,24 +149,19 @@ public class TripleExprEval {
                 if (!ShapeExprEval.satisfies(opposite, valueExpr, vCxt, subReporter))
                     it.remove();
             }});
-        return preMatching;
     }
 
-    /* The triples that are unmatched in preMatching, i.e. which associated value is an empty list.*/
-    private static Map<Triple, List<TripleConstraint>> filterUnmatchedTriples(
+    /* Filters a pre-matching by keeping in only those triples that have at least one associated triple constraint.
+    * Collects the removed triples. */
+    private static void filterUnmatchedTriples(
             Map<Triple, List<TripleConstraint>> preMatching,
-            Set<Triple> removedTriples,
-            Reporter shapeReporter) {
-
-        //if (! shapeReporter.isValidateOnly())
-        //    preMatching = new HashMap<>(preMatching);
+            Set<Triple> removedTriples) {
 
         preMatching.entrySet().stream()
                 .filter(e -> e.getValue().isEmpty())
                 .map(Map.Entry::getKey)
                 .forEach(removedTriples::add);
         removedTriples.forEach(preMatching::remove);
-        return preMatching;
     }
 
 
@@ -156,13 +171,31 @@ public class TripleExprEval {
         for (TripleExprForValidation teVal : exprsToBeMatched.values()) {
             ESet<TripleConstraint> matchedTCs = new ESet<>();
             matchedTCs.addAll(matching.values());
-            if (! matchedTCs.containsAll(teVal.mandatoryTripleConstraints()))
+            if (! matchedTCs.containsAll(teVal.mandatoryTripleConstraints())) {
                 return false;
+            }
         }
         return true;
     }
 
-    /** Checks whether a matching satisfies a hierarchy of triple expressions. */
+    /** Compute the mandatory triple constraints that were not matched by the pre-matching. */
+    private static List<TripleConstraint> unmatchedMandatoryTripleConstraints(Map<Triple, TripleConstraint> matching,
+                                                                      Map<Node, TripleExprForValidation> exprsToBeMatched) {
+        ArrayList<TripleConstraint> result = new ArrayList<>();
+        for (TripleExprForValidation teVal : exprsToBeMatched.values()) {
+            ESet<TripleConstraint> matchedTCs = new ESet<>();
+            matchedTCs.addAll(matching.values());
+            for (TripleConstraint tc : teVal.mandatoryTripleConstraints()) {
+                if (! matchedTCs.contains(tc)) {
+                    result.add(tc);
+                }
+            }
+        }
+        return result;
+
+    }
+
+    /** Checks whether a matching satisfies a collection of triple expressions, corresponding to a hierarchy of shapes. */
     private static boolean checkSatisfiesTripleExpressionsAndReport(Node dataNode,
                                                                     Map<Triple, TripleConstraint> matching,
                                                                     Collection<TripleExprForValidation> exprsToBeMatched,
@@ -170,11 +203,11 @@ public class TripleExprEval {
                                                                     Reporter shapeReporter) {
         // Does not notify the reporter about conformant / non-conformant
 
-        boolean teValid = true;
-        boolean saValid = true;
+        boolean teValid = true;     // triple expressions are valid
+        boolean saValid = true;     // semantic actions are valid
+
         exprsToBeMatchedLoop:
         for (TripleExprForValidation teVal : exprsToBeMatched) {
-            // this loop is needed only for extends, but does no harm w/o extends
 
             // here, teValid is always true (because of break when ! teValid)
             teValid = teVal.isValid(matching);
@@ -197,6 +230,7 @@ public class TripleExprEval {
         return false;
     }
 
+    /** Checks if the unmatched triples all have a predicate among the extra predicates. */
     private static boolean unmatchedTriplesAreExtra(Set<Triple> unmatchedTriples, Set<Node> extraPredicates) {
         return unmatchedTriples.stream().allMatch(t -> extraPredicates.contains(t.getPredicate()));
     }
@@ -229,6 +263,4 @@ public class TripleExprEval {
         }
         return result;
     }
-
-
 }

@@ -38,7 +38,7 @@ import java.util.List;
 public class ReportTests {
 
     static final String DIR = "/home/io/Git/dev/shex/jena/jena-shex/src/test/files/error-report-tests/";
-    static String testName = "repeated";
+    static String testName = "one-of";
 
 
     public static void main(String[] args) {

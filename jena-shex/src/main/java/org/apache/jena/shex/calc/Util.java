@@ -79,9 +79,11 @@ public class Util {
 
     /** Partitions the triples of the neighbourhood of the node between those whose predicate appears in
      * the tripleExprs, and those whose predicate does not appear.*/
-    public static void retrieveRelevantNeighbourhood(Graph graph, Node dataNode,
+    public static void retrieveRelevantNeighbourhood(Graph graph,
+                                                     Node dataNode,
                                                      Collection<TripleExpr> tripleExprs,
-                                                     Set<Triple> accMatchables, Set<Triple> accNonMatchables,
+                                                     Set<Triple> accMatchables,
+                                                     Set<Triple> accNonMatchables,
                                                      ValidationContext vCxt) {
 
         Set<Node> fwdPredicates = new HashSet<>();

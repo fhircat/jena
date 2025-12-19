@@ -28,11 +28,13 @@ import java.util.Map;
 import java.util.Set;
 
 /** Receives information about events regarding validation and uses them to construct a validation report.
- * Every reporter is dedicated to a pair (node, expr) of a node and a (shape or triple) expression, and has a hierarchic structure.
+ * Every reporter is dedicated to a pair (node, expr) where expr is a Shape or a TripleExpression.
+ * Reporters have hierarchic structure.
  * Root reporters (see {@link #createRoot(Node, ShapeExprRef)}) correspond to a pair where the expression is a shape expression reference, as required to be validated by a shape map.
- * The children of a reporter for (node, expr) are about pairs (node', expr') required to be validated while validating node againts expr.
+ * The children of a reporter for (node, expr) are about pairs (node', expr') required to be validated while validating node against expr.
  * That is, expr' is typically a sub-expression of expr, or a reference that appears in expr, or the definition of a reference that appears in expr, and node' is either node itself, or a neighbour of node in the graph.
- * */
+ * Child of reporters can bear a set of triples when the validation is computed for part of the neighbourhood of the node only (because of inheritance).
+ */
 public interface Reporter {
 
     /** The validation report produced by this reporter. */
@@ -40,8 +42,10 @@ public interface Reporter {
 
     /** A root reporter used for validating the given node against the given shape expression reference as required by a shape map. */
     Reporter createRoot(Node node, ShapeExprRef expr);
+
     /** A child reporter for this reporter. */
     Reporter createChild(Node node, Expression expr, Set<Triple> neigh);
+
     /** Indicates that this reporter's result is already known and is the report given as parameter.
      * Used when the result of validating this reporter's node against this reporter's expression is already known (due to recursion, or due to a previous validation).
      */
@@ -54,8 +58,8 @@ public interface Reporter {
     /** A generic method for informing the reporter about events regarding validation. Should not be used directly, but through the other more specific inform methods.*/
     void addInfo(String message, Object details);
 
-    /** Indicates whether the reporter is only interested in the result of the validation, but not in detailed reports.
-     * Used to speed up validation whenever the reporter is validate-only. */
+    /** Indicates whether the reporter is only interested in the result of the validation and won't produce detailed reports.
+     * Validators can use it to avoid some computations that are useful for reporting only. */
     boolean isValidateOnly();
 
     /** Sets the result to conformant or non-conformant.
@@ -108,7 +112,8 @@ public interface Reporter {
         addInfo("Unexpected triples. " + m, triples);
     }
 
-    default void informCandidateMatchingConformance(boolean isConformant, Map<Triple, TripleConstraint> matching,
+    default void informCandidateMatchingConformance(boolean isConformant,
+                                                    Map<Triple, TripleConstraint> matching,
                                                     MatchingNotSatisfiedReason reasonIfNonConformant) {
         String m = isConformant ? "" :
                 switch(reasonIfNonConformant) {
@@ -123,11 +128,8 @@ public interface Reporter {
      * @param predicateBasedPreMatching The predicate based pre-matching
      * @param allowsConformance If not null, indicates whether this predicate based pre-matching allowed to satisfy the expression
      */
-    default void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching, Boolean allowsConformance) {}
-
-    /** Informs about the pre-matching computed during validation of a triple expression., ie with
-     * Useful for precise error reporting.
-     * The map given as parameter might change during validation, so implementations might want to make a copy. */
+    default void informPredicateBasedPreMatching(Map<Triple, List<TripleConstraint>> predicateBasedPreMatching,
+                                                 Boolean allowsConformance) {}
 
     /** Informs about the pre-matching computed during validation of a triple expression.
      * I.e. with every triple, associate the triple constraints that this triple satisfies (predicate and value constraint are satisfied).
@@ -139,8 +141,10 @@ public interface Reporter {
     /** In the case when the expression is a Shape, inform about the triple expressions against which it is being
      * validated. In particular, these are the expressions against which the mappings are defined. */
     default void informShapeTripleExpressions(Map<Node, TripleExprForValidation> expressions) {}
-    
-    
+
+    /** Inform about an error because some triple constraints could not be matched. */
+    default void informUnmatchedTripleConstraints(List<TripleConstraint> tripleConstraints) {}
+
     enum UnexpectedTriplesReason { CLOSED, EXTRA }
 
     enum MatchingNotSatisfiedReason { TRIPLE_EXPRS, SEM_ACTS }

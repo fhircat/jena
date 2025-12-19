@@ -84,6 +84,11 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             this.lastNonConformantPreMatching = new HashMap<>(cleanPreMatching);
     }
 
+    @Override
+    public void informUnmatchedTripleConstraints (List<TripleConstraint> tripleConstraints) {
+        addInfo("These triple constraints could not be satisfied.", tripleConstraints);
+    }
+
     // -----------------------------------------------------------------------------
     // Generate the error message
     // -----------------------------------------------------------------------------
@@ -110,7 +115,7 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
         // Conditions under which we search specific errors:
         //   the triple expression was not matched, and the triple expression is deterministic
         if (lastNonConformantMatchingReason == MatchingNotSatisfiedReason.TRIPLE_EXPRS) {
-            if (isPreMatchingDeterministic(lastNonConformantPreMatching)) {
+            if (isPreMatchingDeterministic(lastNonConformantPreMatching, shapeTripleExpressions)) {
 
                 // The kinds of specific errors we are looking for
                 errorFound |= reportSimpleCardinalityErrors();
@@ -124,25 +129,18 @@ public class FancyExhaustiveReporter extends SimpleExhaustiveReporter {
             super.informCandidateMatchingConformance(false, lastNonConformantMatching, lastNonConformantMatchingReason);
     }
 
-    /** All the expressions are natively SORBE and if there are repeated predicates among all the expressions, then
-     * we can statically establish that every triple could match at most one triple constraint. */
-    private boolean isDeterministic(Map<Node, TripleExprForValidation> expressions) {
-        if (! expressions.values().stream().allMatch(TripleExprForValidation::isNativeSorbe))
-            return false;
-        Map<Node, List<TripleConstraint>> repeatedPredicates = expressions.values()
-                .stream()
-                .flatMap(e -> e.getTripleConstraints().stream())
-                .collect(Collectors.groupingBy(
-                        TripleConstraint::getPredicate,
-                        Collectors.mapping(t->t, Collectors.toList())));
-        repeatedPredicates.entrySet().removeIf(e -> e.getValue().size() <= 1);
-        // TODO a more complete version that looks at the values of triple constraints
-        return repeatedPredicates.isEmpty();
-    }
-
-    /** Determines whether the pre-matching associates at most one triple constraint to every triple. */
-    private boolean isPreMatchingDeterministic(Map<Triple, List<TripleConstraint>> preMatching) {
-        return preMatching.values().stream().allMatch(l -> l.size() <= 1);
+    /** Determines whether the pre-matching associates at most one triple constraint with every triple.
+     * Considers the triple constraints of the original triple expression (i.e. not the sorbe expression). */
+    private boolean isPreMatchingDeterministic(Map<Triple, List<TripleConstraint>> preMatching,
+                                               Map<Node, TripleExprForValidation> expressions) {
+        // If the expression is not natively SORBE, it's not considered deterministic
+        for (TripleExprForValidation teVal : expressions.values())
+            if (! teVal.isNativeSorbe())
+                return false;
+        for (List<TripleConstraint> l : preMatching.values())
+            if (l.size() > 1)
+                return false;
+        return true;
     }
 
     /** A simple cardinality error is about triple constraints that have a directly attached cardinality (or default 1)

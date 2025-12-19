@@ -26,6 +26,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+/** A set of {@link org.apache.jena.shex.expressions.Expression} that uses the expression's id to distinguish expressions.
+ * This set implementation should be used whenever one wants to store a set of expressions as syntactic objects of a schema
+ * and distinguish different occurrences of equivalent expressions.
+ * @param <E>
+ */
 public class ESet<E extends Expression> implements Set<E> {
 
     private final Map<Integer, E> map = new LinkedHashMap<>();

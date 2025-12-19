@@ -24,7 +24,13 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-/** A map which keys are expressions, but stored as their id's for efficiency. */
+/** A map which keys are {@link Expression}s and in which expressions with different id's are considered different.
+ * This map implementation should be used whenever one wants to distinguish between occurences of equivalent expressions,
+ * for instance to distinguish positions in the syntactic tree of an expression
+ *
+ * @param <K> The type of the keys of the map
+ * @param <V> The type of the values of the map
+ */
 public class EMap<K extends Expression, V> implements Map<K, V> {
 
     private final Map<Integer, Map.Entry<K,V>> map = new LinkedHashMap<>();

@@ -24,7 +24,7 @@ import org.apache.jena.shex.expressions.TripleConstraint;
 import java.util.List;
 import java.util.Map;
 
-// A multiset over org.apache.jena.shex.expressions.TripleConstraint
+/** A multiset over {@link org.apache.jena.shex.expressions.TripleConstraint}. */
 /*package*/ class Bag {
 
     private EMap<TripleConstraint, Integer> cardMap;

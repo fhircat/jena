@@ -31,28 +31,61 @@ import org.apache.jena.shex.sys.SysShex;
 
 import java.util.*;
 
+/** Contains the current validation parameters and all information relevant for validation.
+ * Is passed through validation relation functions as an entry point for accessing the graph and the schema,
+ * and for executing the semantic actions.
+ * The class also store information computed and memorised during validation.
+ * This class gives access to
+ * <ul>
+ *     <li>the graph under validation</li>
+ *     <li>the definitions in the schema of shape expression and triple expression labels</li>
+ *     <li>the validation stack</li>
+ *     <li>the semantic action plugins</li>
+ *     <li>the memorised {@link TripleExprForValidation} instances that themselves memorise computed information about triple expressions</li>
+ * </ul>
+ */
 public class ValidationContext {
 
-    private final ValidationStack stack;
-    private final ShexSchema schema;
-    private final ShexSchemaMem schemaMem;
-    private final Map<String, SemanticActionPlugin> semActPluginIndex;
     private final Graph graph;
+    private final ShexSchema schema;
+    private final ValidationStack stack;
+    private final Map<String, SemanticActionPlugin> semActPluginIndex;
     private final Typing typing;
+    private ShexSchemaMem schemaMem;
+    private final boolean fixedSchema;
+    private final boolean fixedGraph;
 
-    public ValidationContext(ShexSchema schema, Graph graph, boolean fixedSchema, boolean fixedGraph, Map<String, SemanticActionPlugin> semActPluginIndex) {
+    /** Creates a new validation context for a given schema and graph.
+     * If the schema and the graph are declared fixed, meaning that they won't be modified after the creation
+     * of the validation context, then the context could store validation information to avoid recomputing it again.
+     * @param schema            The schema defining the shapes to be validated.
+     * @param graph             The graph which nodes are to be validated.
+     * @param semActPluginIndex The plugins for evaluating semantic actions.
+     * @param fixedSchema       Whether the schema is fixed on creation.
+     * @param fixedGraph        Whether the graph is fixed on creation
+     */
+    public ValidationContext(ShexSchema schema,
+                             Graph graph,
+                             Map<String, SemanticActionPlugin> semActPluginIndex,
+                             boolean fixedSchema,
+                             boolean fixedGraph) {
         this.schema = schema;
         this.graph = graph;
         this.semActPluginIndex = semActPluginIndex;
+        this.fixedSchema = fixedSchema;
+        this.fixedGraph = fixedGraph;
 
         this.schemaMem = new ShexSchemaMem(schema);
-        if (fixedGraph) this.typing = new Typing();
+        if (fixedGraph && fixedSchema) this.typing = new Typing();
         else this.typing = new EmptyTyping();
 
         this.stack = new ValidationStack();
     }
 
+    // TODO if the schema is not fixed, then we should recompute the schema information again
     public Report validate(Node focus, Node label, Reporter factory) {
+        if (! fixedSchema)
+            this.schemaMem = new ShexSchemaMem(this.schema);
         Report r = typing.get(focus, label);
         if (r != null)
             return r;
@@ -68,12 +101,15 @@ public class ValidationContext {
                 label == SysShex.startNode
                         ? List.of(label)
                         : nonAbstractDescendants(label);
-        boolean isDescendant = nonAbstractDescendants.get(0) != label; // for error reporting
+        boolean isDescendant = nonAbstractDescendants.get(0) != label; /// <errorReporting/>
         for (Node descendant : nonAbstractDescendants) {
             ShapeExpr expr = schema.get(descendant).getShapeExpr();
             Reporter exprReporter = reporter.createChild(focus, expr, null);
-            if (! isDescendant) isDescendant = true;  // only the first elmt of nonAbstractDescendants is possibly a non-descendant
+
+            ///  <errorReporting> The first element of nonAbstractDescendants is not a descendant
+            if (! isDescendant) isDescendant = true;
             else exprReporter.informValidatingDescendant(descendant);
+            /// </errorReporting>
 
             stack.push(focus, descendant);
             boolean isValid = ShapeExprEval.satisfies(focus, expr, this, exprReporter);
@@ -84,7 +120,7 @@ public class ValidationContext {
                 return reporter.setIsConformant(true);
             }
         }
-        if (isExetendable(label))
+        if (isExtendable(label))
             reporter.informDescendantConformance(false, null);
         return reporter.setIsConformant(false);
         // TODO memoization
@@ -100,7 +136,6 @@ public class ValidationContext {
             reporter.setReferenceTo(re, "");
             return re.getStatus() == ShexStatus.conformant;
         }
-        //return reporter.setIsConformant(re.getStatus() == ShexStatus.conformant, "", re);
 
         // The node/label pair is on the stack
         if (stack.contains(focus, shapeExprLabel)) {
@@ -117,7 +152,7 @@ public class ValidationContext {
         return schemaMem.getTypeHierarchyGraph().getNonAbstractSubtypes(shexprLabel);
     }
 
-    private boolean isExetendable(Node label) {
+    private boolean isExtendable(Node label) {
         return schemaMem.getTypeHierarchyGraph().isExtendableLabel(label);
     }
 
@@ -185,10 +220,9 @@ public class ValidationContext {
         return this.schemaMem.getSorbeFactory().getValExpr(value);
     }
 
-
     private static class ValidationStack {
 
-        private Deque<Pair<Node, Node>> stack = new ArrayDeque<>();
+        private final Deque<Pair<Node, Node>> stack = new ArrayDeque<>();
 
         void push(Node focus, Node shapeExprLabel) {
             Pair<Node, Node> p = new Pair<>(focus, shapeExprLabel);
@@ -205,7 +239,7 @@ public class ValidationContext {
         }
     }
 
-    static class TripleExprForValidationFactory {
+    private static class TripleExprForValidationFactory {
 
         private final EMap<TripleExpr, TripleExprForValidation> sourceToTEValMap = new EMap<>();
         private final ShexSchema schema;

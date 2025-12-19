@@ -34,13 +34,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/** Encapsulates a {@link TripleExpr} together with useful static analysis information for speeding up validation.
+/** Encapsulates a {@link TripleExpr} together with useful static analysis information for that expression.
+ * The stored information would speed up validation if the same expression is used later on.
  * In particular, stores a SORBE version of the expression if it is not SORBE.
  * SORBE triple expressions are associated with an efficient validation algorithm. They are explained below.
  *
  * A {@link TripleExprForValidation} is created using the {@link #create(TripleExpr, ShexSchema)} method.
  * The <pre>create</pre> method should not be used directly but only through
- * {@link ValidationContext#getExprForValidation(TripleExpr)} which will memoize the already computed triple expressions.
+ * {@link ValidationContext#getExprForValidation(TripleExpr)} which will memorise the already computed triple expressions.
  * Each {@link TripleExprForValidation} stores the expression given in the create method, called the <em>original</em> expression.
  * If the original expression is not SORBE, then the <pre>create</pre> method computes and stores its equivalent
  * SORBE form {@link #sorbeForm}.
@@ -177,7 +178,7 @@ public class TripleExprForValidation {
 
 
     // ---------------------------------------------------------------------------------------------------------
-    // Accessors and memoized information
+    // Accessors and memorised information
     // ---------------------------------------------------------------------------------------------------------
 
     private TripleExpr getRelevantExpression() {

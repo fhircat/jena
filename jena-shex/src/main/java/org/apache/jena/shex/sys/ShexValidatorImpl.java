@@ -40,7 +40,7 @@ public class ShexValidatorImpl implements ShexValidator {
         schema = schema.importsClosure();
         // TODO for now without memoization
         ValidationContext vCxt = new ValidationContext(schema, graph,
-                false, false, semanticActionPluginIndex);
+                semanticActionPluginIndex, false, false);
         ShexValidationReport resultReport = new ShexValidationReport();
         if (! vCxt.dispatchStartSemanticAction(schema)) {
             resultReport.setStartSemanticActionReport(new SimpleReport(ShexStatus.nonconformant,

@@ -57,13 +57,19 @@ public class ShapeExprEval {
                 return vCxt.validate(dataNode, ref, reporter);
             else {
                 List<Node> nonAbstractDescendants = vCxt.nonAbstractDescendants(ref.getLabel());
-                boolean isDescendant = nonAbstractDescendants.get(0) != ref.getLabel(); // for error reporting
+
+                boolean isDescendant = nonAbstractDescendants.get(0) != ref.getLabel(); /// <errorReporting/>
+
                 for (Node descendant : nonAbstractDescendants) {
                     // TODO why not recurse on the reference here ? -> there is a reason I do not recall
                     ShapeExpr defn = vCxt.getDefinition(descendant);
                     Reporter defnReporter = reporter.createChild(dataNode, defn, neigh);
-                    if (! isDescendant) isDescendant = true;  // only the first elmt of nonAbstractDescendants is possibly a non-descendant
+
+                    /// <errorReporting> the first element of nonAbstractDescendants is not a proper descendant
+                    if (! isDescendant) isDescendant = true;  //
                     else defnReporter.informValidatingDescendant(descendant);
+                    /// </errorReporting>
+
                     // TODO possible problem if the the definition is a reference itself
                     if (satisfiesNonRefExpr(dataNode, defn, neigh, vCxt, defnReporter)) {
                         reporter.informDescendantConformance(true, descendant);
@@ -89,12 +95,16 @@ public class ShapeExprEval {
 
     /** Validates a node's neighbourhood or a set of triples against a shape.
      * If triples is null, the whole node's neighbourhood is considered. */
-    private static boolean satisfiesShape(Node dataNode, Shape shape, Set<Triple> triples,
-                                          ValidationContext vCxt, Reporter shapeReporter) {
+    private static boolean satisfiesShape(Node dataNode,
+                                          Shape shape,
+                                          Set<Triple> triples,
+                                          ValidationContext vCxt,
+                                          Reporter shapeReporter) {
         // Notifies the reporter about conformant / non-conformant.
 
-        // 1. Collect the shapes to be satisfied (several if the shape is with extends)
-        //    and the corresponding constraints if the shape is with extends
+        // 1. Collect the shapes to be satisfied, distinguishing the main triple expressions and the constraints
+        //    The shape's triple expression and constraint are added to the maps with key null
+        //    If the shape is not in an extension hierarchy, then these maps contain only one entry with null key
         Map<Node, TripleExpr> mainTripleExprs = new HashMap<>();
         Map<Node, List<ShapeExpr>> constraints = new HashMap<>();
         mainTripleExprs.put(null, shape.getTripleExpr());
@@ -111,8 +121,7 @@ public class ShapeExprEval {
         Set<Triple> nonMatchables = new HashSet<>();
         if (null == triples) {  // Validating the whole neighbourhood
             Util.retrieveRelevantNeighbourhood(vCxt.getGraph(), dataNode,
-                    mainTripleExprs.values(),
-                    matchables, nonMatchables, vCxt);
+                    mainTripleExprs.values(), matchables, nonMatchables, vCxt);
         } else {   // Validating only part of the neighbourhood
             matchables = triples;
         }
@@ -123,12 +132,13 @@ public class ShapeExprEval {
             return shapeReporter.setIsConformant(false);
         }
 
-        // 4. Search for a split that satisfies the shape hierarchy and the extends constraints
+        // 4. Iterate over splits that satisfy the main triple expressions of the hierarchy, and look for a split
+        //    that satisfies the constraints.
         Iterator<Map<Node, Set<Triple>>> splitsIt = TripleExprEval.correctSplitsIterator(dataNode, shape, matchables,
                 mainTripleExprs, vCxt, shapeReporter);
         // TODO specific reporting needed when a split satisfies the main shapes but not the constraints
-
-        // TODO we need a test case in which the main part is satisfied, but not the restriction. This should have several equivalent shapes, but in which the ordering is different
+        //      Need a test case for that.
+        //      It should have several equivalent shapes, but in which the ordering is different
         while (splitsIt.hasNext()) {
             Map<Node, Set<Triple>> split = splitsIt.next();
             if (splitSatisfiesConstraints(dataNode, shape, split, constraints, vCxt, shapeReporter)) {
@@ -173,7 +183,7 @@ public class ShapeExprEval {
                 .allMatch(ncc -> ncc.visit(componentEval)));
     }
 
-    static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Reporter> {
+    private static class ShapeExprEvalVisitor implements TypedShapeExprVisitor<Boolean, Reporter> {
 
         private final ValidationContext vCxt;
         private final Node dataNode;
@@ -235,7 +245,7 @@ public class ShapeExprEval {
         }
     }
 
-    static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
+    private static class NodeConstraintComponentEvalVisitor implements TypedNodeConstraintComponentVisitor<Boolean> {
 
         private final Node dataNode;
         private final Reporter reporter;
@@ -473,11 +483,8 @@ public class ShapeExprEval {
             boolean b1 = valueSetRange.included(data);
             if (!b1)
                 return false;
-            boolean b2 = valueSetRange.excluded(data);
-            if (b2)
-                return false;
+            return ! valueSetRange.excluded(data);
             // OK
-            return true;
         }
     }
 
