@@ -74,14 +74,14 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
                 return Cardinality.STAR;
             else {
                 Cardinality subResult = subExpr.visit(this);
-                return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : Cardinality.PLUS;
+                return isEmpty(subResult) ? EMPTY_INTERVAL : Cardinality.PLUS;
             }
         if (card.equals(Cardinality.PLUS))
             if (tripleExpr.isEmptySubbag(bag, tripleExprCardinality))
                 return ZERO_INTERVAL;
             else {
                 Cardinality subResult = subExpr.visit(this);
-                return subResult.equals(EMPTY_INTERVAL) ? EMPTY_INTERVAL : new Cardinality(1, subResult.max);
+                return isEmpty(subResult) ? EMPTY_INTERVAL : new Cardinality(1, subResult.max);
             }
         if (card.equals(Cardinality.OPT)) {
             Cardinality subResult = subExpr.visit(this);
@@ -102,7 +102,19 @@ class IntervalComputation implements TypedTripleExprVisitor<Cardinality> {
         throw new IllegalArgumentException("References not supported");
     }
 
+    /** Whether the interval contains no integer. Empty intervals are not always the canonical
+     * {@link #EMPTY_INTERVAL} [2;1]: {@link #div} can produce eg [1;0]. */
+    private static boolean isEmpty (Cardinality i) {
+        return i.min > i.max;
+    }
+
     private static Cardinality add (Cardinality i1, Cardinality i2) {
+        // The sum (Minkowski) of an empty set of possible repetition numbers with any other set
+        // is empty. Without this, an empty operand like [1;0] leaks its bounds into arithmetic,
+        // eg [0;*] + [1;0] would yield [1;*] although no repetition number is possible.
+        if (isEmpty(i1) || isEmpty(i2))
+            return EMPTY_INTERVAL;
+
         int imin, imax;
 
         imin = i1.min + i2.min;
