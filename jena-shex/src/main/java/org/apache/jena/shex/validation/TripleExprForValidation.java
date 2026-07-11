@@ -146,6 +146,15 @@ public class TripleExprForValidation {
         return interval.min <= 1 && 1 <= interval.max;
     }
 
+    /** Checks whether a bag of triple constraints is accepted by this triple expression.
+     * The bag must be over the triple constraints of the original expression if it is SORBE,
+     * or of its {@link #sorbeForm} otherwise.
+     * Same decision as {@link #isValid(Map)} for any matching realizing the bag. */
+    /*package*/ boolean isValidBag (Bag bag) {
+        Cardinality interval = getRelevantExpression().visit(new IntervalComputation(this, bag));
+        return interval.min <= 1 && 1 <= interval.max;
+    }
+
     /** Checks whether the bag has value 0 for every triple constraint that is part of the sub-expression.
      * Used in {@link IntervalComputation}.
      * The sub-expression can be from the original expression, or from its SORBE form, as long as it is consistent
@@ -181,7 +190,9 @@ public class TripleExprForValidation {
     // Accessors and memorised information
     // ---------------------------------------------------------------------------------------------------------
 
-    private TripleExpr getRelevantExpression() {
+    /** The expression over which validation is actually performed:
+     * the original expression if it is SORBE, its {@link #sorbeForm} otherwise. */
+    /*package*/ TripleExpr getRelevantExpression() {
         return this.sorbeForm != null ? this.sorbeForm : this.expr;
     }
 

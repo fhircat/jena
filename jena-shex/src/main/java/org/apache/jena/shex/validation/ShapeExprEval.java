@@ -160,8 +160,8 @@ public class ShapeExprEval {
         Map<Node, Set<Triple>> relevantTriples = new HashMap<>();
         for (Map.Entry<Node, List<ShapeExpr>> e : constraints.entrySet()) {
             for (ShapeExpr constr : e.getValue()) {
-                Set<Triple> triples = relevantTriples.putIfAbsent(e.getKey(),
-                        vCxt.getSupertypes(e.getKey()).stream()
+                Set<Triple> triples = relevantTriples.computeIfAbsent(e.getKey(),
+                        k -> vCxt.getSupertypes(k).stream()
                             .flatMap(l -> split.get(l).stream())
                             .collect(Collectors.toSet()));
                 Reporter subReporter = shapeReporter.createChild(dataNode, constr, triples);

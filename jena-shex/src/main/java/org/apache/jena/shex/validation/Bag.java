@@ -39,6 +39,16 @@ import java.util.Map;
 
     }
 
+    /** A bag with the given cardinality for each triple constraint, and cardinality 0 for
+     * the triple constraints of {@code base} that do not appear in {@code counts}. */
+    /*package*/ static Bag fromCounts(Map<TripleConstraint, Integer> counts, List<TripleConstraint> base) {
+        Bag bag = new Bag();
+        bag.cardMap = new EMap<>();
+        base.forEach(tc -> bag.cardMap.put(tc, 0));
+        counts.forEach((tc, card) -> bag.cardMap.computeIfPresent(tc, (k, old) -> card));
+        return bag;
+    }
+
     public final int getCard (TripleConstraint tripleConstraint) {
         return cardMap.get(tripleConstraint);
     }

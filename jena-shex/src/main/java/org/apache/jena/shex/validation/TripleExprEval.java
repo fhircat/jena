@@ -69,9 +69,11 @@ public class TripleExprEval {
             return Collections.emptyIterator();
         }
 
-        // Prepare the iterator over matchings to be returned
-
-        Iterator<Map<Triple, TripleConstraint>> allMatchingsIterator = new MatchingsIterator(preMatching);
+        // Prepare the iterator over matchings to be returned.
+        // Enumerates only the matchings not refuted by the feasibility analysis; every valid
+        // matching is enumerated (see FeasibleMatchingsIterator).
+        Iterator<Map<Triple, TripleConstraint>> allMatchingsIterator =
+                new FeasibleMatchingsIterator(preMatching, exprsToBeMatched.values());
 
         /// <errorReporting>
         /// Keep only the matchings that associate at least one triple with every mandatory triple constraint
@@ -80,12 +82,18 @@ public class TripleExprEval {
                 m -> checkAllMandatoryTripleConstraintsAreMatched(m, exprsToBeMatched),
                 allMatchingsIterator);
 
-        if (! shapeReporter.isValidateOnly() && ! mandatoryTCSatisfiedMatchingsIterator.hasNext()) {
-            // Take one matching on which to report
-            Iterator<Map<Triple, TripleConstraint>> it = new MatchingsIterator(preMatching);
-            if (it.hasNext()) {
-                Map<Triple, TripleConstraint> matching = it.next();
-                shapeReporter.informUnmatchedTripleConstraints(unmatchedMandatoryTripleConstraints(matching, exprsToBeMatched));
+        if (! shapeReporter.isValidateOnly()) {
+            // Probe over the unpruned matchings, so that reporting is independent of the search pruning
+            Iterator<Map<Triple, TripleConstraint>> mandatoryProbe = new FilterIterator<> (
+                    m -> checkAllMandatoryTripleConstraintsAreMatched(m, exprsToBeMatched),
+                    new MatchingsIterator(preMatching));
+            if (! mandatoryProbe.hasNext()) {
+                // Take one matching on which to report
+                Iterator<Map<Triple, TripleConstraint>> it = new MatchingsIterator(preMatching);
+                if (it.hasNext()) {
+                    Map<Triple, TripleConstraint> matching = it.next();
+                    shapeReporter.informUnmatchedTripleConstraints(unmatchedMandatoryTripleConstraints(matching, exprsToBeMatched));
+                }
             }
         }
         /// </errorReporting>
