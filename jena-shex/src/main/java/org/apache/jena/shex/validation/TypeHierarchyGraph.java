@@ -119,8 +119,11 @@ public class TypeHierarchyGraph {
             Node current = fifo.removeFirst();
             for (DefaultEdge adjEdge : adjacent.apply(current)) {
                 Node other = opposite.apply(adjEdge);
-                result.add(other);
-                fifo.addLast(other);
+                // Only enqueue newly-discovered vertices: if 'other' was already in 'result',
+                // re-enqueueing it here would loop forever on any cycle in the graph (the
+                // extends/type-hierarchy graph is not guaranteed acyclic before this runs).
+                if ( result.add(other) )
+                    fifo.addLast(other);
             }
         }
         return result;
