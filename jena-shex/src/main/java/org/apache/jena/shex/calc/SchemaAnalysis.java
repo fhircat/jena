@@ -255,6 +255,8 @@ public class SchemaAnalysis {
             public void visit(Shape shape) {
                 context.addLast(SHAPE);
                 context.addLast(shape.getExtras());
+                // EXTENDS contributes the extended shape's constraints via conjunction (à la ShapeAnd)
+                shape.getExtends().forEach(e -> e.visit(this));
                 shape.getTripleExpr().visit(this);
                 context.removeLast();
                 context.removeLast();
