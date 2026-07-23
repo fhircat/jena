@@ -58,10 +58,12 @@ public class SchemaAnalysis {
         if (! checkNoCyclicReferences())
             return false;
 
-        if (! checkStratifiedNegation())
+        TypeHierarchyGraph typeHierarchyGraph = TypeHierarchyGraph.create(shapeDeclMap);
+
+        if (! checkExtendsCorrect(typeHierarchyGraph))
             return false;
 
-        if (! checkExtendsCorrect())
+        if (! checkStratifiedNegation(typeHierarchyGraph))
             return false;
 
         return true;
@@ -120,7 +122,7 @@ public class SchemaAnalysis {
     private static final double NEGDEP = -1.0;
     private static final double POSDEP = 1.0;
 
-    private boolean checkStratifiedNegation() {
+    private boolean checkStratifiedNegation(TypeHierarchyGraph typeHierarchyGraph) {
 
         DefaultDirectedWeightedGraph<Node, DefaultWeightedEdge> dependencyGraph
                 = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
@@ -139,6 +141,12 @@ public class SchemaAnalysis {
                     dependencyGraph.setEdgeWeight(edge, NEGDEP);
             });
         });
+
+        for (Iterator<? extends Pair<Node, Node>> it = typeHierarchyGraph.edgesIterator(); it.hasNext(); ) {
+            Pair<Node, Node> extendsDep = it.next();
+            Graphs.addEdge(dependencyGraph, extendsDep.getLeft(), extendsDep.getRight(), POSDEP);
+            Graphs.addEdge(dependencyGraph, extendsDep.getRight(), extendsDep.getLeft(), POSDEP);
+        }
 
         Predicate<List<Node>> isCycleWithNegation = cycle -> {
             cycle.add(cycle.get(0));
@@ -159,8 +167,7 @@ public class SchemaAnalysis {
         return cycleEnumerationAlgorithm.findSimpleCycles().stream().noneMatch(isCycleWithNegation);
     }
 
-    private boolean checkExtendsCorrect () {
-        TypeHierarchyGraph typeHierarchyGraph = TypeHierarchyGraph.create(shapeDeclMap);
+    private boolean checkExtendsCorrect (TypeHierarchyGraph typeHierarchyGraph) {
         if (typeHierarchyGraph.hasCycles())
             throw new ShexSchemaStructureException("Cyclic extends");
 
@@ -255,8 +262,6 @@ public class SchemaAnalysis {
             public void visit(Shape shape) {
                 context.addLast(SHAPE);
                 context.addLast(shape.getExtras());
-                // EXTENDS contributes the extended shape's constraints via conjunction (à la ShapeAnd)
-                shape.getExtends().forEach(e -> e.visit(this));
                 shape.getTripleExpr().visit(this);
                 context.removeLast();
                 context.removeLast();
@@ -312,7 +317,7 @@ public class SchemaAnalysis {
                 Set<Node> extras = (Set<Node>) context.getLast();
                 boolean predicateIsExtra = extras.contains(tripleConstraint.getPredicate());
                 if (predicateIsExtra)
-                    context.addLast("NOT");
+                    context.addLast(NOT);
                 tripleConstraint.getValueExpr().visit(this);
                 if (predicateIsExtra)
                     context.removeLast();

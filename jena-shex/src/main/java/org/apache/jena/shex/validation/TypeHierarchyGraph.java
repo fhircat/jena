@@ -17,6 +17,9 @@
  */
 package org.apache.jena.shex.validation;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.jena.graph.Node;
 import org.apache.jena.shex.ShapeDecl;
 import org.apache.jena.shex.calc.AccumulationUtil;
@@ -127,6 +130,11 @@ public class TypeHierarchyGraph {
             }
         }
         return result;
+    }
+
+    public Iterator<? extends Pair<Node, Node>> edgesIterator() {
+        return graph.edgeSet().stream()
+                .map(e -> new ImmutablePair<>(graph.getEdgeSource(e), graph.getEdgeTarget(e))).iterator();
     }
 
 }
