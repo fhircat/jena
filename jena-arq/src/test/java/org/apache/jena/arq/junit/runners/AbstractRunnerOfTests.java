@@ -31,6 +31,8 @@ import java.util.stream.Stream;
 
 import org.apache.jena.arq.junit.manifest.*;
 import org.apache.jena.atlas.io.IndentedWriter;
+import org.apache.jena.atlas.lib.ArrayUtils;
+import org.apache.jena.base.Sys;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.junit.EarlReport;
 import org.apache.jena.sparql.vocabulary.VocabTestQuery;
