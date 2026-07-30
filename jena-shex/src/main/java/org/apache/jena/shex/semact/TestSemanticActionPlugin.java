@@ -41,7 +41,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     static Pattern ParsePattern, LeadPattern, LastPattern;
 
     static {
-        String term = "(\\\"(?:(?:[^\\\\\\\"]|\\\\[^\\\"])+)\\\"|[spo])";
+        String term = "(\\\"(?:[^\\\\\\\"]|\\\\\\\\|\\\\\\\")*\\\"|[spo])";
         ParsePattern = Pattern.compile("^ *(fail|print) *\\(((?:" + term + ", )*" + term + ")\\) *$");
         LeadPattern = Pattern.compile(term + ", ");
         LastPattern = Pattern.compile("((" + term + "))");
@@ -108,7 +108,12 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
     }
 
     private static String getQuotedValue(String varName) {
-        return varName.substring(1, varName.length() - 1).replaceAll("\\\\(.)", "$1");
+        // strip the delimiters, then decode the two sanctioned escapes (\\ and \") in one pass
+        return varName.substring(1, varName.length() - 1).replaceAll("\\\\([\\\\\"])", "$1");
+    }
+
+    private static String nodeString(Node pos) {
+        return pos.isLiteral() ? pos.getLiteralLexicalForm() : pos.toString();
     }
 
     private static String resolveNodeVar(String varName, Node focus) {
@@ -121,7 +126,7 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
             default:
                 throw new RuntimeException(String.format("ShapeExpr %s semantic action argument %s was not literal or 's'", SemActIri, varName));
         }
-        return pos.toString();
+        return nodeString(pos);
     }
 
     private static String resolveTripleVar(String varName, Triple triple) {
@@ -139,6 +144,6 @@ public class TestSemanticActionPlugin implements SemanticActionPlugin {
             default:
                 throw new RuntimeException(String.format("TripleExpr %s semantic action argument %s was not a literal or 's', 'p', or 'o'", SemActIri, varName));
         }
-        return pos.toString();
+        return nodeString(pos);
     }
 }
