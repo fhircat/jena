@@ -697,9 +697,14 @@ public class ParserShExC extends LangParserBase {
                 : iriAndCode.substring(codeDelimiter + 1, iriAndCode.length() - 2);
         }
 
-        SemAct ret = new SemAct(iri, code == null ? null : EscapeStr.unescapeUnicode(code));
+        SemAct ret = new SemAct(iri, code == null ? null : unescapeCode(code));
         stack("SemAct: %s %s", iri, code);
         return ret;
+    }
+
+    // CODE ::= "{" ([^%\] | '\' [%\] | UCHAR)* "%" "}" — decode UCHARs, then \% and \\
+    private static String unescapeCode(String code) {
+        return EscapeStr.unescapeUnicode(code).replaceAll("\\\\([%\\\\])", "$1");
     }
 
     // Metacharacters ., ?, *, +, {, } (, ), [ or ].
